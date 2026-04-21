@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sales-workspace</title>
+    <meta name="description" content="Lovable Generated Project" />
+    <meta name="author" content="Lovable" />
+
+    <!-- Lexend Deca Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@100;200;300;400;500;600;700;800;900&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Critical CSS variables to prevent flash of wrong colors -->
+    <!-- All values are resolved hex/rgba - no var() references allowed here -->
+    <style>
+      :root {
+        /* Base Trellis colors */
+        --trellis-color-white: #ffffff;
+        --trellis-color-black: #141414;
+        --trellis-color-neutral-100: #f8f7f6;
+        --trellis-color-neutral-200: #f5f3f2;
+        --trellis-color-neutral-300: #efedeb;
+        --trellis-color-neutral-400: #e7e5e4;
+        --trellis-color-neutral-500: #cfcccb;
+        --trellis-color-neutral-600: #b6b1af;
+        --trellis-color-neutral-700: #8c8787;
+        --trellis-color-neutral-800: #676565;
+        --trellis-color-neutral-900: #4d4c4c;
+        --trellis-color-neutral-1000: #333333;
+        --trellis-color-neutral-1600: #141414;
+        --trellis-color-magenta-1400: #46062B;
+        
+        /* Alpha colors */
+        --trellis-color-alphadark-100: rgba(20, 20, 20, 0.1);
+        --trellis-color-alphadark-700: rgba(20, 20, 20, 0.7);
+        --trellis-color-alphadark-800: rgba(20, 20, 20, 0.8);
+        
+        /* Surface fills - resolved values */
+        --color-fill-surface-recessed: #f8f7f6;
+        --color-fill-surface-recessedhover: rgba(20, 20, 20, 0.7);
+        --color-fill-surface-recessedpressed: rgba(20, 20, 20, 0.8);
+        --color-fill-surface-default: #ffffff;
+        --color-fill-surface-defaulthover: rgba(20, 20, 20, 0.7);
+        --color-fill-surface-defaultpressed: rgba(20, 20, 20, 0.8);
+        --color-fill-surface-raised: #ffffff;
+        --color-fill-surface-overlay: #ffffff;
+        
+        /* Primary/Secondary/Tertiary fills */
+        --color-fill-primary-default: #141414;
+        --color-fill-primary-hover: #333333;
+        --color-fill-primary-pressed: #4d4c4c;
+        --color-fill-primary-disabled: #f5f3f2;
+        --color-fill-secondary-default: #ffffff;
+        --color-fill-secondary-hover: #f5f3f2;
+        --color-fill-secondary-pressed: #e7e5e4;
+        --color-fill-secondary-disabled: #ffffff;
+        --color-fill-tertiary-default: #ffffff;
+        --color-fill-tertiary-hover: #f5f3f2;
+        --color-fill-tertiary-pressed: #e7e5e4;
+        --color-fill-tertiary-disabled: #ffffff;
+        
+        /* Field fills */
+        --color-fill-field-default: #ffffff;
+        --color-fill-field-default-alt: #f8f7f6;
+        
+        /* Text colors */
+        --color-text-core-default: #141414;
+        --color-text-core-subtle: #676565;
+        --color-text-core-disabled: #8c8787;
+        --color-text-core-onfilldefault: #ffffff;
+        --color-text-primary-default: #ffffff;
+        --color-text-primary-disabled: #8c8787;
+        --color-text-secondary-default: #141414;
+        --color-text-secondary-disabled: #8c8787;
+        --color-text-tertiary-default: #141414;
+        --color-text-interactive-default: #46062B;
+        
+        /* Border colors */
+        --color-border-core-default: #8c8787;
+        --color-border-core-hover: #676565;
+        --color-border-core-pressed: #141414;
+        --color-border-core-subtle: #cfcccb;
+        --color-border-core-disabled: #e7e5e4;
+        --color-border-interactive-default: #8c8787;
+        --color-border-interactive-pressed: #141414;
+        --color-border-container-default: #cfcccb;
+        --color-border-secondary-default: #8A8A8A;
+      --color-border-primary-default: #141414;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Lexend Deca', Helvetica, Arial, sans-serif !important;
+        background-color: #ffffff !important;
+        color: #141414 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1.5 !important;
+      }
+
+      html, body, #root {
+        height: 100% !important;
+      }
+
+      html, body {
+        overscroll-behavior: none !important;
+        overflow: hidden !important;
+      }
+    </style>
+
+    <meta property="og:title" content="sales-workspace" />
+    <meta property="og:description" content="Lovable Generated Project" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@lovable_dev" />
+    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
