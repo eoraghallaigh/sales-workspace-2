@@ -6,6 +6,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Tag from "@/components/Tag";
 import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 interface QLData {
@@ -31,6 +36,7 @@ interface ContactCardProps {
     recentTouches: number;
     enrolledInSequence: boolean;
     recentConversions?: number;
+    hasPhone?: boolean;
     signals: Array<{
       variant: "green" | "blue" | "yellow" | "orange";
       text: string;
@@ -72,6 +78,8 @@ const ContactCard = ({
 }: ContactCardProps) => {
   const recentConversions = contact.recentConversions ?? 0;
   const isQL = !!contact.qlData;
+  const canCall = contact.hasPhone !== false;
+  const noPhoneTooltip = "Contact has no phone number";
 
   const [isDismissing, setIsDismissing] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
@@ -389,12 +397,22 @@ const ContactCard = ({
               >
                 <TrellisIcon name="email" size={16} />
               </button>
-              <button
-                className="w-4 h-4 flex items-center justify-center"
-                onClick={() => onCallClick?.(contact.id)}
-              >
-                <TrellisIcon name="calling" size={16} />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className={!canCall ? "cursor-not-allowed" : undefined}>
+                    <button
+                      className="w-4 h-4 flex items-center justify-center disabled:opacity-40 disabled:pointer-events-none"
+                      onClick={() => onCallClick?.(contact.id)}
+                      disabled={!canCall}
+                    >
+                      <TrellisIcon name="calling" size={16} />
+                    </button>
+                  </span>
+                </TooltipTrigger>
+                {!canCall && (
+                  <TooltipContent>{noPhoneTooltip}</TooltipContent>
+                )}
+              </Tooltip>
               <button className="w-4 h-4 flex items-center justify-center">
                 <TrellisIcon name="linkedin" size={16} />
               </button>
@@ -461,14 +479,24 @@ const ContactCard = ({
           </div>
 
           <div className="mt-auto pt-12 flex items-center gap-6 px-4">
-            <Button
-              variant="secondary"
-              size="medium"
-              onClick={() => onCallClick?.(contact.id)}
-            >
-              Call
-              <TrellisIcon name="calling" size={14} className="ml-1" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className={!canCall ? "cursor-not-allowed" : undefined}>
+                  <Button
+                    variant="secondary"
+                    size="medium"
+                    onClick={() => onCallClick?.(contact.id)}
+                    disabled={!canCall}
+                  >
+                    Call
+                    <TrellisIcon name="calling" size={14} className="ml-1" />
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {!canCall && (
+                <TooltipContent>{noPhoneTooltip}</TooltipContent>
+              )}
+            </Tooltip>
             {enrolAction}
             {hideAction}
           </div>
