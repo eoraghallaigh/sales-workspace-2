@@ -47,6 +47,19 @@ When context is missing or stale, **ask before assuming**. Flag when a doc looks
 
 ---
 
+## External systems
+
+### Asana — source of truth for tasks and timelines
+
+Project tasks, deadlines, and cross-functional dependencies live in Asana. When scoping work, estimating effort, checking what's in flight, or proposing what to do next, use the `mcp__asana__*` tools to consult live task state before making assumptions. Do not rely on memory or stale notes in this repo for task status — Asana is authoritative.
+
+Common things to check in Asana:
+- What's assigned to Eoin right now, and what's due this week/sprint
+- Dependencies and blockers on in-flight PRD work (e.g. BoB in the Workspace)
+- Cross-team tasks that intersect with this project (engineering, PM, ops)
+
+---
+
 ## Stack context
 
 The user works on HubSpot projects. Global rules in `~/.claude/CLAUDE.md` apply (CHIRP, Trellis, `bend` tooling, Immutables, etc.). This workspace is primarily design/product work, not code — but any frontend prototyping should follow HubSpot frontend conventions.
