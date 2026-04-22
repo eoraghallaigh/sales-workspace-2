@@ -10,7 +10,8 @@ interface SortableContactCardProps {
   onCallClick?: (contactId: string) => void;
   onEmailClick?: (contactId: string) => void;
   onWorkQLClick?: (contactId: string) => void;
-  onThumbsDownClick?: (contactId: string) => void;
+  onEnrollClick?: (contactId: string) => void;
+  onConfirmDismiss?: (contactId: string, reasons?: string[]) => void;
 }
 
 const SortableContactCard = ({
@@ -20,7 +21,8 @@ const SortableContactCard = ({
   onCallClick,
   onEmailClick,
   onWorkQLClick,
-  onThumbsDownClick,
+  onEnrollClick,
+  onConfirmDismiss,
 }: SortableContactCardProps) => {
   const {
     attributes,
@@ -57,7 +59,8 @@ const SortableContactCard = ({
         onCallClick={onCallClick}
         onEmailClick={onEmailClick}
         onWorkQLClick={onWorkQLClick}
-        onThumbsDownClick={onThumbsDownClick}
+        onEnrollClick={onEnrollClick}
+        onConfirmDismiss={onConfirmDismiss}
       />
     </div>
   );

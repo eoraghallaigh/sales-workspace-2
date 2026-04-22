@@ -97,7 +97,7 @@ const AddContactsModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="sm:max-w-3xl bg-white">
         <DialogHeader>
           <DialogTitle>Add contacts at {companyName}</DialogTitle>
           <DialogDescription>
