@@ -37,10 +37,8 @@ import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import SortableContactCard from "@/components/SortableContactCard";
 import AddContactTile from "@/components/AddContactTile";
-import ContactFeedbackModal, {
-  ContactFeedbackPayload,
-} from "@/components/ContactFeedbackModal";
 import AddContactsModal from "@/components/AddContactsModal";
+import SequenceEnrollmentModal from "@/components/SequenceEnrollmentModal";
 import { useCompanyContacts } from "@/hooks/useCompanyContacts";
 import { getAdditionalContactsForCompany } from "@/data/allContacts";
 
@@ -113,21 +111,27 @@ const CompanyCard = ({
   onEmailClick,
 }: CompanyCardProps) => {
   const [isDismissModalOpen, setIsDismissModalOpen] = useState(false);
-  const [feedbackContactId, setFeedbackContactId] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [enrollContactId, setEnrollContactId] = useState<string | null>(null);
 
   const {
     contacts,
     reorder,
     remove,
     add,
-    restore,
     recordFeedback,
   } = useCompanyContacts(company.recommendedContacts);
 
-  const feedbackContact = useMemo(
-    () => contacts.find((c) => c.id === feedbackContactId) ?? null,
-    [contacts, feedbackContactId],
+  const enrollModalContacts = useMemo(
+    () =>
+      contacts.map((c) => ({
+        id: c.id,
+        name: c.name,
+        role: c.role,
+        initials: c.initials,
+        avatarColor: c.avatarColor,
+      })),
+    [contacts],
   );
 
   const availableToAdd = useMemo(() => {
@@ -148,39 +152,47 @@ const CompanyCard = ({
     reorder(String(active.id), String(over.id));
   };
 
-  const handleFeedbackSubmit = (payload: ContactFeedbackPayload) => {
-    if (!feedbackContact) return;
-    recordFeedback({
-      contactId: feedbackContact.id,
-      contactName: feedbackContact.name,
-      reason: payload.reason,
-      note: payload.note,
-      removed: payload.removed,
-      submittedAt: new Date().toISOString(),
-    });
-
-    if (!payload.removed) {
-      toast.success(`Thanks — feedback logged for ${feedbackContact.name}`);
-      return;
-    }
-
-    const removed = remove(feedbackContact.id);
-    if (!removed) return;
-    toast.success(`Removed ${removed.contact.name}`, {
-      action: {
-        label: "Undo",
-        onClick: () => restore(removed.contact, removed.index),
-      },
-      duration: 8000,
-    });
-  };
-
   const handleAddContacts = (newContacts: RecommendedContact[]) => {
     if (newContacts.length === 0) return;
     add(newContacts);
     toast.success(
       `Added ${newContacts.length} contact${newContacts.length !== 1 ? "s" : ""}`,
     );
+  };
+
+  const handleConfirmDismiss = (contactId: string, reasons?: string[]) => {
+    const target = contacts.find((c) => c.id === contactId);
+    if (target && reasons && reasons.length > 0) {
+      reasons.forEach((reason) => {
+        recordFeedback({
+          contactId: target.id,
+          contactName: target.name,
+          reason,
+          removed: true,
+          submittedAt: new Date().toISOString(),
+        });
+      });
+    }
+    const removed = remove(contactId);
+    if (!removed) return;
+    toast.success(`Removed ${removed.contact.name}`);
+  };
+
+  const handleEnrollInSequence = (
+    sequenceId: string,
+    sequenceName: string,
+    contactIds: string[],
+  ) => {
+    const count = contactIds.length;
+    if (count === 0) return;
+    const label =
+      count === 1
+        ? contacts.find((c) => c.id === contactIds[0])?.name ??
+          `${count} contact`
+        : `${count} contacts`;
+    toast.success(`Enrolled ${label} in ${sequenceName}`);
+    setEnrollContactId(null);
+    void sequenceId;
   };
 
   const getStatusBadgeVariant = (): {
@@ -298,7 +310,7 @@ const CompanyCard = ({
             items={contacts.map((c) => c.id)}
             strategy={horizontalListSortingStrategy}
           >
-            <div className="flex items-stretch gap-4 overflow-x-auto py-6 -my-6 px-1 -mx-1">
+            <div className="flex items-stretch gap-4 overflow-x-auto py-12 -my-12 px-1 -mx-1">
               {contacts.map((contact) => (
                 <SortableContactCard
                   key={contact.id}
@@ -307,7 +319,8 @@ const CompanyCard = ({
                   onContactClick={onContactClick}
                   onCallClick={(contactId) => onCallClick?.(contactId, "")}
                   onEmailClick={(contactId) => onEmailClick?.(contactId, "")}
-                  onThumbsDownClick={(contactId) => setFeedbackContactId(contactId)}
+                  onEnrollClick={(contactId) => setEnrollContactId(contactId)}
+                  onConfirmDismiss={handleConfirmDismiss}
                 />
               ))}
               <AddContactTile onClick={() => setIsAddModalOpen(true)} />
@@ -376,21 +389,23 @@ const CompanyCard = ({
         </DialogContent>
       </Dialog>
 
-      <ContactFeedbackModal
-        open={feedbackContactId !== null}
-        contactName={feedbackContact?.name ?? ""}
-        onOpenChange={(open) => {
-          if (!open) setFeedbackContactId(null);
-        }}
-        onSubmit={handleFeedbackSubmit}
-      />
-
       <AddContactsModal
         open={isAddModalOpen}
         companyName={company.name}
         availableContacts={availableToAdd}
         onOpenChange={setIsAddModalOpen}
         onAdd={handleAddContacts}
+      />
+
+      <SequenceEnrollmentModal
+        open={enrollContactId !== null}
+        contacts={enrollModalContacts}
+        initialContactId={enrollContactId}
+        companyLogo={company.logo}
+        onOpenChange={(open) => {
+          if (!open) setEnrollContactId(null);
+        }}
+        onEnroll={handleEnrollInSequence}
       />
     </Card>
   );
