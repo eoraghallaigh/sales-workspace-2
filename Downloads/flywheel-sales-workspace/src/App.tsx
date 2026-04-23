@@ -17,6 +17,7 @@ import Agents from "./pages/Agents";
 import AgentDetail from "./pages/AgentDetail";
 import DesignSystem from "./pages/DesignSystem";
 import ProspectingStrategy from "./pages/ProspectingStrategy";
+import HoverPreviewDemo from "./pages/HoverPreviewDemo";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/agents" element={<Agents />} />
             <Route path="/agents/:agentId" element={<AgentDetail />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/hover-preview" element={<HoverPreviewDemo />} />
           </Routes>
           <GuidedTour />
           {/* <TourLauncher /> */}
