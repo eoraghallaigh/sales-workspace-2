@@ -679,50 +679,62 @@ const Prospecting = () => {
                   ))}
                 </nav>
               ) : (
-              companiesWithCalculatedStatus.map((company, companyIndex) => {
-                const strategy = companyStrategies[company.id] || defaultStrategy;
-                const strategyHint = strategy.businessIntelligence;
+                (() => {
+                  const rows = companiesWithCalculatedStatus.map((company, companyIndex) => {
+                    const strategy = companyStrategies[company.id] || defaultStrategy;
+                    const strategyHint = strategy.businessIntelligence;
 
-                if (cardVariant === "current") {
-                  return (
-                    <div key={company.id} {...(companyIndex === 0 ? { "data-tour": "first-company-card" } : {})}>
-                      <CompanyCard
-                        company={company}
-                        onCompanyClick={() => handleCompanyClick(company.id)}
-                        onNameClick={() => handleCompanyClick(company.id)}
-                        onContactClick={(contactId) => handleContactClick(contactId)}
-                        onTaskClick={(taskId) => handleTaskClick(taskId)}
-                        onCallClick={(contactId) => handleCallClick(contactId)}
-                        onEmailClick={(contactId) => handleEmailClick(undefined, undefined, undefined, contactId)}
-                        onPrepForCallClick={(contactId) => handlePrepForCallClick(contactId)}
-                        completedTasks={completedTasks}
-                      />
-                    </div>
-                  );
-                }
+                    if (cardVariant === "current") {
+                      return (
+                        <div key={company.id} {...(companyIndex === 0 ? { "data-tour": "first-company-card" } : {})}>
+                          <CompanyCard
+                            company={company}
+                            onCompanyClick={() => handleCompanyClick(company.id)}
+                            onNameClick={() => handleCompanyClick(company.id)}
+                            onContactClick={(contactId) => handleContactClick(contactId)}
+                            onTaskClick={(taskId) => handleTaskClick(taskId)}
+                            onCallClick={(contactId) => handleCallClick(contactId)}
+                            onEmailClick={(contactId) => handleEmailClick(undefined, undefined, undefined, contactId)}
+                            onPrepForCallClick={(contactId) => handlePrepForCallClick(contactId)}
+                            completedTasks={completedTasks}
+                          />
+                        </div>
+                      );
+                    }
 
-                if (cardVariant === "A") {
-                  return (
-                    <div key={company.id} {...(companyIndex === 0 ? { "data-tour": "first-company-card" } : {})}>
-                      <CompanyCardVariantA company={company} strategyHint={strategyHint} onCompanyClick={() => handleCompanyClick(company.id)} completedTasks={completedTasks} />
-                    </div>
-                  );
-                }
+                    if (cardVariant === "A") {
+                      return (
+                        <div key={company.id} {...(companyIndex === 0 ? { "data-tour": "first-company-card" } : {})}>
+                          <CompanyCardVariantA company={company} strategyHint={strategyHint} rank={companyIndex + 1} onCompanyClick={() => handleCompanyClick(company.id)} completedTasks={completedTasks} />
+                        </div>
+                      );
+                    }
 
-                if (cardVariant === "B") {
-                  return (
-                    <div key={company.id} className="mb-2" {...(companyIndex === 0 ? { "data-tour": "first-company-card" } : {})}>
-                      <CompanyCardVariantB company={company} strategyHint={strategyHint} onCompanyClick={() => handleCompanyClick(company.id)} completedTasks={completedTasks} />
-                    </div>
-                  );
-                }
+                    if (cardVariant === "B") {
+                      return (
+                        <div key={company.id} {...(companyIndex === 0 ? { "data-tour": "first-company-card" } : {})}>
+                          <CompanyCardVariantB company={company} strategyHint={strategyHint} rank={companyIndex + 1} onCompanyClick={() => handleCompanyClick(company.id)} completedTasks={completedTasks} />
+                        </div>
+                      );
+                    }
 
-                return (
-                  <div key={company.id} {...(companyIndex === 0 ? { "data-tour": "first-company-card" } : {})}>
-                    <CompanyCardVariantC company={company} strategyHint={strategyHint} onCompanyClick={() => handleCompanyClick(company.id)} completedTasks={completedTasks} />
-                  </div>
-                );
-              })
+                    return (
+                      <div key={company.id} {...(companyIndex === 0 ? { "data-tour": "first-company-card" } : {})}>
+                        <CompanyCardVariantC company={company} strategyHint={strategyHint} rank={companyIndex + 1} onCompanyClick={() => handleCompanyClick(company.id)} completedTasks={completedTasks} />
+                      </div>
+                    );
+                  });
+
+                  if (cardVariant === "A") {
+                    return (
+                      <div className="border border-core-subtle rounded-[4px] overflow-hidden divide-y divide-core-subtle">
+                        {rows}
+                      </div>
+                    );
+                  }
+
+                  return rows;
+                })()
               )}
              </div>
             </div>
