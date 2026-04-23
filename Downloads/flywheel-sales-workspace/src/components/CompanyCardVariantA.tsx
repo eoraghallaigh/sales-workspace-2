@@ -1,141 +1,206 @@
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Info, Phone, Mail } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { MoreHorizontal } from "lucide-react";
 import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
-import { TrellisIcon } from "@/components/ui/trellis-icon";
-import Tag from "@/components/Tag";
 import { Company } from "@/components/CompanyCard";
+import SnoozeModal from "@/components/SnoozeModal";
 
 interface CompanyCardVariantAProps {
   company: Company;
   strategyHint: string;
+  rank?: number;
   onCompanyClick?: () => void;
   completedTasks?: Set<string>;
 }
 
-const CompanyCardVariantA = ({ company, onCompanyClick }: CompanyCardVariantAProps) => {
+const getWhyNow = (company: Company): string => {
+  const parts: string[] = [];
+  if (company.signals[0]?.text) parts.push(company.signals[0].text);
+  if (company.signals[1]?.text) parts.push(company.signals[1].text);
+  if (parts.length === 0 && company.conversionTrigger) {
+    parts.push(company.conversionTrigger);
+  }
+  return parts.join(" · ") || "Ranked by urgency + account potential";
+};
+
+const getStatusBadge = (
+  status: Company["status"],
+): {
+  label: string;
+  variant: "status-orange" | "status-blue" | "status-yellow" | "status-green" | "status-gray";
+} => {
+  switch (status) {
+    case "New":
+      return { label: "New", variant: "status-blue" };
+    case "Unworked QL":
+      return { label: "QL", variant: "status-orange" };
+    case "Unworked P1":
+      return { label: "Unworked", variant: "status-blue" };
+    case "In Progress":
+      return { label: "In Progress", variant: "status-yellow" };
+    case "Over SLA":
+      return { label: "Over SLA", variant: "status-orange" };
+    case "Worked":
+      return { label: "Worked", variant: "status-green" };
+    case "Snoozed":
+      return { label: "Snoozed", variant: "status-gray" };
+    default:
+      return { label: "Dismissed", variant: "status-gray" };
+  }
+};
+
+const CompanyCardVariantA = ({
+  company,
+  onCompanyClick,
+}: CompanyCardVariantAProps) => {
   const [isDismissModalOpen, setIsDismissModalOpen] = useState(false);
+  const [isSnoozeModalOpen, setIsSnoozeModalOpen] = useState(false);
 
-  const getStatusBadgeVariant = (): { label: string; variant: "status-orange" | "status-blue" | "status-yellow" | "status-green" | "status-gray" } => {
-    switch (company.status) {
-      case "New": return { label: "New", variant: "status-blue" };
-      case "Unworked QL": return { label: "QL", variant: "status-orange" };
-      case "Unworked P1": return { label: "Unworked", variant: "status-blue" };
-      case "In Progress": return { label: "In Progress", variant: "status-yellow" };
-      case "Over SLA": return { label: "Over SLA", variant: "status-orange" };
-      case "Worked": return { label: "Worked", variant: "status-green" };
-      case "Snoozed": return { label: "Snoozed", variant: "status-gray" };
-      default: return { label: "Dismissed", variant: "status-gray" };
-    }
-  };
+  const statusBadge = getStatusBadge(company.status);
 
-  const statusBadge = getStatusBadgeVariant();
   const touchStatuses = [...(company.touches.touchStatuses || [])];
   while (touchStatuses.length < 5) touchStatuses.push("empty");
   const displayedTouchStatuses = touchStatuses.slice(0, 5);
-  const remainingTouches = displayedTouchStatuses.filter(s => s !== "completed").length;
+  const completedCount = displayedTouchStatuses.filter((s) => s === "completed").length;
 
-  const contactCount = company.recommendedContacts.length;
-  const emailsDrafted = contactCount;
-  const callScriptsReady = contactCount;
+  const whyNow = getWhyNow(company);
+
+  const handleRowClick = () => onCompanyClick?.();
+
+  const handleRowKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onCompanyClick?.();
+    }
+  };
 
   return (
-    <Card className="p-8 mb-4 border border-border rounded shadow-100 flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex-1 flex flex-col gap-6">
-          <div className="flex items-center gap-4">
-            <img src={company.logo || companyLogoPlaceholder} alt={`${company.name} logo`} className="w-12 h-12 rounded-full object-cover" />
-            <div className="flex flex-col">
-              <h3 className="heading-300 text-foreground mb-1">{company.name}</h3>
-              <a href={`https://${company.website}`} target="_blank" rel="noopener noreferrer" className="heading-50 text-text-interactive hover:text-text-interactive-hover transition-colors flex items-center gap-1 mb-1">
-                {company.website}
-                <TrellisIcon name="externalLink" size={12} />
-              </a>
-              <p className="body-100 text-muted-foreground flex items-center gap-1">
-                <span>{company.industry ?? "—"}</span>
-                <span>•</span>
-                <span>PVS {company.pvsScore ?? "—"}</span>
-                <span>•</span>
-                <span>{company.conversionTrigger ?? "—"}</span>
-                <Info className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-col items-end gap-2">
-          <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
-          <div className="flex flex-col items-end gap-1">
-            <span className="detail-200 text-muted-foreground">
-              {remainingTouches} more {remainingTouches === 1 ? 'touch' : 'touches'} required before {company.touches.deadline}
-            </span>
-            <div className="flex items-center gap-1.5">
-              {displayedTouchStatuses.map((status, index) => (
-                <div key={index} className={`h-4 w-4 rounded-full ${status === "scheduled" ? "bg-trellis-orange-500" : ""}`}
-                  style={{
-                    background: status === "completed" ? "var(--color-fill-transitional-progress-success-gradient-color-1, #00823A)" : status === "empty" ? "var(--color-fill-surface-recessed, #F0F0F0)" : undefined
-                  }} />
-              ))}
-            </div>
-          </div>
-        </div>
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={handleRowClick}
+      onKeyDown={handleRowKeyDown}
+      className="group flex items-center gap-4 px-4 py-3 bg-card cursor-pointer"
+    >
+      <img
+        src={company.logo || companyLogoPlaceholder}
+        alt={`${company.name} logo`}
+        className="w-9 h-9 rounded-full object-cover flex-shrink-0"
+      />
+
+      <div className="flex-1 min-w-0 flex flex-col">
+        <span className="heading-200 text-text-interactive truncate">
+          {company.name}
+        </span>
+        <span className="body-100 text-muted-foreground truncate">
+          {whyNow}
+        </span>
       </div>
 
-      {/* Strategy Details placeholder */}
-      <div className="bg-fill-surface-recessed rounded-lg px-4 py-3 detail-200 text-muted-foreground text-center max-w-md">
-        Strategy Details (outreach targets, emails drafted, call scripts)
-      </div>
-
-      {/* Signals + Actions */}
-      <div className="flex items-center justify-between">
-        <div className="flex flex-wrap gap-2 flex-1 mr-4">
-          {company.signals.slice(0, 3).map((_, index) => (
-            <div key={index} className="bg-fill-surface-recessed rounded-lg px-3 py-2 detail-200 text-muted-foreground text-center">
-              Intent Signal
-            </div>
+      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+        <div className="flex items-center gap-1.5">
+          {displayedTouchStatuses.map((status, index) => (
+            <div
+              key={index}
+              className="h-3 w-3 rounded-full"
+              style={{
+                background:
+                  status === "completed"
+                    ? "var(--color-fill-transitional-progress-success-gradient-color-1, #00823A)"
+                    : status === "scheduled"
+                      ? "var(--color-fill-transitional-progress-warning, #F5A623)"
+                      : "var(--color-fill-surface-recessed, #F0F0F0)",
+              }}
+            />
           ))}
         </div>
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex min-h-[40px] px-3 justify-center items-center gap-2 rounded border border-transparent bg-transparent heading-50 text-foreground hover:bg-accent/10 transition-colors">
-                Snooze <TrellisIcon name="downCarat" size={12} />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem>1 day</DropdownMenuItem>
-              <DropdownMenuItem>3 days</DropdownMenuItem>
-              <DropdownMenuItem>1 week</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <button className="flex min-h-[40px] px-3 justify-center items-center gap-2 rounded border border-transparent bg-transparent heading-50 text-foreground hover:bg-accent/10 transition-colors" onClick={() => setIsDismissModalOpen(true)}>
-            Dismiss
-          </button>
-          <Button variant="primary" size="medium" onClick={() => onCompanyClick?.()}>
-            Work
-          </Button>
-        </div>
+        <span className="detail-200 text-muted-foreground">
+          {completedCount}/5 · due {company.touches.deadline}
+        </span>
       </div>
 
-      {/* Dismiss Modal */}
+      <Badge variant={statusBadge.variant} className="flex-shrink-0">
+        {statusBadge.label}
+      </Badge>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="flex-shrink-0 h-9 w-9"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsSnoozeModalOpen(true);
+            }}
+          >
+            Snooze
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsDismissModalOpen(true);
+            }}
+          >
+            Dismiss
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <SnoozeModal
+        open={isSnoozeModalOpen}
+        onOpenChange={setIsSnoozeModalOpen}
+        companyName={company.name}
+      />
+
       <Dialog open={isDismissModalOpen} onOpenChange={setIsDismissModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>Dismiss {company.name}?</DialogTitle></DialogHeader>
+        <DialogContent
+          className="sm:max-w-md"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <DialogHeader>
+            <DialogTitle>Dismiss {company.name}?</DialogTitle>
+          </DialogHeader>
           <div className="flex flex-col gap-4">
-            <p className="body-100 text-foreground">This will remove {company.name} from your P1 list until someone at {company.name} shows high intent again.</p>
-            <p className="body-100 text-foreground">You can view your dismissed companies using the "Worked Status" selector.</p>
+            <p className="body-100 text-foreground">
+              This will remove {company.name} from your P1 list until someone at {company.name} shows high intent again.
+            </p>
+            <p className="body-100 text-foreground">
+              You can view your dismissed companies using the "Worked Status" selector.
+            </p>
           </div>
           <DialogFooter className="sm:justify-start gap-2">
-            <Button variant="destructive" onClick={() => setIsDismissModalOpen(false)}>Dismiss {company.name}</Button>
-            <Button variant="outline" onClick={() => setIsDismissModalOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => setIsDismissModalOpen(false)}>
+              Dismiss {company.name}
+            </Button>
+            <Button variant="outline" onClick={() => setIsDismissModalOpen(false)}>
+              Cancel
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Card>
+    </div>
   );
 };
 
