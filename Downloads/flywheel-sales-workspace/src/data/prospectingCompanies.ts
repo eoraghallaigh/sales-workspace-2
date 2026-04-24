@@ -57,7 +57,7 @@ const aggregateSignals = (contacts: Array<{ signals: SignalType[] }>): SignalTyp
 // Pre-defined contact signal combinations for each company (randomized, max 2 per contact)
 const company1Contacts = [
   { id: "c1", name: "Jennifer Park", initials: "JP", role: "VP, Marketing", avatarColor: "bg-trellis-purple-600", recentTouches: 1, enrolledInSequence: true, recentConversions: 1, signals: [SIGNALS.COMPETITIVE_RENEWAL, SIGNALS.NON_QL_DEMAND] },
-  { id: "c2", name: "Keisha Blue", initials: "KB", role: "Marketing Director", avatarColor: "bg-trellis-blue-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [SIGNALS.RECENT_FUNDING] },
+  { id: "c2", name: "Keisha Blue", initials: "KB", role: "Marketing Director", avatarColor: "bg-trellis-blue-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [SIGNALS.RECENT_FUNDING], hasPhone: false },
   { id: "c3", name: "Elowen Green", initials: "EG", role: "Head of Product", avatarColor: "bg-trellis-green-600", recentTouches: 0, enrolledInSequence: true, recentConversions: 2, signals: [SIGNALS.THIRD_PARTY_INTENT] },
   { id: "c1a", name: "Marcus Chen", initials: "MC", role: "Sr. Product Manager", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: getRandomEnrollment(), recentConversions: 0, signals: [SIGNALS.MARKETING_HUB_QL] },
   { id: "c1b", name: "Diana Ross", initials: "DR", role: "Content Lead", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: getRandomEnrollment(), recentConversions: 1, signals: [] },
@@ -70,7 +70,7 @@ const company2Contacts = [
   { id: "c5", name: "Tom Williams", initials: "TW", role: "CTO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), recentConversions: 0, signals: [SIGNALS.NON_QL_DEMAND, SIGNALS.RECENT_FUNDING] },
   { id: "c5a", name: "Priya Sharma", initials: "PS", role: "VP Engineering", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), recentConversions: 0, signals: [SIGNALS.THIRD_PARTY_INTENT] },
   { id: "c5b", name: "Kevin O'Malley", initials: "KO", role: "Head of Sales", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), recentConversions: 1, signals: [SIGNALS.COMPETITIVE_RENEWAL] },
-  { id: "c5c", name: "Mei Lin", initials: "ML", role: "Product Manager", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), recentConversions: 0, signals: [] },
+  { id: "c5c", name: "Mei Lin", initials: "ML", role: "Product Manager", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), recentConversions: 0, signals: [], hasPhone: false },
   { id: "c5d", name: "Robert Chang", initials: "RC", role: "Director of IT", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), recentConversions: 0, signals: [SIGNALS.RECENT_FUNDING] },
 ];
 
