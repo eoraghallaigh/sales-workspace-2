@@ -193,7 +193,7 @@ const ProspectingStrategy = () => {
           </nav>
 
           {/* Middle + Right columns wrapper */}
-          <div className="flex flex-1 overflow-hidden relative">
+          <div className="flex flex-1 overflow-hidden relative max-w-[1600px]">
             {/* Transition loading overlay */}
             {isTransitioning && (
               <div className="absolute inset-0 z-40 bg-card flex items-center justify-center animate-fade-in">
@@ -205,7 +205,7 @@ const ProspectingStrategy = () => {
             )}
 
           {/* Middle column - Strategy content */}
-          <div className={`flex-[3] overflow-y-auto pl-12 pt-12 pb-12 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+          <div className={`flex-[3] overflow-y-auto px-12 pt-12 pb-12 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
             <div data-tour="strategy-company-card" className="bg-fill-secondary rounded-300 border border-core-subtle shadow-100 overflow-hidden flex flex-col gap-12">
             {/* Company header */}
             <div className="px-6 pt-4 pb-0">
@@ -276,26 +276,8 @@ const ProspectingStrategy = () => {
                   </CollapsibleContent>
                 </Collapsible>
 
-                {/* Recent Company News & Triggers */}
-                <Collapsible defaultOpen className="mb-12">
-                  <CollapsibleTrigger className="flex items-center gap-2 w-full group">
-                    <TrellisIcon name="downCarat" size={12} className="text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
-                    <h3 className="heading-200 text-foreground">Recent Company News & Triggers</h3>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-3">
-                    <p className="heading-50 text-foreground mb-1">{strategy.recentNews.title}</p>
-                    <p className="body-100 text-foreground leading-relaxed">
-                      {strategy.recentNews.description}
-                    </p>
-                    <h4 className="heading-50 text-foreground mt-4 mb-1">Strategic Integration of Empowering Systems</h4>
-                    <p className="body-100 text-foreground leading-relaxed">
-                      {strategy.strategicIntegration}
-                    </p>
-                  </CollapsibleContent>
-                </Collapsible>
-
                 {/* Outreach Targets */}
-                <Collapsible defaultOpen className="mb-8">
+                <Collapsible defaultOpen className="mb-12">
                   <CollapsibleTrigger className="flex items-center gap-2 w-full group">
                     <TrellisIcon name="downCarat" size={12} className="text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
                     <h3 className="heading-200 text-foreground">Outreach Targets</h3>
@@ -527,6 +509,24 @@ const ProspectingStrategy = () => {
 
                       })}
                     <TextEditPopup containerRef={outreachContainerRef} />
+                  </CollapsibleContent>
+                </Collapsible>
+
+                {/* Recent Company News & Triggers */}
+                <Collapsible defaultOpen className="mb-8">
+                  <CollapsibleTrigger className="flex items-center gap-2 w-full group">
+                    <TrellisIcon name="downCarat" size={12} className="text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
+                    <h3 className="heading-200 text-foreground">Recent Company News & Triggers</h3>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-3">
+                    <p className="heading-50 text-foreground mb-1">{strategy.recentNews.title}</p>
+                    <p className="body-100 text-foreground leading-relaxed">
+                      {strategy.recentNews.description}
+                    </p>
+                    <h4 className="heading-50 text-foreground mt-4 mb-1">Strategic Integration of Empowering Systems</h4>
+                    <p className="body-100 text-foreground leading-relaxed">
+                      {strategy.strategicIntegration}
+                    </p>
                   </CollapsibleContent>
                 </Collapsible>
               </TabsContent>
