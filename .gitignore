@@ -1,0 +1,6 @@
+# Playwright MCP session artifacts (screenshots, console logs, page snapshots)
+.playwright-mcp/
+
+# Ad-hoc screenshots dropped at repo root during design iteration
+/breeze-*.png
+/strategy-*.png
