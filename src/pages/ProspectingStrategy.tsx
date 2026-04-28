@@ -205,7 +205,7 @@ const ProspectingStrategy = () => {
             )}
 
           {/* Middle column - Strategy content */}
-          <div className={`flex-[3] overflow-y-auto px-12 pt-12 pb-12 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+          <div className={`flex-[3] overflow-y-auto pl-12 pr-6 pt-12 pb-12 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
             <div data-tour="strategy-company-card" className="bg-fill-secondary rounded-300 border border-core-subtle shadow-100 overflow-hidden flex flex-col gap-12">
             {/* Company header */}
             <div className="px-6 pt-4 pb-0">
@@ -551,7 +551,7 @@ const ProspectingStrategy = () => {
           </div>
 
           {/* Right column - Contact details panel */}
-          <div className={`flex-[2] p-12 shrink-0 overflow-y-auto transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+          <div className={`flex-[2] py-12 pl-6 pr-12 shrink-0 overflow-y-auto transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
             <div className="space-y-6">
               {outreachTargets.map((contact, index) => {
                 const contactDetail = contactDetails[contact.id];
