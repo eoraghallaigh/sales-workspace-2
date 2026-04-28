@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Star, ThumbsUp, ThumbsDown, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
@@ -62,14 +63,12 @@ const ExplanationContent = ({ selectedText }: { selectedText: string }) => (
 );
 
 const EmptyState = () => (
-  <div className="flex h-full items-end pb-2">
-    <h1
-      className="bg-clip-text text-transparent font-medium leading-[1.15] text-[32px]"
-      style={{ backgroundImage: "linear-gradient(135deg, #FF4800 0%, #FB31A7 100%)" }}
-    >
-      <span>Hi Eoin,<br />how can I help you?</span>
-    </h1>
-  </div>
+  <h1
+    className="bg-clip-text text-transparent font-medium leading-[1.15] text-[32px]"
+    style={{ backgroundImage: "linear-gradient(135deg, #FF4800 0%, #FB31A7 100%)" }}
+  >
+    <span>Hi Eoin,<br />how can I help you?</span>
+  </h1>
 );
 
 export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => {
@@ -77,12 +76,19 @@ export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => 
   const [showProjectsUpsell, setShowProjectsUpsell] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  if (!isOpen) return null;
-
   const canSend = inputValue.trim().length > 0;
 
   return (
-    <div className="fixed top-12 right-0 w-96 h-[calc(100vh-48px)] bg-card border-l border-border shadow-lg z-40 flex flex-col">
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          key="chat-panel"
+          initial={{ x: "100%" }}
+          animate={{ x: 0 }}
+          exit={{ x: "100%" }}
+          transition={{ type: "spring", stiffness: 320, damping: 34, mass: 0.9 }}
+          className="fixed top-12 right-0 w-96 h-[calc(100vh-48px)] bg-card border-l border-border shadow-lg z-40 flex flex-col"
+        >
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <a
           href="#"
@@ -102,16 +108,19 @@ export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => 
             <TrellisIcon name="expand" size={16} />
           </Button>
           <Button variant="ghost" size="sm" onClick={onClose} className="p-2 h-8 w-8" aria-label="Close Assistant">
-            <TrellisIcon name="x" size={16} />
+            <TrellisIcon name="remove" size={16} />
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pt-8 pb-4">
-        {selectedText ? <ExplanationContent selectedText={selectedText} /> : <EmptyState />}
-      </div>
+      {selectedText && (
+        <div className="flex-1 overflow-y-auto px-6 pt-8 pb-4">
+          <ExplanationContent selectedText={selectedText} />
+        </div>
+      )}
 
-      <div className="px-5 pt-2 space-y-5">
+      <div className={`px-5 space-y-5 ${selectedText ? "pt-2" : "my-auto"}`}>
+        {!selectedText && <div className="px-1"><EmptyState /></div>}
         <div className="relative rounded-[20px] border border-border bg-card focus-within:border-neutral-400 transition-colors">
           <div className="px-4 pt-4 pb-3">
             <textarea
@@ -203,7 +212,7 @@ export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => 
               aria-label="Dismiss"
               className="absolute top-3 right-3 p-1 rounded hover:bg-muted transition-colors"
             >
-              <TrellisIcon name="x" size={12} />
+              <TrellisIcon name="remove" size={12} />
             </button>
           </div>
         )}
@@ -212,6 +221,8 @@ export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => 
       <div className="px-5 pt-10 pb-4 text-center">
         <small className="body-100 text-muted-foreground">AI-generated content may be inaccurate.</small>
       </div>
-    </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
