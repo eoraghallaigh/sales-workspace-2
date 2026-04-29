@@ -23,6 +23,7 @@ import ContactDetailSections from "@/components/ContactDetailSections";
 import { calculateCompanyStatus } from "@/utils/companyStatusUtils";
 import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { TextEditPopup } from "@/components/TextEditPopup";
+import PreviousDealCard, { PreviousDeal } from "@/components/PreviousDealCard";
 
 import { companyStrategies, defaultStrategy } from "@/data/companyStrategies";
 
@@ -939,8 +940,44 @@ const ProspectingStrategy = () => {
                 })()}
               </TabsContent>
 
-              <TabsContent value="deals" className="px-6 py-6 mt-0">
-                <p className="body-100 text-muted-foreground">Deals content coming soon.</p>
+              <TabsContent value="deals" className="px-6 pt-6 pb-6 mt-0">
+                <div className="flex flex-col gap-6 items-center">
+                  {(
+                    [
+                      {
+                        name: `${currentCompany.name} - New Pro Deal`,
+                        amount: "$10,000",
+                        closeDate: "Dec 31, 2024",
+                        stage: "Closed Lost",
+                        stageIndex: 5,
+                        totalStages: 7,
+                        footer: "Deal with Primary Company",
+                      },
+                      {
+                        name: `${currentCompany.name} - Starter Renewal`,
+                        amount: "$2,400",
+                        closeDate: "Jun 14, 2024",
+                        stage: "Closed Won",
+                        stageIndex: 6,
+                        totalStages: 7,
+                        footer: "Deal with Primary Company",
+                      },
+                      {
+                        name: `${currentCompany.name} - Marketing Hub Expansion`,
+                        amount: "$6,800",
+                        closeDate: "Feb 02, 2024",
+                        stage: "Closed Won",
+                        stageIndex: 6,
+                        totalStages: 7,
+                        footer: "Deal with Primary Company",
+                      },
+                    ] as PreviousDeal[]
+                  ).map((deal) => (
+                    <div key={deal.name} className="w-full max-w-[600px]">
+                      <PreviousDealCard deal={deal} />
+                    </div>
+                  ))}
+                </div>
               </TabsContent>
 
               <TabsContent value="notes" className="px-6 py-6 mt-0">
