@@ -45,8 +45,21 @@ const ProspectingStrategy = () => {
     return (localStorage.getItem("callScriptMode") as "script" | "bullets") || "script";
   });
   const outreachContainerRef = useRef<HTMLDivElement>(null);
+  const tabsListRef = useRef<HTMLDivElement>(null);
+  const [tabIndicator, setTabIndicator] = useState({ left: 0, width: 0 });
+  const [companyDataSearch, setCompanyDataSearch] = useState("");
+  const [hideBlankProperties, setHideBlankProperties] = useState(false);
+  const [expandedPropertyGroups, setExpandedPropertyGroups] = useState<Record<string, boolean>>({});
   const [isTransitioning, setIsTransitioning] = useState(false);
   const prevCompanyIdRef = useRef(companyId);
+
+  useEffect(() => {
+    const list = tabsListRef.current;
+    if (!list) return;
+    const active = list.querySelector<HTMLElement>('[data-state="active"]');
+    if (!active) return;
+    setTabIndicator({ left: active.offsetLeft, width: active.offsetWidth });
+  }, [activeTab]);
 
   useEffect(() => {
     if (prevCompanyIdRef.current !== companyId) {
@@ -242,20 +255,32 @@ const ProspectingStrategy = () => {
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="w-full justify-start border-b-0 rounded-none bg-transparent px-6 h-auto gap-0">
+              <div className="px-6">
+              <TabsList ref={tabsListRef} className="relative w-full justify-start border-b border-border-subtle rounded-none bg-transparent px-0 h-auto gap-0">
                 {["Strategy", "Company Data", "Activity", `Deals (${currentCompanyDetails?.deals?.length || 0})`, "Notes"].map((tab) => {
                     const tabValue = tab.toLowerCase().split(" ")[0].replace("(", "");
                     return (
                       <TabsTrigger
                         key={tab}
                         value={tabValue === "deals" ? "deals" : tabValue}
-                        className="rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 heading-50 text-muted-foreground data-[state=active]:text-foreground">
-                        
+                        className="rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-transparent px-4 py-3 heading-50 text-muted-foreground data-[state=active]:text-foreground">
+
                       {tab}
                     </TabsTrigger>);
 
                   })}
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute bottom-0 h-[3px] rounded-full bg-[var(--color-fill-primary-default,#141414)]"
+                  style={{
+                    left: tabIndicator.left + 8,
+                    width: Math.max(tabIndicator.width - 16, 0),
+                    transition: "left 200ms cubic-bezier(0.33, 0, 0.4, 1), width 200ms cubic-bezier(0.33, 0, 0.4, 1)",
+                    opacity: tabIndicator.width > 0 ? 1 : 0,
+                  }}
+                />
               </TabsList>
+              </div>
 
               <TabsContent value="strategy" className="px-6 pt-12 pb-6 mt-0">
                 {/* Business Intelligence */}
@@ -531,12 +556,387 @@ const ProspectingStrategy = () => {
                 </Collapsible>
               </TabsContent>
 
-              <TabsContent value="company" className="px-6 py-6 mt-0">
-                <p className="body-100 text-muted-foreground">Company data content coming soon.</p>
+              <TabsContent value="company" className="px-6 pt-6 pb-6 mt-0">
+                {(() => {
+                  type Property = { label: string; value?: string };
+                  type PropertyGroup = { id: string; label: string; properties: Property[] };
+                  const propertyGroups: PropertyGroup[] = [
+                    { id: "company-information", label: "Company Information", properties: Array.from({ length: 479 }, (_, i) => ({ label: `Company info property ${i + 1}` })) },
+                    { id: "revenue-product-group", label: "Revenue Product Group", properties: Array.from({ length: 104 }, (_, i) => ({ label: `Revenue property ${i + 1}` })) },
+                    { id: "zoominfo", label: "ZoomInfo", properties: Array.from({ length: 50 }, (_, i) => ({ label: `ZoomInfo property ${i + 1}` })) },
+                    { id: "delete", label: "Delete | These properties will be deleted", properties: Array.from({ length: 40 }, (_, i) => ({ label: `Deprecated property ${i + 1}` })) },
+                    {
+                      id: "prospecting-signals",
+                      label: "Prospecting Signals",
+                      properties: [
+                        { label: "3rd Party Intent Summary" },
+                        { label: "BDR Lead Status" },
+                        {
+                          label: "Compelling Reasons to Reach Out · Summary",
+                          value:
+                            "A prospect interacted with HubSpot's product page and completed a signup event on August 7, 2024. They also researched a competitor's offering shortly after.",
+                        },
+                        {
+                          label: "Compelling Reasons to Reach Out – Details",
+                          value:
+                            "- Downloaded free guide on ChatGPT at work on 2026-04-08.\n- Visited offer page about ChatGPT at work on 2026-04-08.\n- Research on Zoho's offerings occurred on 2026-02-17.",
+                        },
+                        {
+                          label: "Compelling Reasons to Reach Out · Summary",
+                          value: "Prospect engaged with HubSpot content related to ChatGPT usage at work.",
+                        },
+                        { label: "Content Hub Intent Signal", value: "ai content generation, ai content generation tools, ai generated content, ai search, copilot" },
+                        { label: "Content Hub Intent Signal Date", value: "18/05/2026" },
+                        { label: "CRM Intent Signal", value: "ai chatbot, crm, content experience, zoho" },
+                        { label: "CRM Intent Signal Date", value: "16/04/2026" },
+                        { label: "Q2 CMS Hub Buying Stage" },
+                        { label: "Q2 CMS Hub Most Recent Visit Date" },
+                        { label: "Q2 Marketing Hub Buying Stage", value: "Awareness" },
+                        { label: "Q2 Marketing Hub Most Recent Visit Date", value: "27/08/2025" },
+                        { label: "Q2 Operations Hub Buying Stage" },
+                      ],
+                    },
+                    { id: "company-lcs", label: "Company lifecycle stage properties", properties: Array.from({ length: 34 }, (_, i) => ({ label: `Lifecycle property ${i + 1}` })) },
+                    { id: "partner-channel", label: "Partner/Channel Info", properties: Array.from({ length: 28 }, (_, i) => ({ label: `Partner property ${i + 1}` })) },
+                    { id: "hsfs", label: "HubSpot For Startups (HSFS)", properties: Array.from({ length: 27 }, (_, i) => ({ label: `HSFS property ${i + 1}` })) },
+                  ];
+
+                  const query = (companyDataSearch || "").trim().toLowerCase();
+                  const matches = (text: string) => text.toLowerCase().includes(query);
+
+                  const filteredGroups = propertyGroups
+                    .map((group) => {
+                      const matchingProps = group.properties.filter((p) => {
+                        if (hideBlankProperties && !p.value) return false;
+                        if (!query) return true;
+                        return matches(p.label) || (p.value ? matches(p.value) : false);
+                      });
+                      const groupMatchesQuery = !query || matches(group.label);
+                      const visibleProps =
+                        query && !groupMatchesQuery
+                          ? matchingProps
+                          : hideBlankProperties
+                            ? group.properties.filter((p) => !!p.value)
+                            : group.properties;
+                      const totalCount = hideBlankProperties ? group.properties.filter((p) => !!p.value).length : group.properties.length;
+                      const isMatch = groupMatchesQuery || matchingProps.length > 0;
+                      return { ...group, visibleProps, totalCount, isMatch };
+                    })
+                    .filter((g) => g.isMatch && (!hideBlankProperties || g.totalCount > 0));
+
+                  return (
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="relative flex-1">
+                          <input
+                            type="search"
+                            value={companyDataSearch}
+                            onChange={(e) => setCompanyDataSearch(e.target.value)}
+                            placeholder="Search"
+                            className="w-full h-9 px-3 pr-8 rounded-200 border border-core-subtle bg-fill-surface body-100 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                          />
+                          <TrellisIcon name="search" size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                        </div>
+                        <button className="body-100 text-[var(--color-text-interactive-default)] hover:underline whitespace-nowrap flex items-center gap-1">
+                          Manage properties
+                          <TrellisIcon name="externalLink" size={12} />
+                        </button>
+                        <label className="flex items-center gap-2 body-100 text-foreground whitespace-nowrap cursor-pointer">
+                          <Checkbox
+                            checked={hideBlankProperties}
+                            onCheckedChange={(checked) => setHideBlankProperties(checked === true)}
+                          />
+                          Hide blank properties
+                        </label>
+                      </div>
+
+                      <div className="flex flex-col">
+                        {filteredGroups.length === 0 && (
+                          <p className="body-100 text-muted-foreground py-4">No properties match "{companyDataSearch}".</p>
+                        )}
+                        {filteredGroups.map((group) => {
+                          const forceOpen = !!query && group.visibleProps.length > 0 && group.visibleProps.length < group.properties.length;
+                          const isOpen = forceOpen || (expandedPropertyGroups[group.id] ?? group.id === "prospecting-signals");
+                          return (
+                            <Collapsible
+                              key={group.id}
+                              open={isOpen}
+                              onOpenChange={(open) => setExpandedPropertyGroups((prev) => ({ ...prev, [group.id]: open }))}
+                              className="border-b border-border-subtle"
+                            >
+                              <CollapsibleTrigger className="flex items-center gap-2 w-full text-left py-3 group">
+                                <TrellisIcon
+                                  name="downCarat"
+                                  size={12}
+                                  className="text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90"
+                                />
+                                <h4 className="heading-100 text-foreground">{group.label}</h4>
+                                <span className="detail-200 text-muted-foreground">{group.totalCount} properties</span>
+                              </CollapsibleTrigger>
+                              <CollapsibleContent className="pb-4 pl-5">
+                                <div className="flex flex-col gap-4">
+                                  {group.visibleProps.slice(0, 50).map((prop, idx) => (
+                                    <div key={`${group.id}-${idx}`} className="flex flex-col gap-1">
+                                      <div className="detail-200 text-muted-foreground">{prop.label}</div>
+                                      <div className="body-100 text-foreground whitespace-pre-line">
+                                        {prop.value ?? "--"}
+                                      </div>
+                                    </div>
+                                  ))}
+                                  {group.visibleProps.length > 50 && (
+                                    <div className="detail-200 text-muted-foreground">+ {group.visibleProps.length - 50} more</div>
+                                  )}
+                                </div>
+                              </CollapsibleContent>
+                            </Collapsible>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
               </TabsContent>
 
-              <TabsContent value="activity" className="px-6 py-6 mt-0">
-                <p className="body-100 text-muted-foreground">Activity content coming soon.</p>
+              <TabsContent value="activity" className="px-6 pt-12 pb-6 mt-0">
+                {(() => {
+                  type EmailItem = {
+                    type: "email";
+                    id: string;
+                    subject: string;
+                    from: string;
+                    to: string;
+                    timestamp: string;
+                    threadCount: number;
+                    preview: string;
+                    expanded: string;
+                    opens?: number;
+                    clicks?: number;
+                  };
+                  type CallItem = {
+                    type: "call";
+                    id: string;
+                    title: string;
+                    by: string;
+                    withWhom?: string;
+                    timestamp: string;
+                    outcome: string;
+                    callType: string;
+                    direction: string;
+                    duration?: string;
+                    contactsLabel: string;
+                    associations: string;
+                    notes?: string;
+                  };
+                  type ActivityItem = EmailItem | CallItem;
+
+                  const sections: { label: string; items: ActivityItem[] }[] = [
+                    {
+                      label: "April 2026",
+                      items: [
+                        {
+                          type: "email",
+                          id: "act-1",
+                          subject: "Email - HubSpot - Pricing Clarity",
+                          from: "Dan Taft",
+                          to: "Vivek Sharma",
+                          timestamp: "27 Apr 2026 at 15:34 GMT+2",
+                          threadCount: 3,
+                          preview: "Hi Vivek,\n\nI appreciate that when you first sign up for HubSpot, it can be a bit shocking.",
+                          expanded: "Hi Vivek,\n\nI appreciate that when you first sign up for HubSpot, it can be a bit shocking.\n\nThis system doesn't look complex. How much can I customize? Where should I start?\n\nThis 1:30 second video from Salesforce CRM power users detailing their experience with both platforms may help: CRM Upgraded: See Your Full Business with HubSpot.\n\nI'm also happy to chat to better understand your business and see if HubSpot fits your needs. Are you open to connecting?\n\nDan Taft\nGrowth Specialist, HubSpot",
+                        },
+                        {
+                          type: "email",
+                          id: "act-2",
+                          subject: "Email - quick question",
+                          from: "Dan Taft",
+                          to: "Jessica Busch",
+                          timestamp: "24 Apr 2026 at 19:09 GMT+2",
+                          threadCount: 2,
+                          preview: "A quick thing we're seeing: what shows up in ChatGPT is often different from what from Google. This means you could be missing out on high-value leads that are relying on AI tools.\n\nAre you aware of how this has impacted your brand recognition?",
+                          expanded: "A quick thing we're seeing: what shows up in ChatGPT is often different from what from Google. This means you could be missing out on high-value leads that are relying on AI tools.\n\nAre you aware of how this has impacted your brand recognition? Happy to share what we're seeing for a few companies in your space if useful.\n\nDan Taft\nGrowth Specialist, HubSpot",
+                          opens: 1,
+                          clicks: 1,
+                        },
+                        {
+                          type: "email",
+                          id: "act-3",
+                          subject: "Email - HubSpot - Pricing Clarity",
+                          from: "Dan Taft",
+                          to: "Vivek Sharma",
+                          timestamp: "22 Apr 2026 at 16:16 GMT+2",
+                          threadCount: 3,
+                          preview: "Hi Vivek,\n\nWould a brief chat with the below agenda be a waste of time?",
+                          expanded: "Hi Vivek,\n\nWould a brief chat with the below agenda be a waste of time?\n\n• A quick walkthrough of where HubSpot fits with your current stack\n• Pricing clarity on the bundles that map to your team size\n• Examples from similar companies that recently moved over\n\nLet me know what works — happy to keep it to 20 minutes.\n\nDan Taft\nGrowth Specialist, HubSpot",
+                          opens: 2,
+                          clicks: 0,
+                        },
+                      ],
+                    },
+                    {
+                      label: "February 2026",
+                      items: [
+                        {
+                          type: "call",
+                          id: "act-4",
+                          title: "Logged call - Connected",
+                          by: "Michelle Harkin",
+                          timestamp: "11 Feb 2026 at 16:14 GMT+1",
+                          outcome: "Connected",
+                          callType: "IMA",
+                          direction: "Select call direction",
+                          contactsLabel: "0 contacts",
+                          associations: "2 associations",
+                        },
+                        {
+                          type: "call",
+                          id: "act-5",
+                          title: "Call - Connected",
+                          by: "Michelle Harkin",
+                          withWhom: "Austen Sanders",
+                          timestamp: "11 Feb 2026 at 16:05 GMT+1",
+                          outcome: "Connected",
+                          callType: "None",
+                          direction: "Outbound",
+                          duration: "7:25",
+                          contactsLabel: "1 contact",
+                          associations: "3 associations",
+                          notes: "mid june/ july\ntoo many issues\nusing it for recruitment and sales\nmain issues: over complicated/ back end issues\none of my bd's contacting pot. client\nbincherry\n3 BD's x 1 = 4 users\nupfront 5700 p/ year\n750 each\nvinchere",
+                        },
+                      ],
+                    },
+                  ];
+
+                  return sections.map((section) => (
+                    <div key={section.label} className="mb-8">
+                      <h3 className="heading-200 text-foreground mb-4">{section.label}</h3>
+                      <div className="space-y-3">
+                        {section.items.map((item) => {
+                          const isOpen = expandedEmails[item.id] ?? false;
+                          const onOpenChange = (open: boolean) =>
+                            setExpandedEmails((prev) => ({ ...prev, [item.id]: open }));
+
+                          if (item.type === "email") {
+                            return (
+                              <Collapsible
+                                key={item.id}
+                                open={isOpen}
+                                onOpenChange={onOpenChange}
+                                className="bg-fill-tertiary border border-core-subtle rounded-300"
+                              >
+                                <CollapsibleTrigger className="w-full text-left px-4 py-3 group">
+                                  <div className="flex items-start justify-between gap-4">
+                                    <div className="flex items-start gap-2 min-w-0 flex-1">
+                                      <TrellisIcon
+                                        name="downCarat"
+                                        size={12}
+                                        className="text-muted-foreground mt-1.5 transition-transform group-data-[state=closed]:-rotate-90"
+                                      />
+                                      <div className="min-w-0 flex-1">
+                                        <div className="body-100 text-foreground">
+                                          <strong className="heading-50">{item.subject}</strong> from {item.from}
+                                        </div>
+                                        <div className="body-100 text-foreground mt-1">to {item.to}</div>
+                                        <div className="flex items-center gap-2 detail-200 text-muted-foreground mt-3">
+                                          <div className={`h-2.5 w-2.5 rounded-full ${item.opens && item.opens > 0 ? "bg-trellis-green-600" : "bg-muted-foreground"}`} />
+                                          {item.opens && item.opens > 0
+                                            ? `Opens: ${item.opens}   Clicks: ${item.clicks ?? 0}`
+                                            : "Sent"}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      <TrellisIcon name="email" size={12} className="text-muted-foreground" />
+                                      <span className="detail-100 text-muted-foreground">{item.threadCount}</span>
+                                      <span className="detail-100 text-muted-foreground ml-2">{item.timestamp}</span>
+                                    </div>
+                                  </div>
+                                  {!isOpen && (
+                                    <p className="body-100 text-foreground mt-3 ml-5 whitespace-pre-line line-clamp-3">
+                                      {item.preview}
+                                    </p>
+                                  )}
+                                </CollapsibleTrigger>
+                                <CollapsibleContent className="px-4 pb-4 ml-5">
+                                  <p className="body-100 text-foreground whitespace-pre-line leading-relaxed">
+                                    {item.expanded}
+                                  </p>
+                                </CollapsibleContent>
+                              </Collapsible>
+                            );
+                          }
+
+                          return (
+                            <Collapsible
+                              key={item.id}
+                              open={isOpen}
+                              onOpenChange={onOpenChange}
+                              className="bg-fill-tertiary border border-core-subtle rounded-300"
+                            >
+                              <CollapsibleTrigger className="w-full text-left px-4 py-3 group">
+                                <div className="flex items-start justify-between gap-4">
+                                  <div className="flex items-start gap-2 min-w-0 flex-1">
+                                    <TrellisIcon
+                                      name="downCarat"
+                                      size={12}
+                                      className="text-muted-foreground mt-1.5 transition-transform group-data-[state=closed]:-rotate-90"
+                                    />
+                                    <div className="min-w-0 flex-1">
+                                      <div className="body-100 text-foreground">
+                                        <strong className="heading-50">{item.title}</strong> by {item.by}
+                                      </div>
+                                      {item.withWhom && (
+                                        <div className="detail-100 text-muted-foreground mt-1">with {item.withWhom}</div>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <TrellisIcon name="calling" size={12} className="text-muted-foreground" />
+                                    <span className="detail-100 text-muted-foreground ml-2">{item.timestamp}</span>
+                                  </div>
+                                </div>
+                              </CollapsibleTrigger>
+                              <CollapsibleContent className="px-4 pb-4 ml-5">
+                                {item.notes && (
+                                  <p className="body-100 text-foreground whitespace-pre-line leading-relaxed mb-4">
+                                    {item.notes}
+                                  </p>
+                                )}
+                                <div className="flex flex-wrap gap-x-8 gap-y-3 pt-3 border-t border-border-subtle">
+                                  <div className="flex flex-col">
+                                    <span className="detail-100 text-muted-foreground">Contacted</span>
+                                    <span className="body-100 text-foreground">{item.contactsLabel}</span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="detail-100 text-muted-foreground">Outcome</span>
+                                    <span className="body-100 text-foreground">{item.outcome}</span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="detail-100 text-muted-foreground">Type</span>
+                                    <span className="body-100 text-foreground">{item.callType}</span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="detail-100 text-muted-foreground">Direction</span>
+                                    <span className="body-100 text-foreground">{item.direction}</span>
+                                  </div>
+                                  {item.duration && (
+                                    <div className="flex flex-col">
+                                      <span className="detail-100 text-muted-foreground">Duration</span>
+                                      <span className="body-100 text-foreground">{item.duration}</span>
+                                    </div>
+                                  )}
+                                  <div className="flex flex-col ml-auto">
+                                    <span className="detail-100 text-muted-foreground">&nbsp;</span>
+                                    <span className="detail-100 text-muted-foreground">{item.associations}</span>
+                                  </div>
+                                </div>
+                              </CollapsibleContent>
+                            </Collapsible>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ));
+                })()}
               </TabsContent>
 
               <TabsContent value="deals" className="px-6 py-6 mt-0">
