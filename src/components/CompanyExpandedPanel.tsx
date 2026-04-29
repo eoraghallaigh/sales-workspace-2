@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import Tag from "@/components/Tag";
 import CollapsibleSection from "@/components/CollapsibleSection";
+import PreviousDealCard, { PreviousDeal } from "@/components/PreviousDealCard";
 import { Company } from "@/components/CompanyCard";
 import { CompanyDetail } from "@/data/companyDetails";
 import { ContactDetail } from "@/data/contactDetails";
@@ -306,7 +307,41 @@ const CompanyExpandedPanel = ({
             <div className="px-6 py-6">
               <Card className="p-5 mb-6">
                 <CollapsibleSection title="Deals">
-                  <SkeletonBlock />
+                  <div className="flex flex-col gap-3">
+                    {(
+                      [
+                        {
+                          name: `${company.name} - New Pro Deal`,
+                          amount: "$10,000",
+                          closeDate: "Dec 31, 2024",
+                          stage: "Closed Lost",
+                          stageIndex: 5,
+                          totalStages: 7,
+                          footer: "Deal with Primary Company",
+                        },
+                        {
+                          name: `${company.name} - Starter Renewal`,
+                          amount: "$2,400",
+                          closeDate: "Jun 14, 2024",
+                          stage: "Closed Won",
+                          stageIndex: 6,
+                          totalStages: 7,
+                          footer: "Deal with Primary Company",
+                        },
+                        {
+                          name: `${company.name} - Marketing Hub Expansion`,
+                          amount: "$6,800",
+                          closeDate: "Feb 02, 2024",
+                          stage: "Closed Won",
+                          stageIndex: 6,
+                          totalStages: 7,
+                          footer: "Deal with Primary Company",
+                        },
+                      ] as PreviousDeal[]
+                    ).map((deal) => (
+                      <PreviousDealCard key={deal.name} deal={deal} />
+                    ))}
+                  </div>
                 </CollapsibleSection>
               </Card>
 
