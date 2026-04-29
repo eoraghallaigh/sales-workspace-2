@@ -3,30 +3,54 @@ import { TrellisIcon } from "./ui/trellis-icon";
 
 export const LeftNavigation = () => {
   const location = useLocation();
-  return <nav className="fixed left-0 top-12 w-16 h-[calc(100vh-48px)] bg-trellis-magenta-1400 border-r  z-40 flex flex-col items-center py-4 space-y-4" onWheel={(e) => e.stopPropagation()}>
-      <Link to="/" className={`p-2 rounded-lg transition-colors ${location.pathname === '/' ? 'bg-transparent text-white' : 'text-white hover:text-orange-300 hover:bg-white/10'}`}>
-        <TrellisIcon name="home" size={20} className="brightness-0 invert" />
-      </Link>
-      <div className="p-2 rounded-lg text-white hover:text-orange-300 hover:bg-white/10 cursor-pointer transition-colors">
-        <TrellisIcon name="favoriteHollow" size={20} className="brightness-0 invert" />
+  const items: Array<{ name: any; to?: string }> = [
+    { name: "bookmark" },
+  ];
+  const branchItems: Array<{ name: any; to?: string }> = [
+    { name: "crm", to: "/" },
+    { name: "campaigns" },
+    { name: "documents" },
+    { name: "salesTemplates" },
+    { name: "shoppingCart" },
+    { name: "questionAnswer" },
+    { name: "hubDB" },
+    { name: "workflows" },
+    { name: "reports" },
+  ];
+  const itemClass = "p-2 rounded-md cursor-pointer transition-colors hover:bg-white/10";
+  return (
+    <nav
+      className="fixed left-0 top-12 w-16 h-[calc(100vh-48px)] z-40 flex flex-col items-center py-3 gap-1"
+      style={{ background: "#333333" }}
+      onWheel={(e) => e.stopPropagation()}>
+      {items.map((it) => (
+        <div key={it.name} className={itemClass}>
+          <TrellisIcon name={it.name} size={16} className="brightness-0 invert" />
+        </div>
+      ))}
+      <div className="w-6 h-px bg-white/20 my-1" />
+      {branchItems.map((it) => {
+        const active = it.to && location.pathname === it.to;
+        const inner = (
+          <TrellisIcon name={it.name} size={16} className="brightness-0 invert" />
+        );
+        return it.to ? (
+          <Link
+            key={it.name}
+            to={it.to}
+            className={`${itemClass} ${active ? "bg-white/15" : ""}`}>
+            {inner}
+          </Link>
+        ) : (
+          <div key={it.name} className={itemClass}>
+            {inner}
+          </div>
+        );
+      })}
+      <div className="w-6 h-px bg-white/20 my-1" />
+      <div className={itemClass}>
+        <TrellisIcon name="star" size={16} className="brightness-0 invert" />
       </div>
-      <div className="p-2 rounded-lg text-white hover:text-orange-300 hover:bg-white/10 cursor-pointer transition-colors">
-        <TrellisIcon name="listView" size={20} className="brightness-0 invert" />
-      </div>
-      <Link to="/canvas-mode" className={`p-2 rounded-lg transition-colors ${location.pathname === '/canvas-mode' ? 'bg-orange-500 text-white' : 'text-white hover:text-orange-300 hover:bg-white/10'}`}>
-        <TrellisIcon name="documents" size={20} className="brightness-0 invert" />
-      </Link>
-      <div className="p-2 rounded-lg text-white hover:text-orange-300 hover:bg-white/10 cursor-pointer transition-colors">
-        <TrellisIcon name="objectAssociations" size={20} className="brightness-0 invert" />
-      </div>
-      <div className="p-2 rounded-lg text-white hover:text-orange-300 hover:bg-white/10 cursor-pointer transition-colors">
-        <TrellisIcon name="reports" size={20} className="brightness-0 invert" />
-      </div>
-      <div className="p-2 rounded-lg text-white hover:text-orange-300 hover:bg-white/10 cursor-pointer transition-colors">
-        <TrellisIcon name="folder" size={20} className="brightness-0 invert" />
-      </div>
-      <div className="p-2 rounded-lg text-white hover:text-orange-300 hover:bg-white/10 cursor-pointer transition-colors">
-        <TrellisIcon name="date" size={20} className="brightness-0 invert" />
-      </div>
-    </nav>;
+    </nav>
+  );
 };

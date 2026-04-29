@@ -9,7 +9,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 import { useParams, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
-import WorkspaceHeader from "@/components/WorkspaceHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -166,29 +165,25 @@ const ProspectingStrategy = () => {
 
   return (
     <Layout>
-      <WorkspaceHeader activeTab="prospecting" hideTabs hideTitle subtitle={
-      <div>
-          <button
-          onClick={() => navigate("/prospecting")}
-          className="flex items-center gap-1 body-100 text-muted-foreground hover:text-foreground transition-colors">
-          
-            <TrellisIcon name="left" size={12} />
-            P1 companies
-          </button>
-          <h1 className="heading-200 text-foreground mt-1">Prospecting Strategy</h1>
-        </div>
-      } />
-      <div className="flex flex-col h-[calc(100vh-96px)] bg-background">
+      <div className="flex flex-col h-[calc(100vh-48px)] bg-background">
 
         {/* Three-column layout */}
         <div className="flex flex-1 overflow-hidden">
           {/* Left column - Company sub-nav */}
-          <nav className="w-[280px] border-r border-core-subtle bg-card overflow-y-auto shrink-0 pt-[44px]">
+          <nav className="w-[280px] border-r border-core-subtle bg-card overflow-y-auto shrink-0 pt-6 pl-8">
+            <div className="pb-8">
+              <button
+                onClick={() => navigate("/prospecting")}
+                className="flex items-center gap-1 body-125 text-text-interactive hover:underline transition-colors">
+                <TrellisIcon name="left" size={12} />
+                P1 companies
+              </button>
+            </div>
             {companies.map((company) =>
             <button
               key={company.id}
               onClick={() => navigate(`/prospecting/strategy/${company.id}`)}
-              className={`w-full text-left px-6 py-3 transition-colors ${
+              className={`w-full text-left px-3 py-3 transition-colors ${
               company.id === currentCompany.id ?
               "rounded-l-[var(--borderRadius-100,4px)] rounded-r-none border-l-4 border-l-[var(--color-border-core-pressed,#141414)] bg-[var(--color-fill-tertiary-disabled,#F5F5F5)]" :
               "hover:bg-trellis-neutral-100"}`
@@ -993,7 +988,7 @@ const ProspectingStrategy = () => {
               {outreachTargets.map((contact, index) => {
                 const contactDetail = contactDetails[contact.id];
                 return (
-                  <div key={contact.id} className="bg-fill-tertiary rounded-300 border border-core-subtle">
+                  <div key={contact.id} className="bg-fill-tertiary rounded-300 border border-core-subtle shadow-100">
                     {/* Contact header */}
                     <div className="px-4 py-8">
                       <div className="flex items-start justify-between">
@@ -1063,7 +1058,7 @@ const ProspectingStrategy = () => {
                       const detail = contactDetails[contact.id];
                       const email = detail?.email || `${contact.name.toLowerCase().replace(/\s/g, '.')}@${currentCompany.website}`;
                       return (
-                        <div key={contact.id} className="bg-card rounded-100 border border-core-subtle px-4 py-3">
+                        <div key={contact.id} className="bg-card rounded-100 border border-core-subtle shadow-100 px-4 py-3">
                           <div className="flex items-center gap-3">
                             <div className="flex-1 min-w-0">
                               <button className="heading-50 text-text-interactive hover:underline text-left">{contact.name}</button>
