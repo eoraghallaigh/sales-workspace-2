@@ -25,35 +25,43 @@ export const HeaderNavigation = ({
   showChatHistory,
   CustomSheetContent
 }: HeaderNavigationProps) => {
-  return <header className="fixed top-0 left-0 right-0 w-full h-12 bg-trellis-magenta-1400 border-b border-trellis-magenta-1100 z-50 flex items-center justify-between px-4 shrink-0" onWheel={(e) => e.stopPropagation()}>
-      {/* Left section - HubSpot logo */}
-      <div className="flex items-center space-x-4">
-        <Link to="/design-system">
-          <img src="/lovable-uploads/8417781b-a998-4579-859d-5b91035e3bb8.png" alt="Logo" width="24" height="24" className="object-contain cursor-pointer" />
+  return <header className="fixed top-0 left-0 right-0 w-full h-12 z-50 flex items-center justify-between px-3 shrink-0" style={{ background: "#333333" }} onWheel={(e) => e.stopPropagation()}>
+      {/* Left section */}
+      <div className="flex items-center gap-3">
+        <Link to="/design-system" className="p-1.5 rounded-md hover:bg-white/10 transition-colors flex items-center">
+          <svg width="20" height="20" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-label="HubSpot">
+            <path d="M11.6127 10.9174C10.4763 10.9174 9.55512 10.0374 9.55512 8.95201C9.55512 7.86645 10.4763 6.98646 11.6127 6.98646C12.749 6.98646 13.6702 7.86645 13.6702 8.95201C13.6702 10.0374 12.749 10.9174 11.6127 10.9174ZM12.2286 5.16801V3.41954C12.7064 3.20397 13.041 2.74229 13.041 2.20648V2.16612C13.041 1.42664 12.4077 0.821619 11.6336 0.821619H11.5915C10.8174 0.821619 10.1841 1.42664 10.1841 2.16612V2.20648C10.1841 2.74229 10.5187 3.20416 10.9965 3.41972V5.16801C10.2852 5.27306 9.63527 5.55332 9.09927 5.96578L4.07384 2.23138C4.107 2.10973 4.1303 1.9845 4.1305 1.85286C4.13129 1.0155 3.42174 0.335606 2.54479 0.334474C1.66822 0.333532 0.956311 1.01154 0.955323 1.84909C0.954337 2.68665 1.66388 3.36654 2.54084 3.36748C2.82651 3.36786 3.09106 3.29035 3.32283 3.16436L8.26614 6.83803C7.84582 7.44418 7.59944 8.17028 7.59944 8.95201C7.59944 9.77033 7.8701 10.5274 8.32734 11.1499L6.82415 12.5861C6.7053 12.5519 6.58211 12.5282 6.45141 12.5282C5.73101 12.5282 5.14684 13.086 5.14684 13.7742C5.14684 14.4626 5.73101 15.0205 6.45141 15.0205C7.17201 15.0205 7.75599 14.4626 7.75599 13.7742C7.75599 13.6498 7.73112 13.5319 7.69538 13.4184L9.18238 11.9978C9.85738 12.4899 10.698 12.7856 11.6127 12.7856C13.8292 12.7856 15.6257 11.0692 15.6257 8.95201C15.6257 7.03531 14.1517 5.45185 12.2286 5.16801Z" fill="#FF4800" />
+          </svg>
         </Link>
-        
+
         {/* Search */}
         <div className="relative">
-          <TrellisIcon name="search" size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 brightness-0 invert opacity-60" />
-          <input type="text" placeholder="Search HubSpot" className="w-96 pl-10 pr-12 py-1.5 bg-trellis-magenta-1200 border border-trellis-magenta-1100 rounded-full body-100 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500" />
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
-            <kbd className="px-1.5 py-0.5 detail-100 text-gray-300 bg-trellis-magenta-1100 rounded border border-trellis-magenta-1100">⌘</kbd>
-            <kbd className="px-1.5 py-0.5 detail-100 text-gray-300 bg-trellis-magenta-1100 rounded border border-trellis-magenta-1100">K</kbd>
+          <TrellisIcon name="search" size={12} className="absolute left-3 top-1/2 transform -translate-y-1/2 brightness-0 invert opacity-60" />
+          <input type="text" placeholder="Search HubSpot" className="w-[540px] h-8 pl-8 pr-16 bg-white/10 border border-white/20 rounded-lg body-100 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary" />
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-0.5">
+            <kbd className="w-4 h-4 flex items-center justify-center detail-100 text-gray-300 border border-white/30 rounded">⌘</kbd>
+            <kbd className="w-4 h-4 flex items-center justify-center detail-100 text-gray-300 border border-white/30 rounded">K</kbd>
           </div>
         </div>
-        
-        <div className="bg-transparent border border-white p-2 rounded-full hover:bg-white/10 transition-colors cursor-pointer">
-          <TrellisIcon name="add" size={16} className="brightness-0 invert" />
+
+        <div className="border border-white/40 p-2 rounded-full hover:bg-white/10 transition-colors cursor-pointer">
+          <TrellisIcon name="add" size={12} className="brightness-0 invert" />
         </div>
       </div>
-      
+
       {/* Right section */}
-      <div className="flex items-center space-x-4">
-        {/* Navigation icons */}
+      <div className="flex items-center gap-2">
+        <div className="p-2 rounded-md hover:bg-white/10 cursor-pointer transition-colors">
+          <TrellisIcon name="calling" size={16} className="brightness-0 invert" />
+        </div>
+        <div className="p-2 rounded-md hover:bg-white/10 cursor-pointer transition-colors">
+          <TrellisIcon name="integrations" size={16} className="brightness-0 invert" />
+        </div>
+        {/* Help */}
         <Sheet>
           <SheetTrigger asChild>
-            <div className="text-white hover:text-orange-300 cursor-pointer">
-              <TrellisIcon name="questionCircle" size={20} className="brightness-0 invert" />
+            <div className="p-2 rounded-md hover:bg-white/10 cursor-pointer transition-colors">
+              <TrellisIcon name="questionCircle" size={16} className="brightness-0 invert" />
             </div>
           </SheetTrigger>
           <CustomSheetContent className="w-[560px]">
@@ -151,26 +159,27 @@ export const HeaderNavigation = ({
           </CustomSheetContent>
         </Sheet>
         
-        <div className="text-white hover:text-orange-300 cursor-pointer">
-          <TrellisIcon name="notification" size={20} className="brightness-0 invert" />
+        <div className="p-2 rounded-md hover:bg-white/10 cursor-pointer transition-colors">
+          <TrellisIcon name="settings" size={16} className="brightness-0 invert" />
         </div>
-        <div className="text-white hover:text-orange-300 cursor-pointer">
-          <TrellisIcon name="settings" size={20} className="brightness-0 invert" />
+        <div className="p-2 rounded-md hover:bg-white/10 cursor-pointer transition-colors">
+          <TrellisIcon name="notification" size={16} className="brightness-0 invert" />
         </div>
-        <div className="text-white hover:text-orange-300 cursor-pointer">
-          <TrellisIcon name="contact" size={20} className="brightness-0 invert" />
-        </div>
-        
+
         {/* Divider */}
-        <div className="h-6 w-px bg-trellis-magenta-1100"></div>
-        
+        <div className="h-6 w-px bg-white/20 mx-1"></div>
+
         {/* Copilot */}
         <AssistantButton onClick={() => onChatPanelToggle(true)} />
-        
-        {/* HubSpot dropdown */}
-        <div className="flex items-center space-x-1 text-white hover:text-orange-300 cursor-pointer">
-          <span className="body-125">HubSpot</span>
-          <TrellisIcon name="downCarat" size={12} className="brightness-0 invert" />
+
+        {/* Divider */}
+        <div className="h-6 w-px bg-white/20 mx-1"></div>
+
+        {/* Account menu */}
+        <div className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-white/10 cursor-pointer transition-colors">
+          <TrellisIcon name="contact" size={16} className="brightness-0 invert" />
+          <span className="body-100 text-white">HubSpot</span>
+          <TrellisIcon name="downCarat" size={8} className="brightness-0 invert" />
         </div>
       </div>
     </header>;

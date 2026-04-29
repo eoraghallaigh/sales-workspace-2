@@ -116,13 +116,10 @@ const CompanyCardVariantB = ({
         className="w-10 h-10 rounded-full object-cover flex-shrink-0 mt-0.5"
       />
 
-      <div className="flex-1 min-w-0 flex flex-col gap-1">
+      <div className="flex-1 min-w-0 flex flex-col gap-2">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="heading-200 text-text-interactive">{company.name}</span>
           <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
-          <span className="detail-200 text-muted-foreground">
-            · due {company.touches.deadline}
-          </span>
         </div>
         <p className="body-200 text-muted-foreground leading-relaxed">{brief}</p>
         <div className="flex items-center gap-2 mt-1">
@@ -143,7 +140,7 @@ const CompanyCardVariantB = ({
             ))}
           </div>
           <span className="detail-200 text-muted-foreground">
-            {completedCount}/5 touches
+            {completedCount}/5 touches · due {company.touches.deadline}
           </span>
         </div>
       </div>
