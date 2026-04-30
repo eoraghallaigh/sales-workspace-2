@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { TourProvider } from "@/contexts/TourContext";
+import { VariantProvider } from "@/contexts/VariantContext";
 import GuidedTour from "@/components/GuidedTour";
 import TourLauncher from "@/components/TourLauncher";
 import SalesWorkspace from "./pages/SalesWorkspace";
@@ -29,6 +30,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <TourProvider>
+          <VariantProvider>
           <Routes>
             <Route path="/" element={<Summary />} />
             <Route path="/summary" element={<Summary />} />
@@ -48,6 +50,7 @@ const App = () => (
           </Routes>
           <GuidedTour />
           {/* <TourLauncher /> */}
+          </VariantProvider>
         </TourProvider>
       </BrowserRouter>
     </TooltipProvider>
