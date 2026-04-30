@@ -18,6 +18,7 @@ import AgentDetail from "./pages/AgentDetail";
 import DesignSystem from "./pages/DesignSystem";
 import ProspectingStrategy from "./pages/ProspectingStrategy";
 import HoverPreviewDemo from "./pages/HoverPreviewDemo";
+import OutreachStates from "./pages/OutreachStates";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/agents/:agentId" element={<AgentDetail />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/hover-preview" element={<HoverPreviewDemo />} />
+            <Route path="/outreach-states" element={<OutreachStates />} />
           </Routes>
           <GuidedTour />
           {/* <TourLauncher /> */}

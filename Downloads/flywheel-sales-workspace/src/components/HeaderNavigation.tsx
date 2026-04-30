@@ -159,9 +159,9 @@ export const HeaderNavigation = ({
           </CustomSheetContent>
         </Sheet>
         
-        <div className="p-2 rounded-md hover:bg-white/10 cursor-pointer transition-colors">
+        <Link to="/outreach-states" className="p-2 rounded-md hover:bg-white/10 cursor-pointer transition-colors" title="Outreach card states">
           <TrellisIcon name="settings" size={16} className="brightness-0 invert" />
-        </div>
+        </Link>
         <div className="p-2 rounded-md hover:bg-white/10 cursor-pointer transition-colors">
           <TrellisIcon name="notification" size={16} className="brightness-0 invert" />
         </div>
