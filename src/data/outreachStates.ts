@@ -119,6 +119,206 @@ export function getOutreachState(
           ],
         },
       };
+    case "c4": // Sarah Johnson — full active sequence, no replies yet
+      return {
+        call: { kind: "no-answer", attempts: 1, lastAttemptAt: "yesterday" },
+        linkedin: { kind: "accepted", acceptedAt: "2 days ago" },
+        sequence: {
+          kind: "active",
+          statuses: [
+            { kind: "sent", sentAt: "Apr 23", opens: 3, clicks: 1 },
+            { kind: "sent", sentAt: "Apr 27", opens: 1, clicks: 0 },
+            { kind: "scheduled", sendsAt: "Mon May 4, 9:00am" },
+          ],
+        },
+      };
+    case "c6": // David Lee — pristine
+      return pristine;
+    case "c9": // James Wilson — connected call, sequence ended
+      return {
+        call: { kind: "connected", at: "this morning", durationMin: 18 },
+        linkedin: { kind: "accepted", acceptedAt: "last week" },
+        sequence: {
+          kind: "unenrolled",
+          reason: `Sequence ended because you had a connected call with ${firstName}`,
+          statuses: [
+            { kind: "sent", sentAt: "Apr 18", opens: 4, clicks: 2 },
+            { kind: "sent", sentAt: "Apr 22", opens: 2, clicks: 0 },
+            { kind: "cancelled" },
+          ],
+        },
+      };
+    case "c11": // Rachel Green — voicemail + sequence in flight
+      return {
+        call: { kind: "voicemail", lastAttemptAt: "yesterday" },
+        linkedin: { kind: "pending", sentAt: "4 days ago", daysWaiting: 4 },
+        sequence: {
+          kind: "active",
+          statuses: [
+            { kind: "sent", sentAt: "Apr 25", opens: 2, clicks: 0 },
+            { kind: "scheduled", sendsAt: "Wed May 1, 9:00am" },
+            { kind: "scheduled", sendsAt: "Mon May 6, 9:00am" },
+          ],
+        },
+      };
+    case "c14": // Carlos Santos — pristine
+      return pristine;
+    case "c16": // Olivia Hayes — replied
+      return {
+        call: { kind: "no-answer", attempts: 2, lastAttemptAt: "3 days ago" },
+        linkedin: { kind: "accepted", acceptedAt: "5 days ago" },
+        sequence: {
+          kind: "unenrolled",
+          reason: `Sequence ended because ${firstName} replied`,
+          statuses: [
+            { kind: "sent", sentAt: "Apr 20", opens: 3, clicks: 1 },
+            {
+              kind: "sent",
+              sentAt: "Apr 24",
+              opens: 2,
+              clicks: 1,
+              reply: {
+                at: "Apr 25, 2:11pm",
+                preview: `Thanks for reaching out — happy to take a look. What's the best time next week?`,
+              },
+            },
+            { kind: "cancelled" },
+          ],
+        },
+      };
+    case "c19": // Victoria Davis — early stage
+      return {
+        call: { kind: "not-attempted" },
+        linkedin: { kind: "pending", sentAt: "yesterday", daysWaiting: 1 },
+        sequence: {
+          kind: "active",
+          statuses: [
+            { kind: "sent", sentAt: "Apr 28", opens: 1, clicks: 0 },
+            { kind: "scheduled", sendsAt: "Fri May 2, 9:00am" },
+            { kind: "scheduled", sendsAt: "Wed May 7, 9:00am" },
+          ],
+        },
+      };
+    case "c21": // Connor Murphy — full sequence sent, awaiting
+      return {
+        call: { kind: "no-answer", attempts: 3, lastAttemptAt: "today" },
+        linkedin: { kind: "declined" },
+        sequence: {
+          kind: "completed",
+          statuses: [
+            { kind: "sent", sentAt: "Apr 12", opens: 2, clicks: 0 },
+            { kind: "sent", sentAt: "Apr 18", opens: 1, clicks: 0 },
+            { kind: "sent", sentAt: "Apr 24", opens: 0, clicks: 0 },
+          ],
+        },
+      };
+    case "c23": // Zoe Anderson — call + linkedin only, no sequence
+      return {
+        call: { kind: "voicemail", lastAttemptAt: "today" },
+        linkedin: { kind: "already-connected" },
+        sequence: { kind: "not-enrolled" },
+      };
+    case "c26": // Sophia Nguyen — pristine
+      return pristine;
+    case "c28": // Adrian Cole — mid sequence
+      return {
+        call: { kind: "not-attempted" },
+        linkedin: { kind: "pending", sentAt: "2 days ago", daysWaiting: 2 },
+        sequence: {
+          kind: "active",
+          statuses: [
+            { kind: "sent", sentAt: "Apr 26", opens: 1, clicks: 0 },
+            { kind: "sent", sentAt: "Apr 29", opens: 0, clicks: 0 },
+            { kind: "scheduled", sendsAt: "Mon May 5, 9:00am" },
+          ],
+        },
+      };
+    case "c31": // Kevin Brown — connected call
+      return {
+        call: { kind: "connected", at: "yesterday", durationMin: 9 },
+        linkedin: { kind: "not-sent" },
+        sequence: {
+          kind: "unenrolled",
+          reason: `Sequence ended because you had a connected call with ${firstName}`,
+          statuses: [
+            { kind: "sent", sentAt: "Apr 21", opens: 2, clicks: 1 },
+            { kind: "cancelled" },
+            { kind: "cancelled" },
+          ],
+        },
+      };
+    case "c33": // Michael Chang — pristine
+      return pristine;
+    case "c36": // Charlotte Evans — replied
+      return {
+        call: { kind: "no-answer", attempts: 1, lastAttemptAt: "2 days ago" },
+        linkedin: { kind: "accepted", acceptedAt: "yesterday" },
+        sequence: {
+          kind: "unenrolled",
+          reason: `Sequence ended because ${firstName} replied`,
+          statuses: [
+            { kind: "sent", sentAt: "Apr 23", opens: 3, clicks: 0 },
+            {
+              kind: "sent",
+              sentAt: "Apr 27",
+              opens: 2,
+              clicks: 1,
+              reply: {
+                at: "Apr 28, 9:42am",
+                preview: `Hi — I'd like to learn more. Send over a calendar link?`,
+              },
+            },
+            { kind: "cancelled" },
+          ],
+        },
+      };
+    case "c38": // Emma Harris — fresh sequence
+      return {
+        call: { kind: "not-attempted" },
+        linkedin: { kind: "not-sent" },
+        sequence: {
+          kind: "active",
+          statuses: [
+            { kind: "sent", sentAt: "Apr 29", opens: 0, clicks: 0 },
+            { kind: "scheduled", sendsAt: "Sat May 3, 9:00am" },
+            { kind: "scheduled", sendsAt: "Thu May 8, 9:00am" },
+          ],
+        },
+      };
+    case "c40": // Liam Anderson — pristine
+      return pristine;
+    case "c43": // Mason Cooper — voicemail trail
+      return {
+        call: { kind: "voicemail", lastAttemptAt: "yesterday" },
+        linkedin: { kind: "pending", sentAt: "5 days ago", daysWaiting: 5 },
+        sequence: {
+          kind: "active",
+          statuses: [
+            { kind: "sent", sentAt: "Apr 22", opens: 1, clicks: 0 },
+            { kind: "sent", sentAt: "Apr 27", opens: 2, clicks: 0 },
+            { kind: "scheduled", sendsAt: "Tue May 5, 9:00am" },
+          ],
+        },
+      };
+    case "c45": // Scarlett Hughes — full sent, no reply
+      return {
+        call: { kind: "no-answer", attempts: 2, lastAttemptAt: "today" },
+        linkedin: { kind: "pending", sentAt: "6 days ago", daysWaiting: 6 },
+        sequence: {
+          kind: "completed",
+          statuses: [
+            { kind: "sent", sentAt: "Apr 15", opens: 2, clicks: 0 },
+            { kind: "sent", sentAt: "Apr 21", opens: 1, clicks: 0 },
+            { kind: "sent", sentAt: "Apr 27", opens: 0, clicks: 0 },
+          ],
+        },
+      };
+    case "c48": // Victoria Lin — early prospect
+      return {
+        call: { kind: "not-attempted" },
+        linkedin: { kind: "accepted", acceptedAt: "yesterday" },
+        sequence: { kind: "not-enrolled" },
+      };
     default:
       return pristine;
   }

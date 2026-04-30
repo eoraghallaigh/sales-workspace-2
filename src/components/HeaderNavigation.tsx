@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
 import { Sheet, SheetTrigger, SheetPortal } from "@/components/ui/sheet";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { useVariant, type CardVariant } from "@/contexts/VariantContext";
 import { Button } from "@/components/ui/button";
 import { AssistantButton } from "./AssistantButton";
 import { TrellisIcon } from "./ui/trellis-icon";
+import { Check } from "lucide-react";
 interface HeaderNavigationProps {
   onChatPanelToggle: (isOpen: boolean) => void;
   onNewChat: () => void;
@@ -176,11 +178,44 @@ export const HeaderNavigation = ({
         <div className="h-6 w-px bg-white/20 mx-1"></div>
 
         {/* Account menu */}
-        <div className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-white/10 cursor-pointer transition-colors">
-          <TrellisIcon name="contact" size={16} className="brightness-0 invert" />
-          <span className="body-100 text-white">HubSpot</span>
-          <TrellisIcon name="downCarat" size={8} className="brightness-0 invert" />
-        </div>
+        <AccountMenu />
       </div>
     </header>;
 };
+
+const variantOptions: { label: string; value: CardVariant }[] = [
+  { label: "Variant C (default)", value: "C" },
+  { label: "Variant A", value: "A" },
+  { label: "Variant B", value: "B" },
+  { label: "Original UI", value: "current" },
+];
+
+const AccountMenu = () => {
+  const { variant, setVariant } = useVariant();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-white/10 cursor-pointer transition-colors">
+          <TrellisIcon name="contact" size={16} className="brightness-0 invert" />
+          <span className="body-100 text-white">HubSpot</span>
+          <TrellisIcon name="downCarat" size={8} className="brightness-0 invert" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="bg-background border border-core-subtle shadow-lg z-50 min-w-[220px]">
+        <DropdownMenuLabel>Company list variant</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {variantOptions.map((opt) => (
+          <DropdownMenuItem
+            key={opt.value}
+            onSelect={() => setVariant(opt.value)}
+            className="hover:bg-trellis-neutral-300 cursor-pointer flex items-center justify-between"
+          >
+            <span>{opt.label}</span>
+            {variant === opt.value && <Check size={12} />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+

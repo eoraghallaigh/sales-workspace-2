@@ -1,4 +1,5 @@
 import { Company } from "@/components/CompanyCard";
+import { deriveTouchesForContact } from "@/data/deriveTouches";
 
 const avatarColors = [
   "bg-trellis-purple-600",
@@ -1331,7 +1332,7 @@ Technologies used: Executive dashboards, board reporting tools, marketing analyt
 Summary of Web Analysis: About page with leadership team, company story, and mission/values prominently featured.`,
 };
 
-export const prospectingCompanies: Company[] = [
+const rawProspectingCompanies: Company[] = [
   // 60% with 1 task (12 companies)
   {
     id: "1",
@@ -2236,3 +2237,32 @@ export const prospectingCompanies: Company[] = [
     recommendedContacts: company20Contacts,
   },
 ];
+
+export const prospectingCompanies: Company[] = rawProspectingCompanies.map((company) => {
+  const primary = company.recommendedContacts?.[0];
+  if (!primary) return company;
+  const derived = deriveTouchesForContact(primary.id, primary.name);
+  const reachedCount =
+    derived.state.call.kind === "connected" ||
+    derived.state.linkedin.kind === "accepted" ||
+    derived.state.linkedin.kind === "already-connected" ||
+    (derived.state.sequence.kind === "unenrolled" &&
+      derived.state.sequence.reason.includes("replied"))
+      ? Math.max(1, company.touches.contactsReached?.current ?? 1)
+      : derived.count > 0
+        ? Math.min(1, company.touches.contactsReached?.total ?? 1)
+        : 0;
+  return {
+    ...company,
+    touches: {
+      ...company.touches,
+      touchStatuses: derived.statuses,
+      totalTouches: derived.count,
+      progress: Math.min(100, Math.round((derived.count / 5) * 100)),
+      contactsReached: {
+        current: reachedCount,
+        total: company.touches.contactsReached?.total ?? company.recommendedContacts?.length ?? 1,
+      },
+    },
+  };
+});

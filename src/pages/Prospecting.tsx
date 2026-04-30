@@ -36,6 +36,7 @@ import { TrellisIcon } from "@/components/ui/trellis-icon";
 import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { Company } from "@/components/CompanyCard";
 import { calculateCompanyStatus } from "@/utils/companyStatusUtils";
+import { useVariant } from "@/contexts/VariantContext";
 const Prospecting = () => {
   const { campaignId } = useParams();
   const navigate = useNavigate();
@@ -66,7 +67,7 @@ const Prospecting = () => {
   const [isCallPrepPanelOpen, setIsCallPrepPanelOpen] = useState(false);
   const [callPrepContactId, setCallPrepContactId] = useState<string | null>(null);
   const [activeNavItem, setActiveNavItem] = useState<string>(campaignId || "p1-now");
-  const [cardVariant, setCardVariant] = useState<"current" | "A" | "B" | "C">("current");
+  const { variant: cardVariant } = useVariant();
   useEffect(() => {
     if (campaignId) {
       setActiveNavItem(campaignId);
@@ -645,18 +646,6 @@ const Prospecting = () => {
                     <ListFilter className="h-4 w-4" />
                     Advanced Filters
                   </Button>
-                  {/* Card Variant Toggle */}
-                  <div className="flex items-center rounded-[6px] border border-border bg-fill-surface-recessed p-0.5">
-                    {([{ label: "Current UI", value: "current" as const }, { label: "A", value: "A" as const }, { label: "B", value: "B" as const }, { label: "C", value: "C" as const }]).map((v) => (
-                      <button
-                        key={v.value}
-                        onClick={() => setCardVariant(v.value)}
-                        className={`px-3 py-1 rounded heading-50 transition-colors ${cardVariant === v.value ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                      >
-                        {v.label}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               </div>}
 
