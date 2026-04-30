@@ -32,6 +32,7 @@ import {
   getAggregateSummary,
   getOutreachStripSegments,
 } from "@/data/outreachStates";
+import { getActivityTimeline } from "@/data/deriveTouches";
 
 const ProspectingStrategy = () => {
   const { companyId } = useParams<{companyId: string;}>();
@@ -87,12 +88,30 @@ const ProspectingStrategy = () => {
   };
 
 
-  // Get all companies with calculated status for sub-nav
+  // Get all companies with calculated status for sub-nav.
+  // Filter and sort must match Prospecting list page so the company set is identical.
   const companies = useMemo(() => {
-    return prospectingCompanies.map((company) => ({
-      ...company,
-      status: calculateCompanyStatus(company, new Set())
-    })).filter((c) => ["New", "Unworked P1", "Unworked QL", "In Progress", "Over SLA"].includes(c.status));
+    const statusPriority: Record<string, number> = {
+      "New": 1,
+      "Unworked P1": 2,
+      "In Progress": 3,
+      "Over SLA": 4,
+      "Worked": 5,
+      "Snoozed": 6,
+      "Dismissed": 7,
+    };
+    return prospectingCompanies
+      .map((company) => ({
+        ...company,
+        status: calculateCompanyStatus(company, new Set()),
+      }))
+      .filter((c) =>
+        c.status === "New" ||
+        c.status === "Unworked P1" ||
+        c.status === "In Progress" ||
+        c.status === "Over SLA"
+      )
+      .sort((a, b) => (statusPriority[a.status] ?? 99) - (statusPriority[b.status] ?? 99));
   }, []);
 
   const currentCompany = companies.find((c) => c.id === companyId) || companies[0];
@@ -692,82 +711,124 @@ const ProspectingStrategy = () => {
                   };
                   type ActivityItem = EmailItem | CallItem;
 
-                  const sections: { label: string; items: ActivityItem[] }[] = [
-                    {
-                      label: "April 2026",
-                      items: [
-                        {
-                          type: "email",
-                          id: "act-1",
-                          subject: "Email - HubSpot - Pricing Clarity",
-                          from: "Dan Taft",
-                          to: "Vivek Sharma",
-                          timestamp: "27 Apr 2026 at 15:34 GMT+2",
-                          threadCount: 3,
-                          preview: "Hi Vivek,\n\nI appreciate that when you first sign up for HubSpot, it can be a bit shocking.",
-                          expanded: "Hi Vivek,\n\nI appreciate that when you first sign up for HubSpot, it can be a bit shocking.\n\nThis system doesn't look complex. How much can I customize? Where should I start?\n\nThis 1:30 second video from Salesforce CRM power users detailing their experience with both platforms may help: CRM Upgraded: See Your Full Business with HubSpot.\n\nI'm also happy to chat to better understand your business and see if HubSpot fits your needs. Are you open to connecting?\n\nDan Taft\nGrowth Specialist, HubSpot",
-                        },
-                        {
-                          type: "email",
-                          id: "act-2",
-                          subject: "Email - quick question",
-                          from: "Dan Taft",
-                          to: "Jessica Busch",
-                          timestamp: "24 Apr 2026 at 19:09 GMT+2",
-                          threadCount: 2,
-                          preview: "A quick thing we're seeing: what shows up in ChatGPT is often different from what from Google. This means you could be missing out on high-value leads that are relying on AI tools.\n\nAre you aware of how this has impacted your brand recognition?",
-                          expanded: "A quick thing we're seeing: what shows up in ChatGPT is often different from what from Google. This means you could be missing out on high-value leads that are relying on AI tools.\n\nAre you aware of how this has impacted your brand recognition? Happy to share what we're seeing for a few companies in your space if useful.\n\nDan Taft\nGrowth Specialist, HubSpot",
-                          opens: 1,
-                          clicks: 1,
-                        },
-                        {
-                          type: "email",
-                          id: "act-3",
-                          subject: "Email - HubSpot - Pricing Clarity",
-                          from: "Dan Taft",
-                          to: "Vivek Sharma",
-                          timestamp: "22 Apr 2026 at 16:16 GMT+2",
-                          threadCount: 3,
-                          preview: "Hi Vivek,\n\nWould a brief chat with the below agenda be a waste of time?",
-                          expanded: "Hi Vivek,\n\nWould a brief chat with the below agenda be a waste of time?\n\n• A quick walkthrough of where HubSpot fits with your current stack\n• Pricing clarity on the bundles that map to your team size\n• Examples from similar companies that recently moved over\n\nLet me know what works — happy to keep it to 20 minutes.\n\nDan Taft\nGrowth Specialist, HubSpot",
-                          opens: 2,
-                          clicks: 0,
-                        },
-                      ],
-                    },
-                    {
-                      label: "February 2026",
-                      items: [
-                        {
+                  const primaryContact = currentCompany?.recommendedContacts?.[0];
+                  const primaryFirst = primaryContact?.name.split(" ")[0] || "the contact";
+                  const primaryState = primaryContact
+                    ? getOutreachState(primaryContact.id, primaryFirst)
+                    : null;
+                  const timeline = primaryState ? getActivityTimeline(primaryState) : [];
+                  const repName = "Dan Taft";
+
+                  const items: ActivityItem[] = [];
+                  for (const entry of timeline) {
+                    if (entry.type === "email" && entry.status.kind === "sent") {
+                      const emailNumber = entry.index + 1;
+                      const replyText = entry.status.reply?.preview;
+                      const baseBody = replyText
+                        ? `Hi ${repName} — ${replyText}`
+                        : `Hi ${primaryFirst},\n\nQuick follow-up from the team at HubSpot — wanted to share a few ideas based on what we're seeing in your space.`;
+                      items.push({
+                        type: "email",
+                        id: `email-${entry.index}`,
+                        subject: `Email ${emailNumber} of sequence`,
+                        from: repName,
+                        to: primaryContact?.name || "",
+                        timestamp: entry.status.sentAt,
+                        threadCount: entry.status.reply ? 2 : 1,
+                        preview: baseBody.split("\n\n")[0],
+                        expanded: baseBody,
+                        opens: entry.status.opens,
+                        clicks: entry.status.clicks,
+                      });
+                    } else if (entry.type === "call") {
+                      const call = entry.state;
+                      if (call.kind === "no-answer") {
+                        items.push({
                           type: "call",
-                          id: "act-4",
-                          title: "Logged call - Connected",
-                          by: "Michelle Harkin",
-                          timestamp: "11 Feb 2026 at 16:14 GMT+1",
-                          outcome: "Connected",
-                          callType: "IMA",
-                          direction: "Select call direction",
-                          contactsLabel: "0 contacts",
-                          associations: "2 associations",
-                        },
-                        {
-                          type: "call",
-                          id: "act-5",
-                          title: "Call - Connected",
-                          by: "Michelle Harkin",
-                          withWhom: "Austen Sanders",
-                          timestamp: "11 Feb 2026 at 16:05 GMT+1",
-                          outcome: "Connected",
-                          callType: "None",
+                          id: "call",
+                          title: `Logged call — No answer (${call.attempts} ${call.attempts === 1 ? "attempt" : "attempts"})`,
+                          by: repName,
+                          withWhom: primaryContact?.name,
+                          timestamp: call.lastAttemptAt,
+                          outcome: "No answer",
+                          callType: "Outbound",
                           direction: "Outbound",
-                          duration: "7:25",
                           contactsLabel: "1 contact",
-                          associations: "3 associations",
-                          notes: "mid june/ july\ntoo many issues\nusing it for recruitment and sales\nmain issues: over complicated/ back end issues\none of my bd's contacting pot. client\nbincherry\n3 BD's x 1 = 4 users\nupfront 5700 p/ year\n750 each\nvinchere",
-                        },
-                      ],
-                    },
-                  ];
+                          associations: "1 association",
+                        });
+                      } else if (call.kind === "voicemail") {
+                        items.push({
+                          type: "call",
+                          id: "call",
+                          title: "Logged call — Voicemail left",
+                          by: repName,
+                          withWhom: primaryContact?.name,
+                          timestamp: call.lastAttemptAt,
+                          outcome: "Left voicemail",
+                          callType: "Outbound",
+                          direction: "Outbound",
+                          contactsLabel: "1 contact",
+                          associations: "1 association",
+                        });
+                      } else if (call.kind === "connected") {
+                        items.push({
+                          type: "call",
+                          id: "call",
+                          title: "Logged call — Connected",
+                          by: repName,
+                          withWhom: primaryContact?.name,
+                          timestamp: call.at,
+                          outcome: "Connected",
+                          callType: "Outbound",
+                          direction: "Outbound",
+                          duration: `${call.durationMin}:00`,
+                          contactsLabel: "1 contact",
+                          associations: "1 association",
+                        });
+                      }
+                    } else if (entry.type === "linkedin") {
+                      const li = entry.state;
+                      const summary =
+                        li.kind === "pending"
+                          ? `LinkedIn request sent — pending ${li.daysWaiting} ${li.daysWaiting === 1 ? "day" : "days"}`
+                          : li.kind === "accepted"
+                            ? "LinkedIn request accepted"
+                            : li.kind === "declined"
+                              ? "LinkedIn request declined"
+                              : "Already connected on LinkedIn";
+                      const ts =
+                        li.kind === "pending"
+                          ? li.sentAt
+                          : li.kind === "accepted"
+                            ? li.acceptedAt
+                            : "";
+                      items.push({
+                        type: "call",
+                        id: "linkedin",
+                        title: summary,
+                        by: repName,
+                        withWhom: primaryContact?.name,
+                        timestamp: ts,
+                        outcome: li.kind,
+                        callType: "LinkedIn",
+                        direction: "Outbound",
+                        contactsLabel: "1 contact",
+                        associations: "1 association",
+                      });
+                    }
+                  }
+
+                  const sections: { label: string; items: ActivityItem[] }[] = items.length
+                    ? [{ label: "Recent activity", items }]
+                    : [];
+
+                  if (sections.length === 0) {
+                    return (
+                      <div className="py-12 text-center body-100 text-muted-foreground">
+                        No logged activity yet for {primaryContact?.name || "this contact"}.
+                      </div>
+                    );
+                  }
 
                   return sections.map((section) => (
                     <div key={section.label} className="mb-8">
