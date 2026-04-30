@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TouchDots, type TouchStatus } from "@/components/TouchDot";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -276,24 +277,7 @@ const CompanyCard = ({
               {remainingTouches} more {remainingTouches === 1 ? "touch" : "touches"} required
               before {company.touches.deadline}
             </span>
-            <div className="flex items-center gap-1.5">
-              {displayedTouchStatuses.map((status, index) => (
-                <div
-                  key={index}
-                  className={`h-4 w-4 rounded-full ${
-                    status === "completed" ? "" : status === "scheduled" ? "bg-trellis-orange-500" : ""
-                  }`}
-                  style={{
-                    background:
-                      status === "completed"
-                        ? "var(--color-fill-transitional-progress-success-gradient-color-1, #00823A)"
-                        : status === "empty"
-                          ? "var(--color-fill-surface-recessed, #F0F0F0)"
-                          : undefined,
-                  }}
-                />
-              ))}
-            </div>
+            <TouchDots statuses={displayedTouchStatuses as TouchStatus[]} />
           </div>
         </div>
       </div>

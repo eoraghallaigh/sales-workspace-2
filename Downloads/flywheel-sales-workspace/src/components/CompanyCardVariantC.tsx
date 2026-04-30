@@ -25,6 +25,9 @@ import { MoreHorizontal } from "lucide-react";
 import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { Company } from "@/components/CompanyCard";
 import SnoozeModal from "@/components/SnoozeModal";
+import { getOutreachState } from "@/data/outreachStates";
+import { TrellisIcon, type TrellisIconName } from "@/components/ui/trellis-icon";
+import { MiniTouchDots, type TouchStatus } from "@/components/TouchDot";
 
 interface CompanyCardVariantCProps {
   company: Company;
@@ -203,54 +206,145 @@ const CompanyCardVariantC = ({
               )}
             </div>
           </HoverCardTrigger>
-          {displayedContacts.length > 0 && (
-            <HoverCardContent align="end" className="w-[360px] p-4">
-              <div className="flex flex-col gap-6">
-                <div className="detail-200 font-semibold text-muted-foreground uppercase tracking-wide">
-                  Strategy preview
-                </div>
-                {displayedContacts.map((contact) => (
-                  <div key={contact.id} className="flex items-start gap-3">
-                    <img
-                      src={companyLogoPlaceholder}
-                      alt=""
-                      className="h-8 w-8 rounded-full object-cover flex-shrink-0"
-                    />
-                    <div className="flex flex-col min-w-0 flex-1 gap-0.5">
-                      <span className="heading-100 text-foreground">
-                        {contact.name}
-                      </span>
-                      <span className="detail-200 text-muted-foreground">
-                        {contact.role}
-                      </span>
-                      <span className="body-100 text-foreground">
-                        {getApproachFor(contact.role)}
-                      </span>
-                    </div>
+          {(() => {
+            const targets = company.recommendedContacts.slice(0, 3);
+            if (targets.length === 0) return null;
+
+            type Tone = "positive" | "awaiting" | "none";
+            const POS = "var(--color-fill-accent-green-default)";
+            const AWAIT = "var(--color-fill-accent-green-subtle)";
+            const NONE = "var(--color-fill-surface-recessed)";
+            const dotFor = (t: Tone) => (t === "positive" ? POS : t === "awaiting" ? AWAIT : NONE);
+
+            const channelStatus = (
+              c: (typeof targets)[number],
+            ): Array<{ icon: TrellisIconName; status: string; tone: Tone }> => {
+              const firstName = c.name.split(" ")[0];
+              const s = getOutreachState(c.id, firstName);
+              const rows: Array<{ icon: TrellisIconName; status: string; tone: Tone }> = [];
+
+              switch (s.call.kind) {
+                case "not-attempted":
+                  rows.push({ icon: "calling", status: "Not started", tone: "none" });
+                  break;
+                case "no-answer":
+                  rows.push({ icon: "calling", status: "No answer", tone: "awaiting" });
+                  break;
+                case "voicemail":
+                  rows.push({ icon: "calling", status: "Voicemail", tone: "awaiting" });
+                  break;
+                case "connected":
+                  rows.push({ icon: "calling", status: "Connected", tone: "positive" });
+                  break;
+              }
+
+              switch (s.linkedin.kind) {
+                case "not-sent":
+                  rows.push({ icon: "linkedin", status: "Not started", tone: "none" });
+                  break;
+                case "pending":
+                  rows.push({ icon: "linkedin", status: "Awaiting response", tone: "awaiting" });
+                  break;
+                case "accepted":
+                  rows.push({ icon: "linkedin", status: "Accepted", tone: "positive" });
+                  break;
+                case "declined":
+                  rows.push({ icon: "linkedin", status: "No response", tone: "awaiting" });
+                  break;
+                case "already-connected":
+                  rows.push({ icon: "linkedin", status: "Already connected", tone: "positive" });
+                  break;
+              }
+
+              switch (s.sequence.kind) {
+                case "not-enrolled":
+                  rows.push({ icon: "email", status: "Not enrolled", tone: "none" });
+                  break;
+                case "active":
+                  rows.push({ icon: "email", status: "Active", tone: "awaiting" });
+                  break;
+                case "completed":
+                  rows.push({ icon: "email", status: "Completed", tone: "awaiting" });
+                  break;
+                case "unenrolled": {
+                  const reason = s.sequence.reason;
+                  const status = reason.includes("replied")
+                    ? "Replied"
+                    : reason.includes("LinkedIn")
+                    ? "Ended via LinkedIn"
+                    : reason.includes("call")
+                    ? "Ended via call"
+                    : "Ended";
+                  rows.push({ icon: "email", status, tone: "positive" });
+                  break;
+                }
+              }
+              return rows;
+            };
+
+            return (
+              <HoverCardContent align="end" className="w-[340px] p-4">
+                <div className="flex flex-col gap-4">
+                  <div className="detail-200 font-semibold text-muted-foreground uppercase tracking-wide">
+                    Outreach summary
                   </div>
-                ))}
-              </div>
-            </HoverCardContent>
-          )}
+                  {targets.map((c) => {
+                    const subtle = getSubtleAvatarStyles(c.avatarColor);
+                    const rows = channelStatus(c);
+                    const allPristine = rows.every((r) => r.tone === "none");
+                    return (
+                      <div key={c.id} className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-5 w-5 flex-shrink-0">
+                            <AvatarFallback
+                              className="text-[10px] font-medium"
+                              style={{ background: subtle.background, color: subtle.color }}
+                            >
+                              {c.initials}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="heading-50 text-foreground">{c.name}</span>
+                          <span className="detail-200 text-muted-foreground truncate">
+                            · {c.role}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1 pl-7">
+                          {allPristine ? (
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                                style={{ background: NONE }}
+                              />
+                              <span className="detail-200 text-muted-foreground">
+                                Outreach not started
+                              </span>
+                            </div>
+                          ) : (
+                            rows.map((r) => (
+                              <div key={r.icon} className="flex items-center gap-2">
+                                <TrellisIcon name={r.icon} size={12} className="text-muted-foreground" />
+                                <div
+                                  className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                                  style={{ background: dotFor(r.tone) }}
+                                />
+                                <span className="detail-200 text-foreground truncate">
+                                  {r.status}
+                                </span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </HoverCardContent>
+            );
+          })()}
         </HoverCard>
 
         <div className="flex items-center gap-3 flex-shrink-0">
-          <div className="flex items-center gap-1">
-            {displayedTouchStatuses.map((status, index) => (
-              <div
-                key={index}
-                className="h-3 w-3 rounded-full"
-                style={{
-                  background:
-                    status === "completed"
-                      ? "var(--color-fill-transitional-progress-success-gradient-color-1, #00823A)"
-                      : status === "scheduled"
-                        ? "var(--color-fill-transitional-progress-warning, #F5A623)"
-                        : "var(--color-fill-surface-recessed, #F0F0F0)",
-                }}
-              />
-            ))}
-          </div>
+          <MiniTouchDots statuses={displayedTouchStatuses as TouchStatus[]} />
           <span className="detail-200 text-muted-foreground whitespace-nowrap">
             due {company.touches.deadline}
           </span>

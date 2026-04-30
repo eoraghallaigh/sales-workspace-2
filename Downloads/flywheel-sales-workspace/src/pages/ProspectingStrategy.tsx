@@ -1,5 +1,4 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
-import { Switch } from "@/components/ui/switch";
 import { ThumbsUp, ThumbsDown, Plus, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -23,8 +22,16 @@ import { calculateCompanyStatus } from "@/utils/companyStatusUtils";
 import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { TextEditPopup } from "@/components/TextEditPopup";
 import PreviousDealCard, { PreviousDeal } from "@/components/PreviousDealCard";
+import EmailCommunicator from "@/components/EmailCommunicator";
+import { CallCard, LinkedInCard, EmailSequenceCard } from "@/components/OutreachCards";
+import { TouchDots, MiniTouchDots, type TouchStatus } from "@/components/TouchDot";
 
 import { companyStrategies, defaultStrategy } from "@/data/companyStrategies";
+import {
+  getOutreachState,
+  getAggregateSummary,
+  getOutreachStripSegments,
+} from "@/data/outreachStates";
 
 const ProspectingStrategy = () => {
   const { companyId } = useParams<{companyId: string;}>();
@@ -41,6 +48,7 @@ const ProspectingStrategy = () => {
   const [feedbackReason, setFeedbackReason] = useState<string>("no-longer-works");
   const [feedbackOtherText, setFeedbackOtherText] = useState("");
   const [feedbackRemove, setFeedbackRemove] = useState(false);
+  const [emailReplyTo, setEmailReplyTo] = useState<{ name: string; email: string; subject: string } | null>(null);
   const [callScriptMode, setCallScriptMode] = useState<"script" | "bullets">(() => {
     return (localStorage.getItem("callScriptMode") as "script" | "bullets") || "script";
   });
@@ -190,12 +198,8 @@ const ProspectingStrategy = () => {
               }>
               
                 <div className="body-100 text-foreground">{company.name}</div>
-                <div className="flex items-center gap-1 mt-1">
-                  {(company.touches?.touchStatuses || []).slice(0, 5).map((status: string, i: number) =>
-                <div key={i} className="h-3 w-3 rounded-full" style={{
-                  background: status === "completed" ? "var(--color-fill-transitional-progress-success-gradient-color-1, #00823A)" : status === "scheduled" ? "var(--color-fill-caution-default, #E5780A)" : "var(--color-fill-surface-recessed, #F0F0F0)"
-                }} />
-                )}
+                <div className="mt-1">
+                  <MiniTouchDots statuses={(company.touches?.touchStatuses || []) as TouchStatus[]} />
                 </div>
               </button>
             )}
@@ -239,13 +243,16 @@ const ProspectingStrategy = () => {
                   <Badge variant={getStatusBadgeVariant(currentCompany.status)}>
                     {getStatusLabel(currentCompany.status)}
                   </Badge>
-                  <div className="flex items-center gap-1">
-                    {(currentCompany.touches?.touchStatuses || []).slice(0, 5).map((status: string, i: number) =>
-                      <div key={i} className="h-3 w-3 rounded-full" style={{
-                        background: status === "completed" ? "var(--color-fill-transitional-progress-success-gradient-color-1, #00823A)" : status === "scheduled" ? "var(--color-fill-caution-default, #E5780A)" : "var(--color-fill-surface-recessed, #F0F0F0)"
-                      }} />
-                    )}
-                  </div>
+                  {(() => {
+                    const statuses = (currentCompany.touches?.touchStatuses || []) as TouchStatus[];
+                    const remaining = statuses.filter((s) => s !== "completed").length + Math.max(0, 5 - statuses.length);
+                    return (
+                      <span className="detail-200 text-muted-foreground">
+                        {remaining} more {remaining === 1 ? "touch" : "touches"} required before {currentCompany.touches?.deadline}
+                      </span>
+                    );
+                  })()}
+                  <TouchDots statuses={(currentCompany.touches?.touchStatuses || []) as TouchStatus[]} />
                 </div>
               </div>
             </div>
@@ -302,6 +309,33 @@ const ProspectingStrategy = () => {
                   <CollapsibleTrigger className="flex items-center gap-2 w-full group">
                     <TrellisIcon name="downCarat" size={12} className="text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
                     <h3 className="heading-200 text-foreground">Outreach Targets</h3>
+                    {(() => {
+                      const seg = getOutreachStripSegments(outreachTargets);
+                      if (seg.total === 0) return null;
+                      const unit = 10; // px per contact
+                      const buckets: Array<{ count: number; label: string; bg: string }> = [
+                        { count: seg.engaged, label: "replied", bg: "var(--color-fill-accent-green-default)" },
+                        { count: seg.inFlight, label: "awaiting response", bg: "var(--color-fill-accent-green-subtle)" },
+                        { count: seg.notStarted, label: "not started", bg: "var(--color-fill-surface-recessed)" },
+                      ];
+                      return (
+                        <div className="ml-auto flex items-center gap-3 shrink-0">
+                          {buckets.map((b) =>
+                            b.count > 0 ? (
+                              <div key={b.label} className="flex items-center gap-1.5">
+                                <div
+                                  className="h-2 rounded-sm"
+                                  style={{ width: `${b.count * unit}px`, background: b.bg, minWidth: "8px" }}
+                                />
+                                <span className="detail-200 text-muted-foreground whitespace-nowrap">
+                                  {b.count} {b.label}
+                                </span>
+                              </div>
+                            ) : null,
+                          )}
+                        </div>
+                      );
+                    })()}
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-4" ref={outreachContainerRef}>
 
@@ -348,172 +382,105 @@ const ProspectingStrategy = () => {
                           </p>
 
                           {/* Touch outreach sequence */}
-                          <p className="heading-50 text-foreground mb-3" data-tour="outreach-section">5 touch outreach sequence:</p>
+                          {(() => {
+                            const outreachState = getOutreachState(contact.id, contact.name.split(" ")[0]);
+                            const aggregate = getAggregateSummary(outreachState, contact.name.split(" ")[0]);
+                            return (
+                              <div className="flex items-baseline gap-2 mb-3" data-tour="outreach-section">
+                                <p className="heading-50 text-foreground">5 touch outreach sequence</p>
+                                {aggregate && (
+                                  <span className="detail-200 text-muted-foreground">· {aggregate}</span>
+                                )}
+                              </div>
+                            );
+                          })()}
 
                           {/* Call */}
-                          <div className="mb-3">
-                            <div className="flex items-start gap-3">
-                              <Avatar className="h-10 w-10 mt-3 shrink-0">
-                                <AvatarFallback className="bg-[var(--color-fill-surface-recessed)] text-foreground border border-core-subtle">
-                                  <TrellisIcon name="calling" size={16} />
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1 rounded-100 border border-core-subtle overflow-hidden">
-                                <Collapsible
-                                      open={isOutreachExpanded(contact.id, "call")}
-                                      onOpenChange={() => toggleOutreach(contact.id, "call")}>
-                                      
-                                  <div className="flex items-center px-4 py-3">
-                                    <CollapsibleTrigger className="flex items-center gap-2">
-                                      <TrellisIcon name="downCarat" size={12} className={`text-muted-foreground transition-transform ${isOutreachExpanded(contact.id, "call") ? "" : "-rotate-90"}`} />
-                                      <span className="heading-50 text-foreground">Call</span>
-                                    </CollapsibleTrigger>
-                                    <div className="ml-auto">
-                                      <Button variant="primary" size="extra-small">
-                                        <TrellisIcon name="calling" size={12} className="mr-1 brightness-0 invert" /> Call {contact.name.split(" ")[0]}
-                                      </Button>
-                                    </div>
-                                  </div>
-                                  <CollapsibleContent className="px-4 pb-4">
-                                    {callScriptMode === "script" ? (
-                                      <textarea
-                                        className="body-100 text-foreground leading-relaxed ml-5 w-full bg-transparent resize-none border-0 p-0 focus:outline-none focus:ring-0 rounded-[var(--borderRadius-100)] hover:bg-[var(--color-fill-surface-recessed)] transition-colors cursor-text"
-                                        style={{ fieldSizing: 'content' } as React.CSSProperties}
-                                        value={getEditableContent(`${contact.id}-call`, `"I noticed ${currentCompany.name} recently partnered with Orbweaver to automate data exchange for manufacturers. Usually, increasing the volume of automated data leads to fragmented 'Franken-stacks' where reps struggle to find a single source of truth. HubSpot's Sales Hub consolidates these data streams into one view, using Breeze AI to automate prospecting so your team stays focused on closing."`)}
-                                        onChange={(e) => setEditableContent(`${contact.id}-call`, e.target.value)}
-                                        rows={2}
-                                      />
-                                    ) : (
-                                      <ul className="ml-5 list-disc pl-4 space-y-1.5">
-                                        <li className="body-100 text-foreground leading-relaxed">{currentCompany.name} partnered with Orbweaver to automate data exchange for manufacturers</li>
-                                        <li className="body-100 text-foreground leading-relaxed">Automated data often leads to fragmented "Franken-stacks" — reps can't find a single source of truth</li>
-                                        <li className="body-100 text-foreground leading-relaxed">HubSpot Sales Hub consolidates data streams into one view</li>
-                                        <li className="body-100 text-foreground leading-relaxed">Breeze AI automates prospecting so team stays focused on closing</li>
-                                      </ul>
-                                    )}
-                                    <div className="flex items-center gap-2 justify-end mt-2">
-                                      <span className="detail-200 text-muted-foreground">Bullet points</span>
-                                      <Switch
-                                        className="h-4 w-7 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input [&>span]:h-3 [&>span]:w-3 [&>span]:data-[state=checked]:translate-x-3"
-                                        checked={callScriptMode === "bullets"}
-                                        onCheckedChange={(checked) => {
-                                          const mode = checked ? "bullets" : "script";
-                                          setCallScriptMode(mode);
-                                          localStorage.setItem("callScriptMode", mode);
-                                        }}
-                                      />
-                                    </div>
-                                  </CollapsibleContent>
-                                </Collapsible>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* LinkedIn Connection Request */}
-                          <div className="mb-3">
-                            <div className="flex items-start gap-3">
-                              <Avatar className="h-10 w-10 mt-3 shrink-0">
-                                <AvatarFallback className="bg-[var(--color-fill-surface-recessed)] text-foreground border border-core-subtle">
-                                  <TrellisIcon name="linkedin" size={16} />
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1 rounded-100 border border-core-subtle overflow-hidden">
-                                <Collapsible
-                                      open={isOutreachExpanded(contact.id, "linkedin")}
-                                      onOpenChange={() => toggleOutreach(contact.id, "linkedin")}>
-                                      
-                                  <div className="flex items-center px-4 py-3">
-                                    <CollapsibleTrigger className="flex items-center gap-2">
-                                      <TrellisIcon name="downCarat" size={12} className={`text-muted-foreground transition-transform ${isOutreachExpanded(contact.id, "linkedin") ? "" : "-rotate-90"}`} />
-                                      <span className="heading-50 text-foreground">LinkedIn Connection Request</span>
-                                    </CollapsibleTrigger>
-                                    <div className="ml-auto">
-                                      <Button variant="primary" size="extra-small">
-                                        <TrellisIcon name="linkedin" size={12} className="mr-1 brightness-0 invert" /> Send request
-                                      </Button>
-                                    </div>
-                                  </div>
-                                  <CollapsibleContent className="px-4 pb-4">
-                                    <textarea
-                                      className="body-100 text-foreground leading-relaxed ml-5 w-full bg-transparent resize-none border-0 p-0 focus:outline-none focus:ring-0 rounded-[var(--borderRadius-100)] hover:bg-[var(--color-fill-surface-recessed)] transition-colors cursor-text"
-                                      style={{ fieldSizing: 'content' } as React.CSSProperties}
-                                      value={getEditableContent(`${contact.id}-linkedin`, `"I've been following your leadership in the multi-line sales space and would love to connect. Your work integrating Empowering Systems into ${currentCompany.name} is fascinating."`)}
-                                      onChange={(e) => setEditableContent(`${contact.id}-linkedin`, e.target.value)}
-                                      rows={2}
-                                    />
-                                  </CollapsibleContent>
-                                </Collapsible>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Email sequence */}
-                          <div>
-                            <div className="flex items-start gap-3">
-                              <Avatar className="h-10 w-10 mt-3 shrink-0">
-                                <AvatarFallback className={index === 0 ? "bg-[var(--color-fill-positive-default)] text-white" : "bg-[var(--color-fill-surface-recessed)] text-foreground border border-core-subtle"}>
-                                  {index === 0 ? <TrellisIcon name="success" size={16} className="brightness-0 invert" /> : <TrellisIcon name="email" size={16} />}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1 rounded-100 border border-core-subtle overflow-hidden">
-                                <Collapsible
-                                      open={isOutreachExpanded(contact.id, "email")}
-                                      onOpenChange={() => toggleOutreach(contact.id, "email")}>
-                                      
-                                  <div className="flex items-center px-4 py-3">
-                                    <CollapsibleTrigger className="flex items-center gap-2">
-                                      <TrellisIcon name="downCarat" size={12} className={`text-muted-foreground transition-transform ${isOutreachExpanded(contact.id, "email") ? "" : "-rotate-90"}`} />
-                                      <span className="heading-50 text-foreground">
-                                        {index === 0 ? "3 Email sequence" : "Email sequence"}
-                                      </span>
-                                    </CollapsibleTrigger>
-                                    {index === 0 ?
-                                        <span className="body-100 text-muted-foreground ml-auto">Already enrolled</span> :
-
-                                        <div className="ml-auto">
-                                        <Button variant="primary" size="extra-small">
-                                          <TrellisIcon name="email" size={12} className="mr-1 brightness-0 invert" /> Enroll {contact.name.split(" ")[0]}
-                                        </Button>
-                                      </div>
-                                        }
-                                  </div>
-                                  <CollapsibleContent className="px-4 pb-4">
-                                    <div className="ml-5 divide-y divide-border-core-subtle">
-                                      {[
-                                        { subject: `Scaling ${currentCompany.name}'s Content ROI.`, body: `Hi ${contact.name.split(" ")[0]},\n\nI've been researching ${currentCompany.name}'s content strategy and noticed some impressive growth metrics. Many companies in your space are leaving significant ROI on the table by not connecting their content performance data directly to their sales pipeline.\n\nHubSpot's Content Hub can help you attribute revenue directly to content touchpoints, giving your team clear visibility into what's driving deals forward.\n\nWould you be open to a 15-minute conversation about how we could help scale your content ROI?` },
-                                        { subject: `Doubling down on ${currentCompany.name}'s highest-ROI content`, body: `Hi ${contact.name.split(" ")[0]},\n\nFollowing up on my previous note — I wanted to share a quick case study. A company similar to ${currentCompany.name} was able to 2x their content-influenced pipeline by using AI-powered content recommendations to serve the right assets at the right stage of the buyer's journey.\n\nI'd love to walk you through how this could work for your team. Would next Tuesday or Wednesday work for a brief call?` },
-                                        { subject: `Closing the loop on content ROI at ${currentCompany.name}`, body: `Hi ${contact.name.split(" ")[0]},\n\nI know things get busy, so I'll keep this brief. I've put together a short analysis of how ${currentCompany.name} could better leverage your existing content library to accelerate deals currently in your pipeline.\n\nNo commitment needed — happy to share the analysis either way. Just let me know if you'd like me to send it over.` },
-                                      ].map((email, emailIdx) => {
-                                        const emailKey = `${contact.id}-email-${emailIdx}`;
-                                        const isEmailOpen = expandedEmails[emailKey] ?? false;
-                                        return (
-                                          <Collapsible
-                                            key={emailIdx}
-                                            open={isEmailOpen}
-                                            onOpenChange={() => setExpandedEmails(prev => ({ ...prev, [emailKey]: !prev[emailKey] }))}
-                                          >
-                                            <CollapsibleTrigger className="flex items-center gap-2 w-full py-2">
-                                              <TrellisIcon name="downCarat" size={12} className={`text-muted-foreground transition-transform ${isEmailOpen ? "" : "-rotate-90"}`} />
-                                              <span className="body-100 text-foreground"><span className="heading-50">Subject:</span> {email.subject}</span>
-                                            </CollapsibleTrigger>
-                                            <CollapsibleContent className="pl-5 pb-3">
-                                              <textarea
-                                                className="body-100 text-foreground leading-relaxed whitespace-pre-line w-full bg-transparent resize-none border-0 p-0 focus:outline-none focus:ring-0 rounded-[var(--borderRadius-100)] hover:bg-[var(--color-fill-surface-recessed)] transition-colors cursor-text"
-                                                style={{ fieldSizing: 'content' } as React.CSSProperties}
-                                                value={getEditableContent(emailKey, email.body)}
-                                                onChange={(e) => setEditableContent(emailKey, e.target.value)}
-                                                rows={2}
-                                              />
-                                            </CollapsibleContent>
-                                          </Collapsible>
-                                        );
-                                      })}
-                                    </div>
-                                  </CollapsibleContent>
-                                </Collapsible>
-                              </div>
-                            </div>
-                          </div>
+                          {(() => {
+                            const outreachState = getOutreachState(contact.id, contact.name.split(" ")[0]);
+                            const firstName = contact.name.split(" ")[0];
+                            const defaultCallScript = `"I noticed ${currentCompany.name} recently partnered with Orbweaver to automate data exchange for manufacturers. Usually, increasing the volume of automated data leads to fragmented 'Franken-stacks' where reps struggle to find a single source of truth. HubSpot's Sales Hub consolidates these data streams into one view, using Breeze AI to automate prospecting so your team stays focused on closing."`;
+                            const defaultLinkedInMsg = `"I've been following your leadership in the multi-line sales space and would love to connect. Your work integrating Empowering Systems into ${currentCompany.name} is fascinating."`;
+                            const emailTemplates = [
+                              { subject: `Scaling ${currentCompany.name}'s Content ROI.`, body: `Hi ${firstName},\n\nI've been researching ${currentCompany.name}'s content strategy and noticed some impressive growth metrics. Many companies in your space are leaving significant ROI on the table by not connecting their content performance data directly to their sales pipeline.\n\nHubSpot's Content Hub can help you attribute revenue directly to content touchpoints, giving your team clear visibility into what's driving deals forward.\n\nWould you be open to a 15-minute conversation about how we could help scale your content ROI?` },
+                              { subject: `Doubling down on ${currentCompany.name}'s highest-ROI content`, body: `Hi ${firstName},\n\nFollowing up on my previous note — I wanted to share a quick case study. A company similar to ${currentCompany.name} was able to 2x their content-influenced pipeline by using AI-powered content recommendations to serve the right assets at the right stage of the buyer's journey.\n\nI'd love to walk you through how this could work for your team. Would next Tuesday or Wednesday work for a brief call?` },
+                              { subject: `Closing the loop on content ROI at ${currentCompany.name}`, body: `Hi ${firstName},\n\nI know things get busy, so I'll keep this brief. I've put together a short analysis of how ${currentCompany.name} could better leverage your existing content library to accelerate deals currently in your pipeline.\n\nNo commitment needed — happy to share the analysis either way. Just let me know if you'd like me to send it over.` },
+                            ];
+                            const emailExpanded: Record<number, boolean> = {};
+                            for (let i = 0; i < 3; i++) {
+                              const k = `${contact.id}-email-${i}`;
+                              if (k in expandedEmails) emailExpanded[i] = expandedEmails[k];
+                            }
+                            return (
+                              <>
+                                <div className="mb-3">
+                                  <CallCard
+                                    state={outreachState.call}
+                                    contactName={contact.name}
+                                    companyName={currentCompany.name}
+                                    isExpanded={isOutreachExpanded(contact.id, "call")}
+                                    onToggleExpanded={() => toggleOutreach(contact.id, "call")}
+                                    scriptValue={getEditableContent(`${contact.id}-call`, defaultCallScript)}
+                                    onScriptChange={(v) => setEditableContent(`${contact.id}-call`, v)}
+                                    scriptMode={callScriptMode}
+                                    onScriptModeChange={(mode) => {
+                                      setCallScriptMode(mode);
+                                      localStorage.setItem("callScriptMode", mode);
+                                    }}
+                                  />
+                                </div>
+                                <div className="mb-3">
+                                  <LinkedInCard
+                                    state={outreachState.linkedin}
+                                    isExpanded={isOutreachExpanded(contact.id, "linkedin")}
+                                    onToggleExpanded={() => toggleOutreach(contact.id, "linkedin")}
+                                    messageValue={getEditableContent(`${contact.id}-linkedin`, defaultLinkedInMsg)}
+                                    onMessageChange={(v) => setEditableContent(`${contact.id}-linkedin`, v)}
+                                  />
+                                </div>
+                                <EmailSequenceCard
+                                  state={outreachState.sequence}
+                                  contact={{
+                                    id: contact.id,
+                                    name: contact.name,
+                                    initials: contact.initials,
+                                    avatarColor: contact.avatarColor,
+                                  }}
+                                  isExpanded={isOutreachExpanded(contact.id, "email")}
+                                  onToggleExpanded={() => toggleOutreach(contact.id, "email")}
+                                  emails={emailTemplates}
+                                  expandedEmails={emailExpanded}
+                                  onToggleEmail={(idx) => {
+                                    const k = `${contact.id}-email-${idx}`;
+                                    setExpandedEmails((prev) => ({ ...prev, [k]: !prev[k] }));
+                                  }}
+                                  getSubjectValue={(idx) =>
+                                    getEditableContent(`${contact.id}-email-${idx}-subject`, emailTemplates[idx].subject)
+                                  }
+                                  onSubjectChange={(idx, v) =>
+                                    setEditableContent(`${contact.id}-email-${idx}-subject`, v)
+                                  }
+                                  getBodyValue={(idx) =>
+                                    getEditableContent(`${contact.id}-email-${idx}`, emailTemplates[idx].body)
+                                  }
+                                  onBodyChange={(idx, v) =>
+                                    setEditableContent(`${contact.id}-email-${idx}`, v)
+                                  }
+                                  onReply={(idx) => {
+                                    const subject = getEditableContent(
+                                      `${contact.id}-email-${idx}-subject`,
+                                      emailTemplates[idx].subject,
+                                    );
+                                    setEmailReplyTo({
+                                      name: contact.name,
+                                      email: `${contact.name.toLowerCase().replace(/\s+/g, ".")}@${currentCompany.name.toLowerCase().replace(/\s+/g, "")}.com`,
+                                      subject: `Re: ${subject}`,
+                                    });
+                                  }}
+                                />
+                              </>
+                            );
+                          })()}
                           {/* Feedback */}
                           <div className="flex items-center justify-end gap-1 mt-3">
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
@@ -1131,6 +1098,14 @@ const ProspectingStrategy = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <EmailCommunicator
+        isOpen={emailReplyTo !== null}
+        onClose={() => setEmailReplyTo(null)}
+        recipientName={emailReplyTo?.name}
+        recipientEmail={emailReplyTo?.email}
+        defaultSubject={emailReplyTo?.subject}
+      />
     </Layout>);
 
 };

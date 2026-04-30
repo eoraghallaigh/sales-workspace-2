@@ -1,8 +1,35 @@
 # Design Principles
 
-**Last updated:** 2026-04-21 *(template — please fill in)*
+**Last updated:** 2026-04-30
 
 The rules of thumb for how we design the prospecting workspace. When proposing a new pattern, check here first — if the idea conflicts with a principle, either rethink it or flag the tradeoff explicitly.
+
+---
+
+## What we're trying to enhance
+
+Sales managers describe effective prospecting as the combination of three skills. Every feature we ship should make at least one of these easier — and shouldn't undermine the others.
+
+### Structured planning
+Effective reps block time for prospecting and know in advance how they are going to use that time.
+- They decide ahead when they're working reactive vs proactive, install base vs net new.
+- They prepare call lists the night before so they can execute immediately during power hours.
+
+**Designs should:** make it cheap to plan tomorrow's work today; make it obvious what falls into reactive vs proactive and install vs net new; preserve a rep's plan when they come back to the workspace the next morning.
+
+### Strategic targeting
+Intent does not equal fit. Effective reps prioritise high-fit accounts (employee size, industry) over low-quality high-intent leads, and they personalise outreach when it matters.
+- Recent conversions and intent signals are valuable, but only when paired with high fit.
+- Personalised emails and LinkedIn messages still beat generic blasts.
+
+**Designs should:** surface fit alongside intent — never one without the other; make it fast to act on a strong signal *only when* the account is also worth working; support personalisation without slowing the rep down.
+
+### Depth of work
+High performers don't just contact one person — they map the account and reach multiple decision-makers in parallel. They prefer 3–4 distinct touches per account over a single touch across many accounts.
+- Top reps reach into multiple roles (CMO, VP Sales, CEO) at the same account.
+- They use creative formats like Loom videos to break through, not just automated sequences.
+
+**Designs should:** make multi-threading the default, not an extra step; show coverage across an account, not just per-contact activity; encourage variety in touch types — calls, LinkedIn, personalised email, video — over volume of identical sends.
 
 ---
 

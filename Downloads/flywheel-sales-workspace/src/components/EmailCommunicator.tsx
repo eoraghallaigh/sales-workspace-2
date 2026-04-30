@@ -10,11 +10,16 @@ interface EmailCommunicatorProps {
   onClose: () => void;
   recipientName?: string;
   recipientEmail?: string;
+  defaultSubject?: string;
   onSendEmail?: () => void;
 }
 
-const EmailCommunicator = ({ isOpen, onClose, recipientName, recipientEmail, onSendEmail }: EmailCommunicatorProps) => {
-  const [subject, setSubject] = useState("");
+const EmailCommunicator = ({ isOpen, onClose, recipientName, recipientEmail, defaultSubject, onSendEmail }: EmailCommunicatorProps) => {
+  const [subject, setSubject] = useState(defaultSubject ?? "");
+
+  useEffect(() => {
+    if (isOpen) setSubject(defaultSubject ?? "");
+  }, [isOpen, defaultSubject]);
   const [body, setBody] = useState("");
   const [createTask, setCreateTask] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -27,7 +32,7 @@ const EmailCommunicator = ({ isOpen, onClose, recipientName, recipientEmail, onS
     if (isOpen && panelRef.current) {
       const windowWidth = window.innerWidth;
       const windowHeight = window.innerHeight;
-      const panelWidth = 600;
+      const panelWidth = 720;
       const panelHeight = 572;
       
       setPosition({
@@ -78,8 +83,8 @@ const EmailCommunicator = ({ isOpen, onClose, recipientName, recipientEmail, onS
     <div 
       ref={panelRef}
       className="fixed bg-white z-50 flex flex-col shadow-400 rounded-lg animate-scale-in"
-      style={{ 
-        width: '600px', 
+      style={{
+        width: '720px',
         height: '572px',
         left: `${position.x}px`,
         top: `${position.y}px`,
@@ -87,9 +92,9 @@ const EmailCommunicator = ({ isOpen, onClose, recipientName, recipientEmail, onS
       }}
     >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-border flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <button 
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <button
               className="p-1 hover:bg-gray-100 rounded cursor-grab active:cursor-grabbing"
               onMouseDown={handleMouseDown}
             >
@@ -99,8 +104,8 @@ const EmailCommunicator = ({ isOpen, onClose, recipientName, recipientEmail, onS
                 ))}
               </div>
             </button>
-            <ChevronDown className="h-5 w-5 text-foreground" />
-            <h2 className="heading-300 text-foreground">Email</h2>
+            <ChevronDown className="h-4 w-4 text-foreground" />
+            <h2 className="heading-100 text-foreground">Email</h2>
           </div>
           <div className="flex items-center gap-2">
             <button className="p-2 hover:bg-gray-100 rounded transition-colors">
@@ -133,11 +138,11 @@ const EmailCommunicator = ({ isOpen, onClose, recipientName, recipientEmail, onS
           <div className="px-6 py-4 space-y-4">
             {/* To Field */}
             <div className="flex items-center gap-3">
-              <label className="heading-100 text-foreground w-16">To</label>
+              <label className="heading-50 text-foreground w-16">To</label>
               <div className="flex-1 flex items-center gap-2 flex-wrap">
                 {recipientName && (
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 border border-border rounded-full">
-                    <span className="body-100 text-foreground">{recipientName}</span>
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-gray-100 border border-border rounded-full">
+                    <span className="text-[12px] font-semibold text-foreground">{recipientName}</span>
                     <button className="hover:bg-gray-200 rounded-full p-0.5">
                       <X className="h-3 w-3 text-foreground" />
                     </button>
@@ -153,7 +158,7 @@ const EmailCommunicator = ({ isOpen, onClose, recipientName, recipientEmail, onS
 
             {/* From Field */}
             <div className="flex items-center gap-3">
-              <label className="heading-100 text-foreground w-16">From</label>
+              <label className="heading-50 text-foreground w-16">From</label>
               <div className="flex-1 flex items-center justify-between">
                 <Select defaultValue="eoin">
                   <SelectTrigger className="w-auto border-0 shadow-none p-0 h-auto body-100">
@@ -172,7 +177,7 @@ const EmailCommunicator = ({ isOpen, onClose, recipientName, recipientEmail, onS
 
             {/* Subject Field */}
             <div className="flex items-center gap-3 border-b border-border pb-4">
-              <label className="heading-100 text-foreground w-16">Subject</label>
+              <label className="heading-50 text-foreground w-16">Subject</label>
               <Input
                 type="text"
                 value={subject}
@@ -230,7 +235,7 @@ const EmailCommunicator = ({ isOpen, onClose, recipientName, recipientEmail, onS
           </div>
 
           <Select defaultValue="1">
-            <SelectTrigger className="w-auto border-0 shadow-none h-auto">
+            <SelectTrigger variant="transparent" className="w-auto h-auto px-2 py-1 detail-200 text-muted-foreground gap-1">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -241,38 +246,34 @@ const EmailCommunicator = ({ isOpen, onClose, recipientName, recipientEmail, onS
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-border flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center">
-              <Button 
-                variant="default" 
-                size="default" 
-                className="rounded-r-none"
-                onClick={() => {
-                  onSendEmail?.();
-                  onClose();
-                }}
-              >
-                Send
-              </Button>
-              <Button variant="default" size="default" className="rounded-l-none border-l border-white/20 px-2">
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </div>
+        <div className="px-4 py-3 border-t border-border flex items-center gap-4 flex-shrink-0">
+          <div className="flex items-center shrink-0">
+            <Button
+              variant="default"
+              size="default"
+              className="rounded-r-none"
+              onClick={() => {
+                onSendEmail?.();
+                onClose();
+              }}
+            >
+              Send
+            </Button>
+            <Button variant="default" size="default" className="rounded-l-none border-l border-white/20 px-2">
+              <ChevronDown className="h-4 w-4" />
+            </Button>
           </div>
 
-          <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={createTask}
-                onChange={(e) => setCreateTask(e.target.checked)}
-                className="h-4 w-4 rounded border-border"
-              />
-              <span className="body-100 text-foreground">Create a</span>
-            </label>
+          <div className="flex items-center gap-1.5 body-100 text-foreground whitespace-nowrap">
+            <input
+              type="checkbox"
+              checked={createTask}
+              onChange={(e) => setCreateTask(e.target.checked)}
+              className="h-4 w-4 rounded border-border"
+            />
+            <span>Create a</span>
             <Select defaultValue="todo">
-              <SelectTrigger className="w-auto h-auto border-0 shadow-none p-0">
+              <SelectTrigger variant="transparent" className="w-auto h-auto px-1.5 py-0.5 gap-1 body-100 [&>span]:font-semibold">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -280,13 +281,13 @@ const EmailCommunicator = ({ isOpen, onClose, recipientName, recipientEmail, onS
                 <SelectItem value="task">Task</SelectItem>
               </SelectContent>
             </Select>
-            <span className="body-100 text-foreground">task to follow up</span>
+            <span>task to follow up</span>
             <Select defaultValue="3days">
-              <SelectTrigger className="w-auto h-auto border-0 shadow-none p-0">
+              <SelectTrigger variant="transparent" className="w-auto h-auto px-1.5 py-0.5 gap-1 body-100 [&>span]:font-semibold">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="3days">In 3 business days (Wednesday)</SelectItem>
+                <SelectItem value="3days">In 3 business days (Monday)</SelectItem>
                 <SelectItem value="1week">In 1 week</SelectItem>
                 <SelectItem value="custom">Custom</SelectItem>
               </SelectContent>
