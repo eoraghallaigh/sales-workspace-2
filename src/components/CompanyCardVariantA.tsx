@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { MiniTouchDots, type TouchStatus } from "@/components/TouchDot";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -112,22 +113,7 @@ const CompanyCardVariantA = ({
       </div>
 
       <div className="flex flex-col items-end gap-1 flex-shrink-0">
-        <div className="flex items-center gap-1.5">
-          {displayedTouchStatuses.map((status, index) => (
-            <div
-              key={index}
-              className="h-3 w-3 rounded-full"
-              style={{
-                background:
-                  status === "completed"
-                    ? "var(--color-fill-transitional-progress-success-gradient-color-1, #00823A)"
-                    : status === "scheduled"
-                      ? "var(--color-fill-transitional-progress-warning, #F5A623)"
-                      : "var(--color-fill-surface-recessed, #F0F0F0)",
-              }}
-            />
-          ))}
-        </div>
+        <MiniTouchDots statuses={displayedTouchStatuses as TouchStatus[]} />
         <span className="detail-200 text-muted-foreground">
           {completedCount}/5 · due {company.touches.deadline}
         </span>
