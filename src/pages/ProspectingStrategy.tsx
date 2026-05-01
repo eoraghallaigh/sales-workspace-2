@@ -23,7 +23,7 @@ import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { TextEditPopup } from "@/components/TextEditPopup";
 import PreviousDealCard, { PreviousDeal } from "@/components/PreviousDealCard";
 import EmailCommunicator from "@/components/EmailCommunicator";
-import { CallCard, LinkedInCard, EmailSequenceCard } from "@/components/OutreachCards";
+import { OutreachSequenceCard } from "@/components/OutreachSequenceCard";
 import { TouchDots, MiniTouchDots, type TouchStatus } from "@/components/TouchDot";
 
 import { companyStrategies, defaultStrategy } from "@/data/companyStrategies";
@@ -50,9 +50,6 @@ const ProspectingStrategy = () => {
   const [feedbackOtherText, setFeedbackOtherText] = useState("");
   const [feedbackRemove, setFeedbackRemove] = useState(false);
   const [emailReplyTo, setEmailReplyTo] = useState<{ name: string; email: string; subject: string } | null>(null);
-  const [callScriptMode, setCallScriptMode] = useState<"script" | "bullets">(() => {
-    return (localStorage.getItem("callScriptMode") as "script" | "bullets") || "script";
-  });
   const outreachContainerRef = useRef<HTMLDivElement>(null);
   const tabsListRef = useRef<HTMLDivElement>(null);
   const [tabIndicator, setTabIndicator] = useState({ left: 0, width: 0 });
@@ -185,7 +182,7 @@ const ProspectingStrategy = () => {
 
   const isOutreachExpanded = (contactId: string, section: string) => {
     const key = `${contactId}-${section}`;
-    return expandedOutreach[key] ?? section === "call";
+    return expandedOutreach[key] ?? (section === "call" || section === "sequence");
   };
 
   if (!currentCompany) return null;
@@ -400,20 +397,6 @@ const ProspectingStrategy = () => {
                             Friction in scaling operations post-acquisition due to fragmented data silos between the legacy Empowering Systems and {currentCompany.name} platforms.
                           </p>
 
-                          {/* Touch outreach sequence */}
-                          {(() => {
-                            const outreachState = getOutreachState(contact.id, contact.name.split(" ")[0]);
-                            const aggregate = getAggregateSummary(outreachState, contact.name.split(" ")[0]);
-                            return (
-                              <div className="flex items-baseline gap-2 mb-3" data-tour="outreach-section">
-                                <p className="heading-50 text-foreground">5 touch outreach sequence</p>
-                                {aggregate && (
-                                  <span className="detail-200 text-muted-foreground">· {aggregate}</span>
-                                )}
-                              </div>
-                            );
-                          })()}
-
                           {/* Call */}
                           {(() => {
                             const outreachState = getOutreachState(contact.id, contact.name.split(" ")[0]);
@@ -425,79 +408,71 @@ const ProspectingStrategy = () => {
                               { subject: `Doubling down on ${currentCompany.name}'s highest-ROI content`, body: `Hi ${firstName},\n\nFollowing up on my previous note — I wanted to share a quick case study. A company similar to ${currentCompany.name} was able to 2x their content-influenced pipeline by using AI-powered content recommendations to serve the right assets at the right stage of the buyer's journey.\n\nI'd love to walk you through how this could work for your team. Would next Tuesday or Wednesday work for a brief call?` },
                               { subject: `Closing the loop on content ROI at ${currentCompany.name}`, body: `Hi ${firstName},\n\nI know things get busy, so I'll keep this brief. I've put together a short analysis of how ${currentCompany.name} could better leverage your existing content library to accelerate deals currently in your pipeline.\n\nNo commitment needed — happy to share the analysis either way. Just let me know if you'd like me to send it over.` },
                             ];
-                            const emailExpanded: Record<number, boolean> = {};
-                            for (let i = 0; i < 3; i++) {
-                              const k = `${contact.id}-email-${i}`;
-                              if (k in expandedEmails) emailExpanded[i] = expandedEmails[k];
-                            }
                             return (
-                              <>
-                                <div className="mb-3">
-                                  <CallCard
-                                    state={outreachState.call}
-                                    contactName={contact.name}
-                                    companyName={currentCompany.name}
-                                    isExpanded={isOutreachExpanded(contact.id, "call")}
-                                    onToggleExpanded={() => toggleOutreach(contact.id, "call")}
-                                    scriptValue={getEditableContent(`${contact.id}-call`, defaultCallScript)}
-                                    onScriptChange={(v) => setEditableContent(`${contact.id}-call`, v)}
-                                    scriptMode={callScriptMode}
-                                    onScriptModeChange={(mode) => {
-                                      setCallScriptMode(mode);
-                                      localStorage.setItem("callScriptMode", mode);
-                                    }}
-                                  />
-                                </div>
-                                <div className="mb-3">
-                                  <LinkedInCard
-                                    state={outreachState.linkedin}
-                                    isExpanded={isOutreachExpanded(contact.id, "linkedin")}
-                                    onToggleExpanded={() => toggleOutreach(contact.id, "linkedin")}
-                                    messageValue={getEditableContent(`${contact.id}-linkedin`, defaultLinkedInMsg)}
-                                    onMessageChange={(v) => setEditableContent(`${contact.id}-linkedin`, v)}
-                                  />
-                                </div>
-                                <EmailSequenceCard
-                                  state={outreachState.sequence}
-                                  contact={{
-                                    id: contact.id,
+                              <OutreachSequenceCard
+                                contact={{
+                                  id: contact.id,
+                                  name: contact.name,
+                                  initials: contact.initials,
+                                  avatarColor: contact.avatarColor,
+                                }}
+                                call={outreachState.call}
+                                linkedin={outreachState.linkedin}
+                                sequence={outreachState.sequence}
+                                defaultCallScript={defaultCallScript}
+                                defaultLinkedInMessage={defaultLinkedInMsg}
+                                emailTemplates={emailTemplates}
+                                isExpanded={isOutreachExpanded(contact.id, "sequence")}
+                                onToggleExpanded={() => toggleOutreach(contact.id, "sequence")}
+                                expandedTouches={(() => {
+                                  const map: Record<string, boolean> = {};
+                                  for (const k in expandedEmails) {
+                                    if (k.startsWith(`${contact.id}-`)) map[k] = expandedEmails[k];
+                                  }
+                                  return map;
+                                })()}
+                                onToggleTouch={(id) => {
+                                  setExpandedEmails((prev) => ({ ...prev, [id]: !prev[id] }));
+                                }}
+                                getCallScript={() =>
+                                  getEditableContent(`${contact.id}-call`, defaultCallScript)
+                                }
+                                onCallScriptChange={(v) =>
+                                  setEditableContent(`${contact.id}-call`, v)
+                                }
+                                getLinkedInMessage={() =>
+                                  getEditableContent(`${contact.id}-linkedin`, defaultLinkedInMsg)
+                                }
+                                onLinkedInMessageChange={(v) =>
+                                  setEditableContent(`${contact.id}-linkedin`, v)
+                                }
+                                getEmailSubject={(idx) =>
+                                  getEditableContent(
+                                    `${contact.id}-email-${idx}-subject`,
+                                    emailTemplates[idx].subject,
+                                  )
+                                }
+                                onEmailSubjectChange={(idx, v) =>
+                                  setEditableContent(`${contact.id}-email-${idx}-subject`, v)
+                                }
+                                getEmailBody={(idx) =>
+                                  getEditableContent(`${contact.id}-email-${idx}`, emailTemplates[idx].body)
+                                }
+                                onEmailBodyChange={(idx, v) =>
+                                  setEditableContent(`${contact.id}-email-${idx}`, v)
+                                }
+                                onReplyToEmail={(idx) => {
+                                  const subject = getEditableContent(
+                                    `${contact.id}-email-${idx}-subject`,
+                                    emailTemplates[idx].subject,
+                                  );
+                                  setEmailReplyTo({
                                     name: contact.name,
-                                    initials: contact.initials,
-                                    avatarColor: contact.avatarColor,
-                                  }}
-                                  isExpanded={isOutreachExpanded(contact.id, "email")}
-                                  onToggleExpanded={() => toggleOutreach(contact.id, "email")}
-                                  emails={emailTemplates}
-                                  expandedEmails={emailExpanded}
-                                  onToggleEmail={(idx) => {
-                                    const k = `${contact.id}-email-${idx}`;
-                                    setExpandedEmails((prev) => ({ ...prev, [k]: !prev[k] }));
-                                  }}
-                                  getSubjectValue={(idx) =>
-                                    getEditableContent(`${contact.id}-email-${idx}-subject`, emailTemplates[idx].subject)
-                                  }
-                                  onSubjectChange={(idx, v) =>
-                                    setEditableContent(`${contact.id}-email-${idx}-subject`, v)
-                                  }
-                                  getBodyValue={(idx) =>
-                                    getEditableContent(`${contact.id}-email-${idx}`, emailTemplates[idx].body)
-                                  }
-                                  onBodyChange={(idx, v) =>
-                                    setEditableContent(`${contact.id}-email-${idx}`, v)
-                                  }
-                                  onReply={(idx) => {
-                                    const subject = getEditableContent(
-                                      `${contact.id}-email-${idx}-subject`,
-                                      emailTemplates[idx].subject,
-                                    );
-                                    setEmailReplyTo({
-                                      name: contact.name,
-                                      email: `${contact.name.toLowerCase().replace(/\s+/g, ".")}@${currentCompany.name.toLowerCase().replace(/\s+/g, "")}.com`,
-                                      subject: `Re: ${subject}`,
-                                    });
-                                  }}
-                                />
-                              </>
+                                    email: `${contact.name.toLowerCase().replace(/\s+/g, ".")}@${currentCompany.name.toLowerCase().replace(/\s+/g, "")}.com`,
+                                    subject: `Re: ${subject}`,
+                                  });
+                                }}
+                              />
                             );
                           })()}
                           {/* Feedback */}
