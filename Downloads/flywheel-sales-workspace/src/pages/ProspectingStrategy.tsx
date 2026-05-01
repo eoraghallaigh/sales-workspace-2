@@ -182,7 +182,7 @@ const ProspectingStrategy = () => {
 
   const isOutreachExpanded = (contactId: string, section: string) => {
     const key = `${contactId}-${section}`;
-    return expandedOutreach[key] ?? section === "call";
+    return expandedOutreach[key] ?? (section === "call" || section === "sequence");
   };
 
   if (!currentCompany) return null;
