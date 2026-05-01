@@ -32,6 +32,7 @@ When context is missing or stale, **ask before assuming**. Flag when a doc looks
 ### Read when relevant
 - [Customer feedback themes](docs/customer-feedback.md)
 - [User personas](docs/personas.md)
+- [Prospecting management research report](docs/research/prospecting-management-research-report.md) — manager-side view of what effective prospecting looks like; the behaviours the workspace is optimizing for
 
 ### Active PRDs
 - [BoB in the Workspace — Priority Prospects view](docs/prds/prd-bob-workspace.md) *(Alpha Dec 8, 2025 · GA Feb 1, 2026)*
@@ -42,6 +43,8 @@ When context is missing or stale, **ask before assuming**. Flag when a doc looks
 
 - `docs/` — living product context (goals, roadmap, feedback, principles, personas)
 - `docs/prds/` — individual PRD summaries, one per feature
+- `docs/research/` — research reports and findings synthesizing user/manager interviews
+- `docs/research-plans/` — plans for upcoming or in-flight research studies
 - `.context/` — workspace scratch space (gitignored); attachments, notes, todos
 - `Downloads/` — raw artifacts pulled in from Drive, Figma, etc. Treat as source material, not canonical.
 
