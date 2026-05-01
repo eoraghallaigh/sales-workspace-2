@@ -1,80 +1,132 @@
-# **BoB in the Workspace Prototype: Research Plan**
+# **Research Plan**
 
-**Last updated:** 2026-04-30
-**Owner:** Eoin Ó Raghallaigh (Research/Design)
-**Stage:** Pre-Alpha prototype evaluation (Variant C)
-
----
+# **Prospecting Strategy: Research Plan**
 
 # **Background**
 
-The Flywheel Sales Workspace is HubSpot's daily prospecting cockpit for SMB SDRs and Growth Specialists. The Beta has surfaced a clear and consistent set of pain points (see [customer feedback themes](../customer-feedback.md)): reps distrust the P1–P4 prioritization, are hindered by data quality issues, want to tsee the full context of the company/contact record, and strongly dislike the native HubSpot calling function
+The Flywheel Sales Workspace is HubSpot's daily prospecting cockpit for SB Growth Specialists. Sales managers describe effective prospecting as the combination of three skills, and the prototype is designed to make each one easier:
 
-Variant C of the prototype takes a deliberate stance in response: it commits to a **company-centric, deep-prospecting** layout where each company is a strategy page (not a row in a queue), the AI pre-stages outreach (call script, LinkedIn DM, three-email sequence), and engagement state (touches, activity, sequence status) is unified across surfaces. Several behaviors in the prototype are bets we have not yet validated with reps:
+1. **Structured planning.** The best reps block time for prospecting and prepare in advance (reactive vs. proactive, install base vs. net new).   
+2. **Strategic targeting.** The workspace should surface high-fit accounts together with the signals that justify them, and make it fast to act when fit and intent align.  
+3. **Depth of work.** Top performers engage multiple contacts across multiple channels. The workspace should make multi-threading the default, not an extra step.
 
-- **AI-generated outreach is treated as the default**, with the rep editing rather than authoring from scratch.
-- **Recent activity / conversion context** that justifies the prioritization may be hidden or de-emphasized once the AI has used it to draft outreach.
-- **Connected calls automatically pause / unenroll the contact from the email sequence**, on the assumption that the conversation supersedes the automation.
-- **The default workflow is one company at a time, in depth** (multi-thread, multi-channel) rather than a centralized list a rep blasts through.
+The prototype we're testing makes three changes to the current workspace:
 
+1. **A condensed company list.** Detailed contact cards are removed from the list view — they were redundant with the strategy page and pulled reps' attention sideways instead of forward.  
+2. **A strategy page per company** that surfaces all outreach targets together with pre-generated outreach (call script, LinkedIn DM, three-email sequence) and a one-click execution path for each.  
+3. **Review-and-edit affordances** so reps can adjust the AI-drafted outreach before it goes out.
 
 # **Research Objectives**
 
-1. Validate whether reps trust the AI-generated outreach enough to act on it without re-deriving the underlying signals themselves.
-2. Pressure-test the "auto-pause sequence on connected call" automation against how reps actually want to handle that moment.
-3. Confirm that the affordance for editing AI outreach is discoverable and that reps feel ownership of what gets sent.
-4. Assess whether the deep-per-company workflow matches the rep's natural daily loop, or whether a centralized burst-call list is a better default.
+1. Validate whether reps trust the AI-generated outreach enough to act on it without wanting to investigate the underlying signals themselves.  
+2. Understand what events should trigger pauses/unenroll from sequences.  
+3. Confirm that the affordance for editing AI outreach is discoverable and that reps feel ownership of what gets sent.  
+4. Assess whether the deep-per-company workflow matches the rep's natural daily workflow, or whether a centralized burst-call list is a better default.
 
+# **Research Questions**
 
-# **Research Questions and Hypotheses**
+### **Trust in automated outreach**
 
-### Trust in AI
+The prototype doesn't generate live AI outreach against real companies, so we can't measure trust in *this* AI directly. Instead, we use reps' lived experience with HubSpot's existing automated email sequences as the starting point and probe whether the prototype's review affordances would close the gaps they currently feel.
 
-1. **Do reps trust AI-generated call scripts, LinkedIn DMs, and email sequences enough to send them with light edits — or do they feel the need to rewrite from scratch?**
-   *H1: Trust will correlate with whether the rep can see the reasoning ("why this account / why this opening line"). Reps who can drill into the source signals will accept lighter edits; reps who can't will rewrite or abandon.*
+1. What is reps' current experience with automated outreach (sequences, AI-assisted email)? Where has it served them well, and where has it embarrassed or burned them? 
 
+2. What would have to be true for a rep to trust an AI-drafted call script / LinkedIn DM / email enough to send it with light edits? 
 
-2. **Are reps comfortable with source data (recent activity, conversions, intent signals) being hidden or collapsed once the AI has used it, or do they want it persistently visible?**
-   *H2: Most reps will want at least a one-click reveal of source signals before sending — full removal will erode trust, especially after past experiences with low-quality P1s and "fake Gmail" intent.*
+3. How do reps actually review and verify outreach content today? What's their checklist, and where do they go to confirm each piece? 
 
+4. Does the prototype's design support that review-and-verify workflow? Where does it help, and where does it get in the way?
 
-### Automation logic
+### **Automation logic**
 
-3. **When a rep has a connected call with a contact, is automatically pausing/unenrolling the email sequence the correct default?**
-   *H3: Reps will accept auto-pause for the contact who connected, but not for other contacts at the same company. They will also want a clear undo and visibility into what was paused.*
+5. When a rep has a connected call with a contact, is automatically pausing/unenrolling the email sequence the correct default?   
+6. Beyond connected calls, what other moments should auto-end a sequence?
 
+### **Feature discoverability**
 
-4. **Beyond connected calls, what other moments should auto-end a sequence?** (e.g. reply, meeting booked, LinkedIn-accepted-and-engaged, closed-lost)
-   *H4: Reps already have a strong mental model: any signal that the conversation has moved off rails ends automation. Meeting booked and reply are universally accepted; LinkedIn acceptance is contested.*
+7. Can reps find and use the affordance for editing AI-drafted outreach without prompting?  
+     
+8. Once edits are discovered, do reps feel safe making them?
 
-### Feature discoverability
+### **Workflow preferences (deep vs. burst)**
 
-5. **Can reps find and use the affordance for editing AI-drafted outreach without prompting?**
-   *H5: Edit affordances inside the outreach panel will be discovered quickly; deeper edits (changing tone, swapping a CTA, regenerating) will not be — reps will work around them with copy-paste.*
+9. When reps batch their dialling (power hour, blitz, manager-mandated call window), where does the call actually start? From the strategy page in flow, or from a separate call list they assembled earlier?   
+     
+10. Should the per-target affordance on the strategy page be "call now" or "add to call list"?   
+      
+11. Where in the daily loop does the prototype break down?
 
-6. **Once edits are discovered, do reps feel safe making them?** (i.e. do they understand what's editable, what's locked, and what saves vs. resets)
-   *H6: Reps will edit cautiously the first time and need explicit confirmation that their edits stick before trusting the system.*
+# **Interview Guide**
 
-### Workflow preferences (deep vs. burst)
+# **Interview Guide** 
 
-7. **Does the deep, per-company workflow match how reps actually prospect — or do they prefer a centralized list to burst-call through?**
-   *H7: Workflow splits along role and time of day. SDRs and reps in DC-mandated blitz windows want a burst-style list with per-call context; GS reps doing strategic prospecting want the deep per-company view. The prototype will feel right to one cohort and wrong to the other.*
+This section's purpose is to 
 
+## **Interview Questions for Sales Reps**
 
-8. **Where in the daily loop does the prototype break down?** (planning the night before, executing during a power hour, reactive triage between meetings)
-   *H8: The prototype will support strategic targeting and depth of work well, but will under-serve structured planning — reps will not feel they can "set up tomorrow" inside the workspace.*
-   *Tests:* the three skills framing in [design principles](../design-principles.md) — Structured planning, Strategic targeting, Depth of work.
+### **\[Topic\]**
 
-# **Methodology**
+1. Question
 
-* **Approach:** Moderated, task-based usability evaluation.
+2. Question
 
-* **Participants:** 8–10 reps, mixed across NAM and EMEA. All SB.
+3. Question
 
-## **Recruitment**
+### **\[Topic\]**
 
-* Recruited via the Beta participant list and manager nominations (Soraya Hatcher, Fancy Lai, Katherine Sanders have provided strong signal in the past — re-engage). Skew toward reps who have left substantive feedback in the CSV so we can probe specific past complaints. Avoid reps who have only used the workspace for <2 weeks — they can't compare against the prior daily loop.
+4. Question
 
-| Research Group | Group Size | # of participants | Recruitment List |
-| :---- | :---- | :---- | :---- |
+5. Question
+
+6. Question
+
+### **\[Topic\]**
+
+7. Question
+
+8. Question
+
+9. Question
+
+# **Communication**
+
+# **Communication**
+
+This section contains all communication models utilized for this research.
+
+# **Interview Meeting Invites**
+
+## **Calendar Invite**
+
+| Subject: \[Subject\] Body:   Hello \[Name\], I hope you’re well. I’m a Product Designer for the Prospecting team in Flywheel Product. We’re currently building an experience in the Sales Workspace where AI agents will conduct company research and draft outreach for you to review, edit and send. The goal is to make your prospecting as efficient and easy as possible. We’re in the user testing phase, and I’d love to get your feedback on our prototype. Would you have 30 mins for a call so I can understand your prospecting workflow and get your valuable feedback? If this time doesn't suit, feel free to modify the event\! Thanks, Eoin |
+| :---- |
+
+## **Slack Message**
+
+## 
+
+| Hey \[Name\]\! I hope you’re well. I’m a Product Designer for the Prospecting team in Flywheel Product. We’re currently building an experience in the Sales Workspace where AI agents will conduct company research and draft outreach for you to review, edit and send. The goal is to make your prospecting as efficient and easy as possible. We’re in the user testing phase, and I’d love to get your feedback on our prototype. Would you have 30 mins for a call so I can understand your prospecting workflow and get your valuable feedback? I’ve put a slot in for us on Monday next week, but if this time doesn't suit, feel free to modify the event\!  |
+| :---- |
+
+# **Interviews**
+
+# **Interviews Repository**
+
+# **Interviews Scheduled**
+
+| Date | Interviewee | Location | Facilitator | Watchers | Status | Link to video |
+| :---- | :---- | :---- | ----- | :---- | ----- | ----- |
+| May 4, 2026 | [Kira Hoff](mailto:khoff@hubspot.com) | Canada | [Eoin Ó Raghallaigh](mailto:eoraghallaigh@hubspot.com) |  | Accepted |  |
+| May 4, 2026 | [Sarah Li](mailto:sali@hubspot.com) | Canada | [Eoin Ó Raghallaigh](mailto:eoraghallaigh@hubspot.com) |  | Scheduled |  |
+| May 6, 2026 | [Antoine Roussel](mailto:aroussel@hubspot.com) | France | [Eoin Ó Raghallaigh](mailto:eoraghallaigh@hubspot.com) |  | Scheduled |  |
+| May 6, 2026 | [Akmel Bedi](mailto:abedi@hubspot.com) | France | [Eoin Ó Raghallaigh](mailto:eoraghallaigh@hubspot.com) |  | Scheduled |  |
+| May 6, 2026 | [Callum Breen](mailto:cbreen@hubspot.com) | Ireland | [Eoin Ó Raghallaigh](mailto:eoraghallaigh@hubspot.com) |  | Accepted |  |
+| May 7, 2026 | [George Archer](mailto:garcher@hubspot.com) | UK | [Eoin Ó Raghallaigh](mailto:eoraghallaigh@hubspot.com) |  | Scheduled  |  |
+| May 7, 2026 | [Ben Winters](mailto:bwinters@hubspot.com) | USA | [Eoin Ó Raghallaigh](mailto:eoraghallaigh@hubspot.com) |  | Scheduled |  |
+
+# **Appendix**
+
+# **Appendix**
+
+Includes relevant docs or any supplementary materials for this research.
 
