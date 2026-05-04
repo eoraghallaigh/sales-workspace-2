@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
-import { ThumbsUp, ThumbsDown, Plus, Loader2 } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Plus, Loader2, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -55,6 +55,24 @@ const ProspectingStrategy = () => {
     return (localStorage.getItem("callScriptMode") as "script" | "bullets") || "script";
   });
   const [editedCallBullets, setEditedCallBullets] = useState<Record<string, string[]>>({});
+  const [isNarrow, setIsNarrow] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 1600 : false,
+  );
+  const [isSubNavOpen, setIsSubNavOpen] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth >= 1600 : true,
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      const nextNarrow = window.innerWidth < 1600;
+      setIsNarrow((prev) => {
+        if (prev !== nextNarrow) setIsSubNavOpen(!nextNarrow);
+        return nextNarrow;
+      });
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const outreachContainerRef = useRef<HTMLDivElement>(null);
   const tabsListRef = useRef<HTMLDivElement>(null);
   const [tabIndicator, setTabIndicator] = useState({ left: 0, width: 0 });
@@ -199,16 +217,41 @@ const ProspectingStrategy = () => {
         {/* Three-column layout */}
         <div className="flex flex-1 overflow-hidden">
           {/* Left column - Company sub-nav */}
-          <nav className="w-[280px] border-r border-core-subtle bg-card overflow-y-auto shrink-0 pt-6 pl-8">
-            <div className="pb-8">
-              <button
-                onClick={() => navigate("/prospecting")}
-                className="flex items-center gap-1 body-125 text-text-interactive hover:underline transition-colors">
-                <TrellisIcon name="left" size={12} />
-                P1 companies
-              </button>
-            </div>
-            {companies.map((company) =>
+          <nav
+            className={`border-r border-core-subtle bg-card shrink-0 pt-6 transition-all duration-300 ${
+              isSubNavOpen ? "w-[280px] pl-8 overflow-y-auto" : "w-16 overflow-hidden"
+            }`}
+          >
+            {isNarrow && (
+              <div
+                className={`mb-6 flex ${isSubNavOpen ? "justify-end pr-4" : "justify-center"}`}
+              >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsSubNavOpen((o) => !o)}
+                  className="h-8 w-8 p-0 border border-border"
+                  aria-label={isSubNavOpen ? "Collapse sub-nav" : "Expand sub-nav"}
+                >
+                  {isSubNavOpen ? (
+                    <PanelLeftClose className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <PanelLeftOpen className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </Button>
+              </div>
+            )}
+            {isSubNavOpen && !isNarrow && (
+              <div className="pb-8">
+                <button
+                  onClick={() => navigate("/prospecting")}
+                  className="flex items-center gap-1 body-125 text-text-interactive hover:underline transition-colors">
+                  <TrellisIcon name="left" size={12} />
+                  P1 companies
+                </button>
+              </div>
+            )}
+            {isSubNavOpen && companies.map((company) =>
             <button
               key={company.id}
               onClick={() => navigate(`/prospecting/strategy/${company.id}`)}
@@ -217,7 +260,7 @@ const ProspectingStrategy = () => {
               "rounded-l-[var(--borderRadius-100,4px)] rounded-r-none border-l-4 border-l-[var(--color-border-core-pressed,#141414)] bg-[var(--color-fill-tertiary-disabled,#F5F5F5)]" :
               "hover:bg-trellis-neutral-100"}`
               }>
-              
+
                 <div className="body-100 text-foreground">{company.name}</div>
                 <div className="mt-1">
                   <MiniTouchDots statuses={(company.touches?.touchStatuses || []) as TouchStatus[]} />
@@ -240,6 +283,16 @@ const ProspectingStrategy = () => {
 
           {/* Middle column - Strategy content */}
           <div className={`flex-[3] overflow-y-auto pl-12 pr-6 pt-12 pb-12 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+            {isNarrow && (
+              <div className="mb-4">
+                <button
+                  onClick={() => navigate("/prospecting")}
+                  className="flex items-center gap-1 body-125 text-text-interactive hover:underline transition-colors">
+                  <TrellisIcon name="left" size={12} />
+                  P1 companies
+                </button>
+              </div>
+            )}
             <div data-tour="strategy-company-card" className="bg-fill-secondary rounded-300 border border-core-subtle shadow-100 overflow-hidden flex flex-col gap-12">
             {/* Company header */}
             <div className="px-6 pt-4 pb-0">
@@ -1011,6 +1064,14 @@ const ProspectingStrategy = () => {
 
           {/* Right column - Contact details panel */}
           <div className={`flex-[2] py-12 pl-6 pr-12 shrink-0 overflow-y-auto transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+            {isNarrow && (
+              <div className="mb-4 invisible" aria-hidden="true">
+                <button className="flex items-center gap-1 body-125">
+                  <TrellisIcon name="left" size={12} />
+                  P1 companies
+                </button>
+              </div>
+            )}
             <div className="space-y-6">
               {outreachTargets.map((contact, index) => {
                 const contactDetail = contactDetails[contact.id];
