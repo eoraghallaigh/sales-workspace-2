@@ -23,7 +23,7 @@ import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { TextEditPopup } from "@/components/TextEditPopup";
 import PreviousDealCard, { PreviousDeal } from "@/components/PreviousDealCard";
 import EmailCommunicator from "@/components/EmailCommunicator";
-import { OutreachSequenceCard } from "@/components/OutreachSequenceCard";
+import { OutreachSequenceCard, getDefaultCallBullets } from "@/components/OutreachSequenceCard";
 import { TouchDots, MiniTouchDots, type TouchStatus } from "@/components/TouchDot";
 
 import { companyStrategies, defaultStrategy } from "@/data/companyStrategies";
@@ -50,6 +50,11 @@ const ProspectingStrategy = () => {
   const [feedbackOtherText, setFeedbackOtherText] = useState("");
   const [feedbackRemove, setFeedbackRemove] = useState(false);
   const [emailReplyTo, setEmailReplyTo] = useState<{ name: string; email: string; subject: string } | null>(null);
+  const [callScriptMode, setCallScriptMode] = useState<"script" | "bullets">(() => {
+    if (typeof window === "undefined") return "script";
+    return (localStorage.getItem("callScriptMode") as "script" | "bullets") || "script";
+  });
+  const [editedCallBullets, setEditedCallBullets] = useState<Record<string, string[]>>({});
   const outreachContainerRef = useRef<HTMLDivElement>(null);
   const tabsListRef = useRef<HTMLDivElement>(null);
   const [tabIndicator, setTabIndicator] = useState({ left: 0, width: 0 });
@@ -415,6 +420,25 @@ const ProspectingStrategy = () => {
                                   name: contact.name,
                                   initials: contact.initials,
                                   avatarColor: contact.avatarColor,
+                                }}
+                                callBullets={
+                                  editedCallBullets[contact.id] ??
+                                  getDefaultCallBullets(currentCompany.name)
+                                }
+                                onCallBulletChange={(idx, value) => {
+                                  setEditedCallBullets((prev) => {
+                                    const current =
+                                      prev[contact.id] ??
+                                      getDefaultCallBullets(currentCompany.name);
+                                    const next = [...current];
+                                    next[idx] = value;
+                                    return { ...prev, [contact.id]: next };
+                                  });
+                                }}
+                                scriptMode={callScriptMode}
+                                onScriptModeChange={(mode) => {
+                                  setCallScriptMode(mode);
+                                  localStorage.setItem("callScriptMode", mode);
                                 }}
                                 call={outreachState.call}
                                 linkedin={outreachState.linkedin}

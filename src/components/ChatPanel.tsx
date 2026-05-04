@@ -62,10 +62,12 @@ const ExplanationContent = ({ selectedText }: { selectedText: string }) => (
   </div>
 );
 
+const BREEZE_GRADIENT = "linear-gradient(114deg, #fc0849 0%, #d20688 100%)";
+
 const EmptyState = () => (
   <h1
     className="bg-clip-text text-transparent font-medium leading-[1.15] text-[32px]"
-    style={{ backgroundImage: "linear-gradient(135deg, #FF4800 0%, #FB31A7 100%)" }}
+    style={{ backgroundImage: BREEZE_GRADIENT }}
   >
     <span>Hi Eoin,<br />how can I help you?</span>
   </h1>
@@ -73,7 +75,6 @@ const EmptyState = () => (
 
 export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => {
   const [inputValue, setInputValue] = useState("");
-  const [showProjectsUpsell, setShowProjectsUpsell] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const canSend = inputValue.trim().length > 0;
@@ -83,11 +84,19 @@ export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => 
       {isOpen && (
         <motion.div
           key="chat-panel"
-          initial={{ x: "100%" }}
+          initial={{ x: "calc(100% + 12px)" }}
           animate={{ x: 0 }}
-          exit={{ x: "100%" }}
+          exit={{ x: "calc(100% + 12px)" }}
           transition={{ type: "spring", stiffness: 320, damping: 34, mass: 0.9 }}
-          className="fixed top-12 right-0 w-96 h-[calc(100vh-48px)] bg-card border-l border-border shadow-lg z-40 flex flex-col"
+          className="fixed top-14 right-3 bottom-3 w-96 z-40 flex flex-col overflow-hidden"
+          style={{
+            background:
+              "linear-gradient(var(--color-fill-surface-default), var(--color-fill-surface-default)) padding-box, " +
+              BREEZE_GRADIENT +
+              " border-box",
+            border: "1px solid transparent",
+            borderRadius: "16px",
+          }}
         >
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <a
@@ -121,15 +130,18 @@ export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => 
 
       <div className={`px-5 space-y-5 ${selectedText ? "pt-2" : "my-auto"}`}>
         {!selectedText && <div className="px-1"><EmptyState /></div>}
-        <div className="relative rounded-[20px] border border-border bg-card focus-within:border-neutral-400 transition-colors">
-          <div className="px-4 pt-4 pb-3">
+        <div
+          className="group/input relative rounded-[16px] border border-[#dfe3eb] bg-card"
+          style={{ boxShadow: "0 1px 8px 0 rgba(20, 20, 20, 0.08)" }}
+        >
+          <div className="px-3 pt-3 pb-4">
             <textarea
               ref={textareaRef}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Type @ to mention a record"
               rows={3}
-              className="block w-full resize-none border-0 bg-transparent body-200 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0 min-h-[72px] pr-10"
+              className="block w-full resize-none border-0 bg-transparent text-[14px] text-foreground placeholder:text-[#aaaaaa] placeholder:text-[14px] focus:outline-none focus:ring-0 min-h-[92px] pr-10"
             />
           </div>
 
@@ -137,25 +149,19 @@ export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => 
             type="button"
             disabled={!canSend}
             aria-label="Send"
-            className="absolute right-3 bottom-3 flex h-8 w-8 items-center justify-center rounded-full transition-all disabled:cursor-not-allowed"
+            className="absolute right-3 bottom-3 flex h-6 w-6 items-center justify-center rounded-full transition-all disabled:cursor-not-allowed"
             style={{
-              backgroundImage: canSend
-                ? "linear-gradient(135deg, #FF4800 0%, #FB31A7 100%)"
-                : "linear-gradient(135deg, #FBDDD2 0%, #FCC3DC 100%)",
+              background: canSend ? BREEZE_GRADIENT : "#fbdbe9",
             }}
           >
             <TrellisIcon
               name="sortTableAsc"
-              size={14}
-              style={{
-                filter: canSend
-                  ? "brightness(0) invert(1)"
-                  : "brightness(0) saturate(100%) invert(69%) sepia(47%) saturate(369%) hue-rotate(296deg) brightness(95%) contrast(97%)",
-              }}
+              size={12}
+              style={{ filter: "brightness(0) invert(1)" }}
             />
           </button>
 
-          <div className="flex items-center gap-1 px-3 pb-2">
+          <div className="flex items-center gap-1 px-3 pb-2 opacity-0 pointer-events-none transition-opacity duration-200 group-focus-within/input:opacity-100 group-focus-within/input:pointer-events-auto group-hover/input:opacity-100 group-hover/input:pointer-events-auto">
             <button
               type="button"
               className="flex items-center gap-1.5 rounded-full px-2 py-1 hover:bg-muted transition-colors"
@@ -180,42 +186,20 @@ export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => 
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-          <button type="button" className="body-125 text-foreground hover:text-primary transition-colors">
+          <button type="button" className="text-[12px] font-normal text-foreground hover:text-primary transition-colors">
             Summarize
           </button>
-          <button type="button" className="body-125 text-foreground hover:text-primary transition-colors">
+          <button type="button" className="text-[12px] font-normal text-foreground hover:text-primary transition-colors">
             Create
           </button>
-          <button type="button" className="body-125 text-foreground hover:text-primary transition-colors">
+          <button type="button" className="text-[12px] font-normal text-foreground hover:text-primary transition-colors">
             How do I
           </button>
-          <button type="button" className="flex items-center gap-1.5 body-125 text-foreground hover:text-primary transition-colors">
+          <button type="button" className="flex items-center gap-1.5 text-[12px] font-normal text-foreground hover:text-primary transition-colors">
             <TrellisIcon name="meetings" size={14} />
             Meetings
           </button>
         </div>
-
-        {showProjectsUpsell && (
-          <div className="relative rounded-xl border border-border p-4 pr-10 flex gap-3 items-start">
-            <div className="shrink-0 mt-0.5">
-              <TrellisIcon name="folderOpen" size={20} />
-            </div>
-            <div className="min-w-0">
-              <p className="body-125 font-semibold text-foreground">Skip the setup next time</p>
-              <p className="body-100 text-muted-foreground mt-1">
-                Projects save your context, instructions, and files so every new chat starts ready.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowProjectsUpsell(false)}
-              aria-label="Dismiss"
-              className="absolute top-3 right-3 p-1 rounded hover:bg-muted transition-colors"
-            >
-              <TrellisIcon name="remove" size={12} />
-            </button>
-          </div>
-        )}
       </div>
 
       <div className="px-5 pt-10 pb-4 text-center">
