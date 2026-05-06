@@ -39,6 +39,7 @@ import { TrellisIcon } from "@/components/ui/trellis-icon";
 import SortableContactCard from "@/components/SortableContactCard";
 import AddContactTile from "@/components/AddContactTile";
 import AddContactsModal from "@/components/AddContactsModal";
+import PvsTooltip from "@/components/PvsTooltip";
 import SequenceEnrollmentModal from "@/components/SequenceEnrollmentModal";
 import { useCompanyContacts } from "@/hooks/useCompanyContacts";
 import { getAdditionalContactsForCompany } from "@/data/allContacts";
@@ -259,7 +260,11 @@ const CompanyCard = ({
               <p className="body-100 text-muted-foreground flex items-center gap-1">
                 <span>{company.industry ?? "—"}</span>
                 <span>•</span>
-                <span>PVS {company.pvsScore ?? "—"}</span>
+                <PvsTooltip pvsScore={company.pvsScore}>
+                  <span className="cursor-default">
+                    PVS {company.pvsScore ?? "—"}
+                  </span>
+                </PvsTooltip>
                 <span>•</span>
                 <span>{company.conversionTrigger ?? "—"}</span>
                 <Info className="h-4 w-4 text-muted-foreground flex-shrink-0" />

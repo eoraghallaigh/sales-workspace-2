@@ -28,6 +28,7 @@ import SnoozeModal from "@/components/SnoozeModal";
 import { getOutreachState } from "@/data/outreachStates";
 import { TrellisIcon, type TrellisIconName } from "@/components/ui/trellis-icon";
 import { MiniTouchDots, type TouchStatus } from "@/components/TouchDot";
+import PvsTooltip from "@/components/PvsTooltip";
 
 interface CompanyCardVariantCProps {
   company: Company;
@@ -165,7 +166,12 @@ const CompanyCardVariantC = ({
             {company.name}
           </span>
           <span className="detail-200 text-muted-foreground whitespace-nowrap">
-            · {company.industry ?? "—"} · PVS {company.pvsScore ?? "—"}
+            · {company.industry ?? "—"} ·{" "}
+            <PvsTooltip pvsScore={company.pvsScore}>
+              <span className="cursor-default">
+                PVS {company.pvsScore ?? "—"}
+              </span>
+            </PvsTooltip>
           </span>
           <span className="detail-200 text-muted-foreground whitespace-nowrap truncate">
             {displayedSignals.length > 0
