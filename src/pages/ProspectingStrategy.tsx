@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
-import { ThumbsUp, ThumbsDown, Plus, Loader2, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Plus, Loader2, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -23,16 +23,39 @@ import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { TextEditPopup } from "@/components/TextEditPopup";
 import PreviousDealCard, { PreviousDeal } from "@/components/PreviousDealCard";
 import EmailCommunicator from "@/components/EmailCommunicator";
-import { OutreachSequenceCard, getDefaultCallBullets } from "@/components/OutreachSequenceCard";
+import { OutreachSequenceCard } from "@/components/OutreachSequenceCard";
 import { TouchDots, MiniTouchDots, type TouchStatus } from "@/components/TouchDot";
 
-import { companyStrategies, defaultStrategy } from "@/data/companyStrategies";
+import { getCompanyStrategy } from "@/data/companyStrategies";
+import { useStrategyAssistant } from "@/contexts/StrategyAssistantContext";
 import {
   getOutreachState,
   getAggregateSummary,
   getOutreachStripSegments,
 } from "@/data/outreachStates";
 import { getActivityTimeline } from "@/data/deriveTouches";
+
+const REWRITE_STATUS_MESSAGES = [
+  "Reading account history…",
+  "Reviewing recent activity and signals…",
+  "Drafting call script…",
+  "Rewriting LinkedIn outreach…",
+  "Rewriting email sequence…",
+  "Finalizing the strategy…",
+];
+
+const RewritingStatusMessage = () => {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setIndex((i) => Math.min(i + 1, REWRITE_STATUS_MESSAGES.length - 1));
+    }, 1200);
+    return () => window.clearInterval(id);
+  }, []);
+  return (
+    <span className="body-125 text-foreground">{REWRITE_STATUS_MESSAGES[index]}</span>
+  );
+};
 
 const ProspectingStrategy = () => {
   const { companyId } = useParams<{companyId: string;}>();
@@ -136,7 +159,14 @@ const ProspectingStrategy = () => {
 
   const currentCompany = companies.find((c) => c.id === companyId) || companies[0];
   const currentCompanyDetails = companyDetails[currentCompany?.id || "1"];
-  const strategy = companyStrategies[currentCompany?.id || ""] || defaultStrategy;
+  const {
+    activeVariantByCompany,
+    isRewriting,
+    revertVariant,
+  } = useStrategyAssistant();
+  const activeVariantId = activeVariantByCompany[currentCompany?.id || ""] || "default";
+  const strategy = getCompanyStrategy(currentCompany?.id)[activeVariantId];
+  const isStrategyRewriting = !!isRewriting[currentCompany?.id || ""];
 
   // Get contacts for the current company
   const baseOutreachTargets = currentCompany?.recommendedContacts?.slice(0, 3) || [];
@@ -281,6 +311,19 @@ const ProspectingStrategy = () => {
               </div>
             )}
 
+            {/* Strategy rewrite overlay */}
+            {isStrategyRewriting && (
+              <div className="absolute inset-0 z-50 bg-card flex items-center justify-center animate-fade-in">
+                <div className="flex flex-col items-center gap-4">
+                  <Loader2 className="h-10 w-10 animate-spin text-trellis-green-800" />
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="heading-200 text-foreground">Rewriting strategy</span>
+                    <RewritingStatusMessage />
+                  </div>
+                </div>
+              </div>
+            )}
+
           {/* Middle column - Strategy content */}
           <div className={`flex-[3] overflow-y-auto pl-12 pr-6 pt-12 pb-12 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
             {isNarrow && (
@@ -290,6 +333,23 @@ const ProspectingStrategy = () => {
                   className="flex items-center gap-1 body-125 text-text-interactive hover:underline transition-colors">
                   <TrellisIcon name="left" size={12} />
                   P1 companies
+                </button>
+              </div>
+            )}
+            {activeVariantId !== "default" && (
+              <div
+                role="status"
+                className="mb-4 flex items-center justify-between gap-3 rounded-100 border border-trellis-green-800 bg-trellis-green-200 px-4 py-3 animate-fade-in"
+              >
+                <span className="body-100 text-foreground">
+                  Strategy modified - now focusing on Salesforce comparison
+                </span>
+                <button
+                  type="button"
+                  onClick={() => currentCompany?.id && revertVariant(currentCompany.id)}
+                  className="body-100 font-bold text-foreground hover:underline shrink-0"
+                >
+                  Revert
                 </button>
               </div>
             )}
@@ -422,17 +482,38 @@ const ProspectingStrategy = () => {
                             
                         {/* Card header */}
                         <div
-                              className="flex items-center gap-3 px-6 py-4 bg-[var(--color-fill-surface-recessed)] cursor-pointer"
+                              className="flex items-center justify-between gap-3 px-6 py-4 bg-[var(--color-fill-surface-recessed)] cursor-pointer"
                               onClick={() => setSelectedContactIndex(index)}>
-                              
-                          <Avatar className="h-10 w-10">
-                            <AvatarFallback className={contact.avatarColor + " text-white heading-50"}>
-                              {contact.initials}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="heading-100 text-text-interactive">{contact.name}</div>
-                            <div className="body-100 text-muted-foreground">{contact.role}</div>
+
+                          <div className="flex items-center gap-3 min-w-0">
+                            <Avatar className="h-10 w-10">
+                              <AvatarFallback className={contact.avatarColor + " text-white heading-50"}>
+                                {contact.initials}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <div className="heading-100 text-text-interactive">{contact.name}</div>
+                              <div className="body-100 text-muted-foreground">{contact.role}</div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <button className="flex items-center justify-center hover:opacity-70 transition-opacity">
+                              <TrellisIcon name="email" size={16} />
+                            </button>
+                            <button className="flex items-center justify-center hover:opacity-70 transition-opacity">
+                              <TrellisIcon name="calling" size={16} />
+                            </button>
+                            <button className="flex items-center justify-center hover:opacity-70 transition-opacity">
+                              <TrellisIcon name="linkedin" size={16} />
+                            </button>
+                            <button
+                              className="flex items-center justify-center hover:opacity-70 transition-opacity"
+                              onClick={() => openFeedback(contact.id)}
+                              aria-label="Hide contact"
+                            >
+                              <TrellisIcon name="hide" size={16} />
+                            </button>
                           </div>
                         </div>
 
@@ -446,26 +527,22 @@ const ProspectingStrategy = () => {
                         <div key={`content-${contact.id}`} className="px-6 py-5 bg-card animate-fade-in">
                           {/* Description */}
                           <p className="body-100 text-foreground leading-relaxed mb-4">
-                            As the visionary behind the platform, {contact.name.split(" ")[0]} is the primary target for COO/CEO-level conversations regarding digital transformation and scaling the business through a unified Smart CRM.
+                            {strategy.contactDescription(contact.name.split(" ")[0], currentCompany.name)}
                           </p>
 
                           {/* Primary Friction */}
                           <p className="heading-50 text-foreground mb-1">Primary Friction:</p>
                           <p className="body-100 text-foreground leading-relaxed mb-4">
-                            Friction in scaling operations post-acquisition due to fragmented data silos between the legacy Empowering Systems and {currentCompany.name} platforms.
+                            {strategy.primaryFriction(currentCompany.name)}
                           </p>
 
                           {/* Call */}
                           {(() => {
                             const outreachState = getOutreachState(contact.id, contact.name.split(" ")[0]);
                             const firstName = contact.name.split(" ")[0];
-                            const defaultCallScript = `"I noticed ${currentCompany.name} recently partnered with Orbweaver to automate data exchange for manufacturers. Usually, increasing the volume of automated data leads to fragmented 'Franken-stacks' where reps struggle to find a single source of truth. HubSpot's Sales Hub consolidates these data streams into one view, using Breeze AI to automate prospecting so your team stays focused on closing."`;
-                            const defaultLinkedInMsg = `"I've been following your leadership in the multi-line sales space and would love to connect. Your work integrating Empowering Systems into ${currentCompany.name} is fascinating."`;
-                            const emailTemplates = [
-                              { subject: `Scaling ${currentCompany.name}'s Content ROI.`, body: `Hi ${firstName},\n\nI've been researching ${currentCompany.name}'s content strategy and noticed some impressive growth metrics. Many companies in your space are leaving significant ROI on the table by not connecting their content performance data directly to their sales pipeline.\n\nHubSpot's Content Hub can help you attribute revenue directly to content touchpoints, giving your team clear visibility into what's driving deals forward.\n\nWould you be open to a 15-minute conversation about how we could help scale your content ROI?` },
-                              { subject: `Doubling down on ${currentCompany.name}'s highest-ROI content`, body: `Hi ${firstName},\n\nFollowing up on my previous note — I wanted to share a quick case study. A company similar to ${currentCompany.name} was able to 2x their content-influenced pipeline by using AI-powered content recommendations to serve the right assets at the right stage of the buyer's journey.\n\nI'd love to walk you through how this could work for your team. Would next Tuesday or Wednesday work for a brief call?` },
-                              { subject: `Closing the loop on content ROI at ${currentCompany.name}`, body: `Hi ${firstName},\n\nI know things get busy, so I'll keep this brief. I've put together a short analysis of how ${currentCompany.name} could better leverage your existing content library to accelerate deals currently in your pipeline.\n\nNo commitment needed — happy to share the analysis either way. Just let me know if you'd like me to send it over.` },
-                            ];
+                            const defaultCallScript = strategy.callScript(currentCompany.name, firstName);
+                            const defaultLinkedInMsg = strategy.linkedInMessage(currentCompany.name, firstName);
+                            const emailTemplates = strategy.emailTemplates(currentCompany.name, firstName);
                             return (
                               <OutreachSequenceCard
                                 contact={{
@@ -476,13 +553,13 @@ const ProspectingStrategy = () => {
                                 }}
                                 callBullets={
                                   editedCallBullets[contact.id] ??
-                                  getDefaultCallBullets(currentCompany.name)
+                                  strategy.callBullets(currentCompany.name)
                                 }
                                 onCallBulletChange={(idx, value) => {
                                   setEditedCallBullets((prev) => {
                                     const current =
                                       prev[contact.id] ??
-                                      getDefaultCallBullets(currentCompany.name);
+                                      strategy.callBullets(currentCompany.name);
                                     const next = [...current];
                                     next[idx] = value;
                                     return { ...prev, [contact.id]: next };
@@ -552,15 +629,6 @@ const ProspectingStrategy = () => {
                               />
                             );
                           })()}
-                          {/* Feedback */}
-                          <div className="flex items-center justify-end gap-1 mt-3">
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
-                              <ThumbsUp className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => openFeedback(contact.id)}>
-                              <ThumbsDown className="h-4 w-4" />
-                            </Button>
-                          </div>
                         </div>
                         )}
                       </div>);
@@ -1079,33 +1147,18 @@ const ProspectingStrategy = () => {
                   <div key={contact.id} className="bg-fill-tertiary rounded-300 border border-core-subtle shadow-100">
                     {/* Contact header */}
                     <div className="px-4 py-8">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback className={contact.avatarColor + " text-white heading-50"}>
-                              {contact.initials}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex flex-col gap-2">
-                            <div className="heading-100 text-foreground">{contact.name}</div>
-                            <div className="detail-100 text-muted-foreground">{contact.role}</div>
-                            {contactDetail && (
-                              <div className="detail-100 text-muted-foreground">{contactDetail.email}</div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <div className="flex items-center gap-2">
-                            <button className="flex items-center justify-center hover:opacity-70 transition-opacity">
-                              <TrellisIcon name="email" size={16} />
-                            </button>
-                            <button className="flex items-center justify-center hover:opacity-70 transition-opacity">
-                              <TrellisIcon name="calling" size={16} />
-                            </button>
-                            <button className="flex items-center justify-center hover:opacity-70 transition-opacity">
-                              <TrellisIcon name="linkedin" size={16} />
-                            </button>
-                          </div>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback className={contact.avatarColor + " text-white heading-50"}>
+                            {contact.initials}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col gap-2">
+                          <div className="heading-100 text-foreground">{contact.name}</div>
+                          <div className="detail-100 text-muted-foreground">{contact.role}</div>
+                          {contactDetail && (
+                            <div className="detail-100 text-muted-foreground">{contactDetail.email}</div>
+                          )}
                         </div>
                       </div>
                     </div>
