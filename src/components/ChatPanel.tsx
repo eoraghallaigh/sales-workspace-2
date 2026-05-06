@@ -1,8 +1,10 @@
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useLocation } from "react-router-dom";
 import { Star, ThumbsUp, ThumbsDown, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
+import { useStrategyAssistant } from "@/contexts/StrategyAssistantContext";
 
 interface ChatPanelProps {
   isOpen: boolean;
@@ -73,11 +75,62 @@ const EmptyState = () => (
   </h1>
 );
 
+const STRATEGY_PATH_RE = /^\/prospecting\/strategy\/([^/?#]+)/;
+
+const SUGGESTED_PROMPTS = [
+  "Their Salesforce contract is ending soon",
+  "They're a heavy Salesforce user",
+];
+
+const TypingIndicator = () => (
+  <div className="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-muted self-start">
+    <span className="block w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-pulse" style={{ animationDelay: "0ms" }} />
+    <span className="block w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-pulse" style={{ animationDelay: "150ms" }} />
+    <span className="block w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-pulse" style={{ animationDelay: "300ms" }} />
+  </div>
+);
+
 export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => {
   const [inputValue, setInputValue] = useState("");
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  const { messages, isAssistantBusy, requestRewrite } = useStrategyAssistant();
 
-  const canSend = inputValue.trim().length > 0;
+  const strategyCompanyId = useMemo(() => {
+    const m = location.pathname.match(STRATEGY_PATH_RE);
+    return m ? m[1] : null;
+  }, [location.pathname]);
+
+  const onStrategyPage = strategyCompanyId !== null;
+  const hasConversation = messages.length > 0;
+
+  const canSend =
+    inputValue.trim().length > 0 && onStrategyPage && !isAssistantBusy;
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [messages.length, isAssistantBusy]);
+
+  const submit = (text: string) => {
+    if (!strategyCompanyId) return;
+    if (!text.trim()) return;
+    if (isAssistantBusy) return;
+    requestRewrite(strategyCompanyId, text);
+    setInputValue("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      submit(inputValue);
+    }
+  };
+
+  const showConversation = !selectedText && (hasConversation || isAssistantBusy);
 
   return (
     <AnimatePresence>
@@ -128,10 +181,64 @@ export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => 
         </div>
       )}
 
-      <div className={`px-5 space-y-5 ${selectedText ? "pt-2" : "my-auto"}`}>
-        {!selectedText && <div className="px-1"><EmptyState /></div>}
+      {showConversation && (
+        <div className="flex-1 overflow-y-auto px-5 pt-6 pb-4">
+          <div className="flex flex-col gap-3">
+            {messages.map((m) => (
+              <div
+                key={m.id}
+                className={
+                  m.role === "user"
+                    ? "self-end max-w-[85%] rounded-2xl rounded-br-sm bg-primary text-primary-foreground px-3 py-2 body-100 whitespace-pre-wrap"
+                    : "self-start max-w-[90%] rounded-2xl rounded-bl-sm bg-muted text-foreground px-3 py-2 body-100 whitespace-pre-wrap"
+                }
+              >
+                {m.text}
+              </div>
+            ))}
+            {isAssistantBusy && <TypingIndicator />}
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
+      )}
+
+      <div className={`px-5 space-y-4 ${selectedText || showConversation ? "pt-2 pb-2" : "my-auto"}`}>
+        {!selectedText && !showConversation && <div className="px-1"><EmptyState /></div>}
+
+        {!selectedText && !onStrategyPage && (
+          <p className="detail-100 text-muted-foreground text-center px-2">
+            Open a company's prospecting strategy and I can rewrite it for you.
+          </p>
+        )}
+
+        <div className="relative">
+        <AnimatePresence>
+          {!selectedText && onStrategyPage && !hasConversation && isInputFocused && (
+            <motion.div
+              key="suggested-prompts"
+              initial={{ y: 24, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 24, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 360, damping: 32, mass: 0.7 }}
+              className="absolute left-0 right-0 bottom-full mb-2 z-0 flex flex-col gap-2 pointer-events-auto"
+            >
+              <p className="detail-100 text-muted-foreground px-1">Try one of these to rewrite the strategy:</p>
+              {SUGGESTED_PROMPTS.map((prompt) => (
+                <button
+                  key={prompt}
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => submit(prompt)}
+                  className="text-left rounded-full border border-border bg-card px-3 py-2 body-100 text-foreground hover:bg-muted transition-colors shadow-sm"
+                >
+                  {prompt}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
         <div
-          className="group/input relative rounded-[16px] border border-[#dfe3eb] bg-card"
+          className="group/input relative z-10 rounded-[16px] border border-[#dfe3eb] bg-card"
           style={{ boxShadow: "0 1px 8px 0 rgba(20, 20, 20, 0.08)" }}
         >
           <div className="px-3 pt-3 pb-4">
@@ -139,7 +246,10 @@ export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => 
               ref={textareaRef}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Type @ to mention a record"
+              onKeyDown={handleKeyDown}
+              onFocus={() => setIsInputFocused(true)}
+              onBlur={() => setIsInputFocused(false)}
+              placeholder={onStrategyPage ? "Ask me to rewrite the strategy…" : "Type @ to mention a record"}
               rows={3}
               className="block w-full resize-none border-0 bg-transparent text-[14px] text-foreground placeholder:text-[#aaaaaa] placeholder:text-[14px] focus:outline-none focus:ring-0 min-h-[92px] pr-10"
             />
@@ -149,6 +259,7 @@ export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => 
             type="button"
             disabled={!canSend}
             aria-label="Send"
+            onClick={() => submit(inputValue)}
             className="absolute right-3 bottom-3 flex h-6 w-6 items-center justify-center rounded-full transition-all disabled:cursor-not-allowed"
             style={{
               background: canSend ? BREEZE_GRADIENT : "#fbdbe9",
@@ -184,25 +295,28 @@ export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => 
             </Button>
           </div>
         </div>
-
-        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-          <button type="button" className="text-[12px] font-normal text-foreground hover:text-primary transition-colors">
-            Summarize
-          </button>
-          <button type="button" className="text-[12px] font-normal text-foreground hover:text-primary transition-colors">
-            Create
-          </button>
-          <button type="button" className="text-[12px] font-normal text-foreground hover:text-primary transition-colors">
-            How do I
-          </button>
-          <button type="button" className="flex items-center gap-1.5 text-[12px] font-normal text-foreground hover:text-primary transition-colors">
-            <TrellisIcon name="meetings" size={14} />
-            Meetings
-          </button>
         </div>
+
+        {!showConversation && !selectedText && (
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+            <button type="button" className="text-[12px] font-normal text-foreground hover:text-primary transition-colors">
+              Summarize
+            </button>
+            <button type="button" className="text-[12px] font-normal text-foreground hover:text-primary transition-colors">
+              Create
+            </button>
+            <button type="button" className="text-[12px] font-normal text-foreground hover:text-primary transition-colors">
+              How do I
+            </button>
+            <button type="button" className="flex items-center gap-1.5 text-[12px] font-normal text-foreground hover:text-primary transition-colors">
+              <TrellisIcon name="meetings" size={14} />
+              Meetings
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="px-5 pt-10 pb-4 text-center">
+      <div className="px-5 pt-4 pb-4 text-center">
         <small className="body-100 text-muted-foreground">AI-generated content may be inaccurate.</small>
       </div>
         </motion.div>

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { TourProvider } from "@/contexts/TourContext";
 import { VariantProvider } from "@/contexts/VariantContext";
+import { StrategyAssistantProvider } from "@/contexts/StrategyAssistantContext";
 import GuidedTour from "@/components/GuidedTour";
 import TourLauncher from "@/components/TourLauncher";
 import SalesWorkspace from "./pages/SalesWorkspace";
@@ -31,6 +32,7 @@ const App = () => (
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <TourProvider>
           <VariantProvider>
+          <StrategyAssistantProvider>
           <Routes>
             <Route path="/" element={<Summary />} />
             <Route path="/summary" element={<Summary />} />
@@ -50,6 +52,7 @@ const App = () => (
           </Routes>
           <GuidedTour />
           {/* <TourLauncher /> */}
+          </StrategyAssistantProvider>
           </VariantProvider>
         </TourProvider>
       </BrowserRouter>
