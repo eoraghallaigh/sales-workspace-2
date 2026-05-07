@@ -21,6 +21,7 @@ import DesignSystem from "./pages/DesignSystem";
 import ProspectingStrategy from "./pages/ProspectingStrategy";
 import HoverPreviewDemo from "./pages/HoverPreviewDemo";
 import OutreachStates from "./pages/OutreachStates";
+import About from "./pages/About";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Summary />} />
             <Route path="/summary" element={<Summary />} />
+            <Route path="/about" element={<About />} />
             <Route path="/design-system" element={<DesignSystem />} />
             <Route path="/prospecting" element={<Prospecting />} />
             <Route path="/prospecting/campaign/:campaignId" element={<Prospecting />} />
