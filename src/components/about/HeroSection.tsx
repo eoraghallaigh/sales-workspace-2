@@ -3,9 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { projectMeta, iterations } from "@/data/about";
 
-// The hero image represents "what the prototype currently looks like".
-// Prefer a screenshot from the latest iteration (auto-updates when /ship
-// captures a new round). Fall back to the manually-set projectMeta.heroImage.
 const HERO_ROUTE_NAME = "prospecting";
 
 const resolveHeroImage = () => {
@@ -13,8 +10,7 @@ const resolveHeroImage = () => {
   const fromIteration = latest?.screenshots.find((s) =>
     s.src.endsWith(`/${HERO_ROUTE_NAME}.png`),
   );
-  if (fromIteration) return fromIteration;
-  return projectMeta.heroImage;
+  return fromIteration ?? projectMeta.heroImage;
 };
 
 export const HeroSection = () => {
@@ -27,8 +23,8 @@ export const HeroSection = () => {
       className="scroll-mt-12 pt-4 pb-16 border-b border-border"
       aria-labelledby="hero-heading"
     >
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-col items-center text-center gap-6">
+        <div className="flex flex-wrap items-center justify-center gap-2">
           <Badge variant={status.badgeVariant}>{status.label}</Badge>
           {status.milestones.map((m) => (
             <span
@@ -40,7 +36,7 @@ export const HeroSection = () => {
           ))}
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col items-center gap-4">
           <h1
             id="hero-heading"
             className="heading-1000 text-foreground tracking-tight"
@@ -52,14 +48,8 @@ export const HeroSection = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3 pt-2">
-          <Button asChild variant="primary" size="medium">
-            <Link to={prototypeHref}>Open prototype</Link>
-          </Button>
-        </div>
-
         {heroImage ? (
-          <figure className="2xl:hidden mt-6 overflow-hidden rounded-lg border border-border shadow-200 bg-card">
+          <figure className="w-full overflow-hidden rounded-lg border border-border shadow-200 bg-card">
             <img
               src={heroImage.src}
               alt={heroImage.alt}
@@ -68,6 +58,12 @@ export const HeroSection = () => {
             />
           </figure>
         ) : null}
+
+        <div className="flex flex-wrap justify-center gap-3">
+          <Button asChild variant="primary" size="medium">
+            <Link to={prototypeHref}>Open prototype</Link>
+          </Button>
+        </div>
       </div>
     </header>
   );
