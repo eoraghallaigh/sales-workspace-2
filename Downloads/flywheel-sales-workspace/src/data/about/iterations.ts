@@ -11,7 +11,7 @@ export const iterations: IterationEntry[] = [
     whatChanged:
       "Reworked the About page: hero image now sits inline between the tagline and Open prototype CTA with everything center-aligned and the main column centered in its container. Iteration history shows the latest entry as an open card and wraps the previous 27 PRs in a paged accordion (5 visible at a time, with a small ghost \"Show 5 more\" button to reveal the rest). All 27 historical PRs from git.hubteam.com are now imported into the changelog.",
     why: "The user wanted the hero to read as the centered marketing-style headline of the page, the latest iteration to read instantly without a click, and the long tail of historical PRs to be present but compressed so they don't dominate. Importing the full PR history makes /about an actual project archive, not just a forward-looking changelog.",
-    prUrl: "",
+    prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/29",
     screenshots: [
       { src: "/about/iterations/2026-05-07-prototype-homepage-hub-2/summary.png", alt: "Summary route screenshot" },
       { src: "/about/iterations/2026-05-07-prototype-homepage-hub-2/prospecting.png", alt: "Prospecting route screenshot" },
