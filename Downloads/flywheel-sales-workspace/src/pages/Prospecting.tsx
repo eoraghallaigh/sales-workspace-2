@@ -32,6 +32,7 @@ import { prospectingCompanies as initialProspectingCompanies } from "@/data/pros
 import { companyDetails } from "@/data/companyDetails";
 import { contactDetails, ContactDetail } from "@/data/contactDetails";
 import ContactDetailSections from "@/components/ContactDetailSections";
+import ContactDetailPanel from "@/components/ContactDetailPanel";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { Company } from "@/components/CompanyCard";
@@ -1381,48 +1382,16 @@ const Prospecting = () => {
             </div>}
 
           {/* Contact Panel - hidden when expanded panel is active */}
-          {!expandedPanelCompanyId && selectedContactId && <div className={`fixed top-12 right-0 h-[calc(100vh-3rem)] bg-white z-40 transition-transform duration-300 overflow-y-auto shadow-300 ${isContactPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} style={{
-          width: '569px'
-        }}>
-              {/* Header */}
-              <div className="sticky top-0 z-10 bg-white flex items-center justify-between px-6 py-5 border-b border-border">
-                <h2 className="heading-400 text-foreground">
-                  {selectedContact.name}
-                </h2>
-                <Button variant="ghost" size="icon" onClick={() => setIsContactPanelOpen(false)} className="h-8 w-8">
-                  <X className="h-6 w-6 text-foreground" />
-                </Button>
-              </div>
-
-              {/* Contact Highlight Section */}
-              <div className="px-6 py-6 border-border">
-                {/* Contact Info */}
-                <div className="flex items-start justify-between mb-8">
-                  <div className="flex items-start gap-4">
-                    {/* Contact Avatar */}
-                    <img src={(() => {
-                  const company = companiesWithCalculatedStatus.find(c => c.name === selectedContact.company);
-                  return company?.logo || companyLogoPlaceholder;
-                })()} alt={`${selectedContact.company} logo`} className="h-20 w-20 rounded-full object-cover flex-shrink-0" />
-                    
-                    {/* Contact Details */}
-                    <div>
-                      <h3 className="heading-400 text-foreground mb-2">{selectedContact.name}</h3>
-                      <div className="body-100 text-foreground mb-1">{selectedContact.role}</div>
-                      <div className="body-100 text-muted-foreground mb-1">{selectedContact.company}</div>
-                      <div className="body-100 text-foreground">{selectedContact.phone}</div>
-                    </div>
-                  </div>
-                  
-                  {/* View Record Link */}
-                  <Button variant="link" className="body-100 text-[#8B1538] p-0 h-auto hover:no-underline flex items-center gap-1">
-                    View record <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-start gap-4">
-                  {[{
+          {!expandedPanelCompanyId && selectedContactId && (
+            <ContactDetailPanel
+              isOpen={isContactPanelOpen}
+              onClose={() => setIsContactPanelOpen(false)}
+              contact={selectedContact}
+              companyLogo={(() => {
+                const company = companiesWithCalculatedStatus.find(c => c.name === selectedContact.company);
+                return company?.logo || companyLogoPlaceholder;
+              })()}
+              actionsRow={[{
                 icon: FileEdit,
                 label: "Note"
               }, {
@@ -1453,51 +1422,38 @@ const Prospecting = () => {
                           </PopoverTrigger>
                           <PopoverContent className="w-[500px] p-0 bg-white shadow-400" align="end" side="bottom" sideOffset={8} alignOffset={-40}>
                             <div className="border border-border rounded-lg">
-                              {/* Header */}
                               <div className="px-4 py-3 border-b border-border">
                                 <h3 className="heading-200 text-foreground">
                                   {selectedContact?.name || "Contact Name"}
                                 </h3>
                               </div>
-
-                              {/* Content */}
                               <div className="p-4">
-                                {/* Call phone number */}
                                 <Button variant="ghost" className="flex items-center gap-2 mb-4 w-full justify-start h-auto p-2" onClick={() => {
-                            // Find the task notes from the callingTaskId
-                            const taskWithNotes = callingTaskId ? companiesWithCalculatedStatus.flatMap(c => c.tasks).find(t => t.id === callingTaskId) : undefined;
-                            setDiallerContact({
-                              name: selectedContact?.name,
-                              phone: selectedContact?.phone,
-                              taskNotes: taskWithNotes?.notes
-                            });
-                            setIsDiallerOpen(true);
-                            setIsCallPopoverOpen(false);
-                          }}>
+                                  const taskWithNotes = callingTaskId ? companiesWithCalculatedStatus.flatMap(c => c.tasks).find(t => t.id === callingTaskId) : undefined;
+                                  setDiallerContact({
+                                    name: selectedContact?.name,
+                                    phone: selectedContact?.phone,
+                                    taskNotes: taskWithNotes?.notes
+                                  });
+                                  setIsDiallerOpen(true);
+                                  setIsCallPopoverOpen(false);
+                                }}>
                                   <Phone className="h-5 w-5 text-foreground" />
                                   <span className="body-100 text-foreground">
                                     Call {selectedContact?.phone || "+31 64 7642770"} (Mobile Phone Number)
                                   </span>
                                 </Button>
-
-                                {/* Add phone number link */}
                                 <Button variant="link" className="body-100 text-foreground p-0 h-auto mb-6">
                                   + Add phone number
                                 </Button>
-
-                                {/* Call from */}
                                 <div className="flex items-center justify-between px-4 py-3 border-t border-border hover:bg-gray-50 cursor-pointer">
                                   <span className="heading-100 text-foreground">Call from: +31647352106</span>
                                   <ChevronRight className="h-5 w-5 text-foreground" />
                                 </div>
-
-                                {/* Device */}
                                 <div className="flex items-center justify-between px-4 py-3 border-t border-border hover:bg-gray-50 cursor-pointer">
                                   <span className="heading-100 text-foreground">Device: Browser</span>
                                   <ChevronRight className="h-5 w-5 text-foreground" />
                                 </div>
-
-                                {/* Open call options */}
                                 <div className="px-4 py-3 border-t border-border">
                                   <Button variant="link" className="body-100 text-foreground p-0 h-auto">
                                     Open call options
@@ -1523,18 +1479,8 @@ const Prospecting = () => {
                         <span className="body-100 text-foreground">{action.label}</span>
                       </Button>;
               })}
-                </div>
-              </div>
-
-              <ContactDetailSections
-                contact={selectedContact}
-                companyLogo={(() => {
-                  const company = companiesWithCalculatedStatus.find(c => c.name === selectedContact.company);
-                  return company?.logo || companyLogoPlaceholder;
-                })()}
-              />
-
-            </div>}
+            />
+          )}
 
           {/* Task Panel - hidden when expanded panel is active */}
           {!expandedPanelCompanyId && selectedTask && <div className={`fixed top-12 right-0 h-[calc(100vh-3rem)] bg-white z-40 transition-transform duration-300 overflow-y-auto shadow-300 ${isTaskPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} style={{
