@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { GripVertical } from "lucide-react";
+import BreezeBadge from "@/components/BreezeBadge";
 import {
   DndContext,
   closestCenter,
@@ -601,6 +602,7 @@ export type OutreachSequenceCardProps = {
   scriptMode: ScriptMode;
   onScriptModeChange: (mode: ScriptMode) => void;
   onReplyToEmail?: (idx: number) => void;
+  onViewReasoning: () => void;
 };
 
 const buildDefaultOrder = (contactId: string): string[] => [
@@ -634,6 +636,7 @@ export const OutreachSequenceCard = ({
   scriptMode,
   onScriptModeChange,
   onReplyToEmail,
+  onViewReasoning,
 }: OutreachSequenceCardProps) => {
   const firstName = contact.name.split(" ")[0];
   const pristine = isPristine(call, linkedin, sequence);
@@ -776,8 +779,20 @@ export const OutreachSequenceCard = ({
                 </div>
               </SortableContext>
             </DndContext>
+
           </CollapsibleContent>
         </Collapsible>
+        <div className="flex items-center gap-1.5 pb-3">
+          <BreezeBadge />
+          <span className="detail-200 text-muted-foreground">Created by Outreach Agent ·</span>
+          <button
+            type="button"
+            onClick={onViewReasoning}
+            className="detail-200 text-text-interactive hover:underline"
+          >
+            View reasoning
+          </button>
+        </div>
       </div>
     </div>
   );
