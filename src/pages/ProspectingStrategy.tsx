@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
-import { Plus, Loader2, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Plus, Loader2, PanelLeftClose, PanelLeftOpen, FileEdit, Mail, Phone, ListTodo, Calendar, MoreHorizontal } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -17,7 +18,8 @@ import { TrellisIcon } from "@/components/ui/trellis-icon";
 import { prospectingCompanies } from "@/data/prospectingCompanies";
 import { companyDetails } from "@/data/companyDetails";
 import { contactDetails } from "@/data/contactDetails";
-import ContactDetailSections from "@/components/ContactDetailSections";
+import ContactDetailPanel from "@/components/ContactDetailPanel";
+import ReasoningPanel from "@/components/ReasoningPanel";
 import { calculateCompanyStatus } from "@/utils/companyStatusUtils";
 import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { TextEditPopup } from "@/components/TextEditPopup";
@@ -73,6 +75,8 @@ const ProspectingStrategy = () => {
   const [feedbackOtherText, setFeedbackOtherText] = useState("");
   const [feedbackRemove, setFeedbackRemove] = useState(false);
   const [emailReplyTo, setEmailReplyTo] = useState<{ name: string; email: string; subject: string } | null>(null);
+  const [contactDrawerId, setContactDrawerId] = useState<string | null>(null);
+  const [reasoningContactId, setReasoningContactId] = useState<string | null>(null);
   const [callScriptMode, setCallScriptMode] = useState<"script" | "bullets">(() => {
     if (typeof window === "undefined") return "script";
     return (localStorage.getItem("callScriptMode") as "script" | "bullets") || "script";
@@ -324,8 +328,8 @@ const ProspectingStrategy = () => {
               </div>
             )}
 
-          {/* Middle column - Strategy content */}
-          <div className={`flex-[3] overflow-y-auto pl-12 pr-6 pt-12 pb-12 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+          {/* Strategy content */}
+          <div className={`flex-1 overflow-y-auto pl-12 pr-12 pt-12 pb-12 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
             {isNarrow && (
               <div className="mb-4">
                 <button
@@ -492,7 +496,16 @@ const ProspectingStrategy = () => {
                               </AvatarFallback>
                             </Avatar>
                             <div className="min-w-0">
-                              <div className="heading-100 text-text-interactive">{contact.name}</div>
+                              <button
+                                type="button"
+                                className="heading-100 text-text-interactive hover:underline text-left"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setContactDrawerId(contact.id);
+                                }}
+                              >
+                                {contact.name}
+                              </button>
                               <div className="body-100 text-muted-foreground">{contact.role}</div>
                             </div>
                           </div>
@@ -626,6 +639,7 @@ const ProspectingStrategy = () => {
                                     subject: `Re: ${subject}`,
                                   });
                                 }}
+                                onViewReasoning={() => setReasoningContactId(contact.id)}
                               />
                             );
                           })()}
@@ -635,6 +649,43 @@ const ProspectingStrategy = () => {
 
 
                       })}
+                    {otherContacts.length > 0 && (
+                      <div className="mt-8">
+                        <h3 className="heading-200 text-foreground mb-4">Other Contacts</h3>
+                        <div className="space-y-2">
+                          {otherContacts.map((contact) => {
+                            const detail = contactDetails[contact.id];
+                            const email = detail?.email || `${contact.name.toLowerCase().replace(/\s/g, '.')}@${currentCompany.website}`;
+                            return (
+                              <div key={contact.id} className="bg-card rounded-100 border border-core-subtle shadow-100 px-4 py-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="flex-1 min-w-0">
+                                    <button
+                                      className="heading-50 text-text-interactive hover:underline text-left"
+                                      onClick={() => setContactDrawerId(contact.id)}
+                                    >
+                                      {contact.name}
+                                    </button>
+                                    <div className="detail-100 text-muted-foreground">{contact.role}</div>
+                                    <div className="detail-100 text-muted-foreground truncate">{email}</div>
+                                  </div>
+                                  <div className="flex flex-col items-end gap-1 shrink-0">
+                                    <Button
+                                      variant="secondary"
+                                      size="extra-small"
+                                      onClick={() => handleAddToOutreach(contact.id)}
+                                    >
+                                      <Plus className="h-3 w-3 mr-1" />
+                                      Add to Outreach Targets
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                     <TextEditPopup containerRef={outreachContainerRef} />
                   </CollapsibleContent>
                 </Collapsible>
@@ -1130,104 +1181,87 @@ const ProspectingStrategy = () => {
             </div>
           </div>
 
-          {/* Right column - Contact details panel */}
-          <div className={`flex-[2] py-12 pl-6 pr-12 shrink-0 overflow-y-auto transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
-            {isNarrow && (
-              <div className="mb-4 invisible" aria-hidden="true">
-                <button className="flex items-center gap-1 body-125">
-                  <TrellisIcon name="left" size={12} />
-                  P1 companies
-                </button>
-              </div>
-            )}
-            <div className="space-y-6">
-              {outreachTargets.map((contact, index) => {
-                const contactDetail = contactDetails[contact.id];
-                return (
-                  <div key={contact.id} className="bg-fill-tertiary rounded-300 border border-core-subtle shadow-100">
-                    {/* Contact header */}
-                    <div className="px-4 py-8">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className={contact.avatarColor + " text-white heading-50"}>
-                            {contact.initials}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col gap-2">
-                          <div className="heading-100 text-foreground">{contact.name}</div>
-                          <div className="detail-100 text-muted-foreground">{contact.role}</div>
-                          {contactDetail && (
-                            <div className="detail-100 text-muted-foreground">{contactDetail.email}</div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Collapsible sections */}
-                    <div>
-                      <ContactDetailSections
-                        contact={contactDetail || {
-                          id: contact.id,
-                          name: contact.name,
-                          initials: contact.initials,
-                          role: contact.role,
-                          company: currentCompany.name,
-                          email: '',
-                          phone: '',
-                          avatarColor: contact.avatarColor,
-                          linkedInInfo: { role: contact.role, location: '', yearsInRole: '', previousCompanies: '' },
-                          leadQualification: { engagementScore: 0, responseRate: 0, meetingAcceptance: 0, lastEngagement: '', associatedQLs: [], compellingReasons: [], interests: '' },
-                          deals: [],
-                          recentActivity: [],
-                          qlSummary: { hasRecentQL: false, hasPastQLs: false },
-                          notes: []
-                        }}
-                        defaultOpen={false}
-                        showDeals={false}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* Other Contacts */}
-              {otherContacts.length > 0 && (
-                <div className="mt-8">
-                  <h3 className="heading-200 text-foreground mb-4">Other Contacts</h3>
-                  <div className="space-y-2">
-                    {otherContacts.map((contact) => {
-                      const detail = contactDetails[contact.id];
-                      const email = detail?.email || `${contact.name.toLowerCase().replace(/\s/g, '.')}@${currentCompany.website}`;
-                      return (
-                        <div key={contact.id} className="bg-card rounded-100 border border-core-subtle shadow-100 px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="flex-1 min-w-0">
-                              <button className="heading-50 text-text-interactive hover:underline text-left">{contact.name}</button>
-                              <div className="detail-100 text-muted-foreground">{contact.role}</div>
-                              <div className="detail-100 text-muted-foreground truncate">{email}</div>
-                            </div>
-                            <div className="flex flex-col items-end gap-1 shrink-0">
-                              <Button
-                                variant="secondary"
-                                size="extra-small"
-                                onClick={() => handleAddToOutreach(contact.id)}
-                              >
-                                <Plus className="h-3 w-3 mr-1" />
-                                Add to Outreach Targets
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
           </div>
         </div>
       </div>
+
+      {/* Contact details drawer (shared with the company list page) */}
+      {contactDrawerId && (() => {
+        const drawerContact = outreachTargets.find(c => c.id === contactDrawerId)
+          || otherContacts.find(c => c.id === contactDrawerId);
+        const detail = contactDetails[contactDrawerId];
+        const fallbackContact = drawerContact && {
+          id: contactDrawerId,
+          name: drawerContact.name,
+          initials: drawerContact.initials,
+          role: drawerContact.role,
+          company: currentCompany.name,
+          email: '',
+          phone: '',
+          avatarColor: drawerContact.avatarColor,
+          linkedInInfo: { role: drawerContact.role, location: '', yearsInRole: '', previousCompanies: '' },
+          leadQualification: { engagementScore: 0, responseRate: 0, meetingAcceptance: 0, lastEngagement: '', associatedQLs: [], compellingReasons: [], interests: '' },
+          deals: [],
+          recentActivity: [],
+          qlSummary: { hasRecentQL: false, hasPastQLs: false },
+          notes: []
+        };
+        const contact = detail || fallbackContact;
+        if (!contact) return null;
+        const actionDefs = [
+          { icon: FileEdit, label: "Note" },
+          { icon: Mail, label: "Email" },
+          { icon: Phone, label: "Call" },
+          { icon: ListTodo, label: "Task" },
+          { icon: Calendar, label: "Meeting" },
+          { icon: MoreHorizontal, label: "More" },
+        ];
+        return (
+          <ContactDetailPanel
+            isOpen={true}
+            onClose={() => setContactDrawerId(null)}
+            contact={contact}
+            companyLogo={companyLogoPlaceholder}
+            actionsRow={actionDefs.map((action) => {
+              const handleClick =
+                action.label === "Email"
+                  ? () => setEmailReplyTo({ name: contact.name, email: contact.email, subject: "" })
+                  : undefined;
+              return (
+                <Button
+                  key={action.label}
+                  variant="ghost"
+                  className="flex flex-col items-center gap-2 group h-auto p-1"
+                  onClick={handleClick}
+                >
+                  <div className="h-8 w-8 rounded-full border border-border flex items-center justify-center group-hover:bg-gray-50 transition-colors">
+                    <action.icon className="h-4 w-4 text-foreground" />
+                  </div>
+                  <span className="body-100 text-foreground">{action.label}</span>
+                </Button>
+              );
+            })}
+          />
+        );
+      })()}
+
+      {/* Reasoning panel — agent's thought process */}
+      <AnimatePresence>
+        {reasoningContactId && (() => {
+          const reasoningContact = outreachTargets.find(c => c.id === reasoningContactId)
+            || otherContacts.find(c => c.id === reasoningContactId);
+          if (!reasoningContact) return null;
+          return (
+            <ReasoningPanel
+              key={reasoningContact.id}
+              onClose={() => setReasoningContactId(null)}
+              contactName={reasoningContact.name}
+              companyName={currentCompany.name}
+            />
+          );
+        })()}
+      </AnimatePresence>
+
       {/* Feedback Dialog */}
       <Dialog open={feedbackContactId !== null} onOpenChange={(open) => { if (!open) setFeedbackContactId(null); }}>
         <DialogContent className="sm:max-w-[425px] bg-fill-surface">
