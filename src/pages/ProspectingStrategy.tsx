@@ -357,7 +357,7 @@ const ProspectingStrategy = () => {
                 </button>
               </div>
             )}
-            <div data-tour="strategy-company-card" className="bg-fill-secondary rounded-300 border border-core-subtle shadow-100 overflow-hidden flex flex-col gap-12">
+            <div data-tour="strategy-company-card" className="bg-fill-secondary rounded-300 border border-core-subtle shadow-100 overflow-hidden flex flex-col gap-12 max-w-[1000px] w-full">
             {/* Company header */}
             <div className="px-6 pt-4 pb-0">
               <div className="flex items-center justify-between">
@@ -439,6 +439,24 @@ const ProspectingStrategy = () => {
                         Currently, the company is in a growth phase. Their top revenue streams are: 1) SaaS recurring license fees for the core platform, 2) Professional services for implementation and data migration, and 3) Integration-led revenue through partnerships with existing and back-office systems.
                       </p>
                       }
+                  </CollapsibleContent>
+                </Collapsible>
+
+                {/* Recent Company News & Triggers */}
+                <Collapsible defaultOpen className="mb-12">
+                  <CollapsibleTrigger className="flex items-center gap-2 w-full group">
+                    <TrellisIcon name="downCarat" size={12} className="text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
+                    <h3 className="heading-200 text-foreground">Recent Company News & Triggers</h3>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-3">
+                    <p className="heading-50 text-foreground mb-1">{strategy.recentNews.title}</p>
+                    <p className="body-100 text-foreground leading-relaxed">
+                      {strategy.recentNews.description}
+                    </p>
+                    <h4 className="heading-50 text-foreground mt-4 mb-1">Strategic Integration of Empowering Systems</h4>
+                    <p className="body-100 text-foreground leading-relaxed">
+                      {strategy.strategicIntegration}
+                    </p>
                   </CollapsibleContent>
                 </Collapsible>
 
@@ -687,24 +705,6 @@ const ProspectingStrategy = () => {
                       </div>
                     )}
                     <TextEditPopup containerRef={outreachContainerRef} />
-                  </CollapsibleContent>
-                </Collapsible>
-
-                {/* Recent Company News & Triggers */}
-                <Collapsible defaultOpen className="mb-8">
-                  <CollapsibleTrigger className="flex items-center gap-2 w-full group">
-                    <TrellisIcon name="downCarat" size={12} className="text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
-                    <h3 className="heading-200 text-foreground">Recent Company News & Triggers</h3>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-3">
-                    <p className="heading-50 text-foreground mb-1">{strategy.recentNews.title}</p>
-                    <p className="body-100 text-foreground leading-relaxed">
-                      {strategy.recentNews.description}
-                    </p>
-                    <h4 className="heading-50 text-foreground mt-4 mb-1">Strategic Integration of Empowering Systems</h4>
-                    <p className="body-100 text-foreground leading-relaxed">
-                      {strategy.strategicIntegration}
-                    </p>
                   </CollapsibleContent>
                 </Collapsible>
               </TabsContent>
