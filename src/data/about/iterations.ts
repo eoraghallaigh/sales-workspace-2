@@ -5,6 +5,22 @@ import type { IterationEntry } from "./types";
 // Each entry's `id` matches the folder name under public/about/iterations/.
 export const iterations: IterationEntry[] = [
   {
+    id: "2026-05-12-outreach-row-edit-affordance",
+    date: "2026-05-12",
+    label: "outreach-row-edit-affordance",
+    whatChanged:
+      "Outreach sequence rows now highlight on hover across their full row height (rounded 4px) and the subject is no longer an inline input, so clicking anywhere on a collapsed row expands it. Email bodies show a dark-grey \"Click to edit\" overlay on hover; clicking opens an explicit edit state with two separate labelled form fields (Subject and Body) styled with the subtle border tokens, rich-text controls (Bold/Italic/Underline/Link) bottom-left, and Undo/Redo/Discard/Save bottom-right (Save and Undo/Redo disabled until dirty). The strategy company card is now capped at max-width 1000px and left-aligned, and the Recent Company News & Triggers section was moved up to sit directly under Business Intelligence.",
+    why: "Reps weren't noticing they could edit the AI-generated emails or that the whole row was clickable to expand. An explicit edit state gives us a clean boundary to log rep edits to AI content, and the stronger hover affordance plus full-row hit area should make both the expand and edit interactions obvious. Splitting subject and body into separate labelled form fields (per Figma) removes the inbox-style framing so the form reads as two discrete inputs the rep is filling out.",
+    screenshots: [
+      { src: "/about/iterations/2026-05-12-outreach-row-edit-affordance/summary.png", alt: "Summary route screenshot" },
+      { src: "/about/iterations/2026-05-12-outreach-row-edit-affordance/prospecting.png", alt: "Prospecting route screenshot" },
+      { src: "/about/iterations/2026-05-12-outreach-row-edit-affordance/power-hour.png", alt: "Power Hour route screenshot" },
+      { src: "/about/iterations/2026-05-12-outreach-row-edit-affordance/sales-workspace.png", alt: "Sales Workspace route screenshot" },
+      { src: "/about/iterations/2026-05-12-outreach-row-edit-affordance/deals.png", alt: "Deals route screenshot" },
+      { src: "/about/iterations/2026-05-12-outreach-row-edit-affordance/dashboard.png", alt: "Dashboard route screenshot" },
+    ],
+  },
+  {
     id: "2026-05-07-prototype-homepage-hub-2",
     date: "2026-05-07",
     label: "prototype-homepage-hub",
