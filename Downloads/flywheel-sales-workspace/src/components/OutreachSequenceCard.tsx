@@ -1,5 +1,13 @@
-import { useState } from "react";
-import { GripVertical } from "lucide-react";
+import { useRef, useState } from "react";
+import {
+  GripVertical,
+  Bold,
+  Italic,
+  Underline,
+  Link as LinkIcon,
+  Undo2,
+  Redo2,
+} from "lucide-react";
 import BreezeBadge from "@/components/BreezeBadge";
 import {
   DndContext,
@@ -18,6 +26,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -241,6 +251,188 @@ const seqHeaderChip = (
   return null;
 };
 
+type EmailEditorProps = {
+  initialSubject: string;
+  initialBody: string;
+  onSave: (subject: string, body: string) => void;
+  onDiscard: () => void;
+};
+
+const EmailEditor = ({ initialSubject, initialBody, onSave, onDiscard }: EmailEditorProps) => {
+  const [history, setHistory] = useState<Array<{ subject: string; body: string }>>([
+    { subject: initialSubject, body: initialBody },
+  ]);
+  const [index, setIndex] = useState(0);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+
+  const current = history[index];
+  const dirty = current.subject !== initialSubject || current.body !== initialBody;
+  const canUndo = index > 0;
+  const canRedo = index < history.length - 1;
+
+  const push = (next: { subject: string; body: string }) => {
+    setHistory((prev) => [...prev.slice(0, index + 1), next]);
+    setIndex(index + 1);
+  };
+
+  const wrapSelection = (before: string, after = before) => {
+    const ta = bodyRef.current;
+    if (!ta) return;
+    const start = ta.selectionStart ?? current.body.length;
+    const end = ta.selectionEnd ?? current.body.length;
+    const newBody =
+      current.body.slice(0, start) +
+      before +
+      current.body.slice(start, end) +
+      after +
+      current.body.slice(end);
+    push({ subject: current.subject, body: newBody });
+    requestAnimationFrame(() => {
+      ta.focus();
+      ta.setSelectionRange(start + before.length, end + before.length);
+    });
+  };
+
+  return (
+    <div className="flex flex-col gap-8 pt-4 pb-4" onClick={(e) => e.stopPropagation()}>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="email-subject" className="heading-50 text-foreground">
+          Subject
+        </label>
+        <Input
+          id="email-subject"
+          value={current.subject}
+          onChange={(e) => push({ subject: e.target.value, body: current.body })}
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="email-body" className="heading-50 text-foreground">
+          Body
+        </label>
+        <Textarea
+          id="email-body"
+          ref={bodyRef}
+          value={current.body}
+          onChange={(e) => push({ subject: current.subject, body: e.target.value })}
+          className="min-h-[180px] leading-relaxed"
+          autoFocus
+        />
+        <div className="flex items-center justify-between gap-2 mt-1">
+          <div className="flex items-center">
+            <button
+              type="button"
+              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+              onClick={() => wrapSelection("**")}
+              aria-label="Bold"
+            >
+              <Bold size={14} />
+            </button>
+            <button
+              type="button"
+              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+              onClick={() => wrapSelection("*")}
+              aria-label="Italic"
+            >
+              <Italic size={14} />
+            </button>
+            <button
+              type="button"
+              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+              onClick={() => wrapSelection("__")}
+              aria-label="Underline"
+            >
+              <Underline size={14} />
+            </button>
+            <button
+              type="button"
+              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+              onClick={() => wrapSelection("[", "](url)")}
+              aria-label="Insert link"
+            >
+              <LinkIcon size={14} />
+            </button>
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
+              onClick={() => canUndo && setIndex(index - 1)}
+              disabled={!canUndo}
+              aria-label="Undo"
+            >
+              <Undo2 size={14} />
+            </button>
+            <button
+              type="button"
+              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
+              onClick={() => canRedo && setIndex(index + 1)}
+              disabled={!canRedo}
+              aria-label="Redo"
+            >
+              <Redo2 size={14} />
+            </button>
+            <Button variant="secondary" size="extra-small" onClick={onDiscard}>
+              Discard
+            </Button>
+            <Button
+              variant="primary"
+              size="extra-small"
+              onClick={() => onSave(current.subject, current.body)}
+              disabled={!dirty}
+            >
+              Save
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+type EditableEmailBodyProps = {
+  subject: string;
+  body: string;
+  onSave: (subject: string, body: string) => void;
+};
+
+const EditableEmailBody = ({ subject, body, onSave }: EditableEmailBodyProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+
+  if (isEditing) {
+    return (
+      <EmailEditor
+        initialSubject={subject}
+        initialBody={body}
+        onSave={(s, b) => {
+          onSave(s, b);
+          setIsEditing(false);
+        }}
+        onDiscard={() => setIsEditing(false)}
+      />
+    );
+  }
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      className="relative group cursor-pointer rounded-[var(--borderRadius-100)] overflow-hidden"
+      onClick={() => setIsEditing(true)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          setIsEditing(true);
+        }
+      }}
+    >
+      <p className="body-100 text-foreground leading-relaxed whitespace-pre-line">{body}</p>
+      <div className="absolute inset-0 flex items-center justify-center bg-black/65 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+        <span className="heading-100 text-white">Click to edit</span>
+      </div>
+    </div>
+  );
+};
+
 type SortableRowProps = {
   touch: Touch;
   isFirst: boolean;
@@ -301,19 +493,15 @@ const SortableRow = ({
       <div className="flex items-center gap-2">
         <span className="heading-50 text-foreground">{touchLabel(touch)}</span>
         {touch.kind === "email" && (
-          <input
-            type="text"
-            className={`body-100 flex-1 min-w-0 bg-transparent border-0 p-0 focus:outline-none focus:ring-0 rounded-[var(--borderRadius-100)] hover:bg-[var(--color-fill-surface-recessed)] transition-colors cursor-text ${
+          <span
+            className={`body-100 flex-1 min-w-0 truncate ${
               touch.status.kind === "cancelled"
                 ? "text-muted-foreground line-through"
                 : "text-foreground"
             }`}
-            value={touch.subject}
-            onChange={(e) => onSubjectChange?.(e.target.value)}
-            readOnly={!editable}
-            onClick={(e) => e.stopPropagation()}
-            onMouseDown={(e) => e.stopPropagation()}
-          />
+          >
+            {touch.subject}
+          </span>
         )}
         <TrellisIcon
           name="downCarat"
@@ -329,10 +517,10 @@ const SortableRow = ({
 
   if (!isEnrolled) {
     return (
-      <div ref={setNodeRef} style={style} className="py-3">
+      <div ref={setNodeRef} style={style}>
         <Collapsible open={isExpanded} onOpenChange={onToggle}>
           <CollapsibleTrigger asChild>
-            <div className="flex items-start gap-2 cursor-pointer text-left">
+            <div className="flex items-start gap-2 cursor-pointer text-left -mx-2 px-2 py-3 rounded-[4px] hover:bg-[var(--color-fill-surface-recessed)] transition-colors">
               {draggable ? (
                 <button
                   type="button"
@@ -405,12 +593,13 @@ const SortableRow = ({
               ))}
             {touch.kind === "email" &&
               (editable ? (
-                <textarea
-                  className="body-100 text-foreground leading-relaxed whitespace-pre-line w-full bg-transparent resize-none border-0 p-0 focus:outline-none focus:ring-0 rounded-[var(--borderRadius-100)] hover:bg-[var(--color-fill-surface-recessed)] transition-colors cursor-text"
-                  style={{ fieldSizing: "content" } as React.CSSProperties}
-                  value={touch.body}
-                  onChange={(e) => onBodyChange?.(e.target.value)}
-                  rows={2}
+                <EditableEmailBody
+                  subject={touch.subject}
+                  body={touch.body}
+                  onSave={(s, b) => {
+                    onSubjectChange?.(s);
+                    onBodyChange?.(b);
+                  }}
                 />
               ) : (
                 <p className="body-100 text-muted-foreground leading-relaxed whitespace-pre-line">
@@ -493,10 +682,10 @@ const SortableRow = ({
         </div>
       </div>
 
-      <div className="flex-1 min-w-0 py-3">
+      <div className="flex-1 min-w-0">
       <Collapsible open={isExpanded} onOpenChange={onToggle}>
         <CollapsibleTrigger asChild>
-          <div className="flex items-start gap-2 cursor-pointer text-left">
+          <div className="flex items-start gap-2 cursor-pointer text-left -mx-2 px-2 py-3 rounded-[4px] hover:bg-[var(--color-fill-surface-recessed)] transition-colors">
             {headingInner}
           </div>
         </CollapsibleTrigger>

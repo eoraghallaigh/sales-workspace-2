@@ -15,7 +15,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         )}
         style={{
           borderRadius: 'var(--borderRadius-100, 4px)',
-          border: 'var(--borderWidth-100, 1px) solid var(--color-border-core-default, #8A8A8A)',
+          border: 'var(--borderWidth-100, 1px) solid var(--color-border-core-subtle, #CCCCCC)',
           background: 'var(--color-fill-field-default, #FFF)',
         }}
         ref={ref}
