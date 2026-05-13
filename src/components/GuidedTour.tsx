@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTour } from "@/contexts/TourContext";
+import { useCyclePath } from "@/hooks/useCyclePath";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
@@ -17,6 +18,7 @@ const GuidedTour: React.FC = () => {
   const { activeTour, currentStepIndex, isActive, nextStep, endTour } = useTour();
   const location = useLocation();
   const navigate = useNavigate();
+  const { cyclePath } = useCyclePath();
   const [targetRect, setTargetRect] = useState<Rect | null>(null);
   const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
   const rafRef = useRef<number>();
@@ -29,7 +31,7 @@ const GuidedTour: React.FC = () => {
   useEffect(() => {
     if (!currentStep) return;
     // For strategy routes, just check prefix
-    const stepRoute = currentStep.route;
+    const stepRoute = cyclePath(currentStep.route);
     if (stepRoute.endsWith("/")) {
       if (!location.pathname.startsWith(stepRoute)) {
         // Don't navigate for wildcard routes - user needs to navigate there
@@ -37,7 +39,7 @@ const GuidedTour: React.FC = () => {
     } else if (location.pathname !== stepRoute) {
       navigate(stepRoute);
     }
-  }, [currentStep, location.pathname, navigate]);
+  }, [currentStep, location.pathname, navigate, cyclePath]);
 
   // Find and track the target element
   const updateRect = useCallback(() => {
@@ -177,7 +179,7 @@ const GuidedTour: React.FC = () => {
             clickingRef.current = true;
             // Step 2: clicking first company card should navigate to strategy page
             if (currentStep.targetSelector === '[data-tour="first-company-card"]') {
-              navigate("/prospecting/strategy/1");
+              navigate(cyclePath("/prospecting/strategy/1"));
               setTimeout(() => { nextStep(); clickingRef.current = false; }, 300);
               return;
             }

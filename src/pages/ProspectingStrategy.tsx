@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import { useParams, useNavigate } from "react-router-dom";
+import { useCyclePath } from "@/hooks/useCyclePath";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -62,6 +63,7 @@ const RewritingStatusMessage = () => {
 const ProspectingStrategy = () => {
   const { companyId } = useParams<{companyId: string;}>();
   const navigate = useNavigate();
+  const { cyclePath } = useCyclePath();
   const [selectedContactIndex, setSelectedContactIndex] = useState(0);
   const [activeTab, setActiveTab] = useState("strategy");
   const [expandedOutreach, setExpandedOutreach] = useState<Record<string, boolean>>({});
@@ -278,7 +280,7 @@ const ProspectingStrategy = () => {
             {isSubNavOpen && !isNarrow && (
               <div className="pb-8">
                 <button
-                  onClick={() => navigate("/prospecting")}
+                  onClick={() => navigate(cyclePath("/prospecting"))}
                   className="flex items-center gap-1 body-125 text-text-interactive hover:underline transition-colors">
                   <TrellisIcon name="left" size={12} />
                   P1 companies
@@ -288,7 +290,7 @@ const ProspectingStrategy = () => {
             {isSubNavOpen && companies.map((company) =>
             <button
               key={company.id}
-              onClick={() => navigate(`/prospecting/strategy/${company.id}`)}
+              onClick={() => navigate(cyclePath(`/prospecting/strategy/${company.id}`))}
               className={`w-full text-left px-3 py-3 transition-colors ${
               company.id === currentCompany.id ?
               "rounded-l-[var(--borderRadius-100,4px)] rounded-r-none border-l-4 border-l-[var(--color-border-core-pressed,#141414)] bg-[var(--color-fill-tertiary-disabled,#F5F5F5)]" :
@@ -333,7 +335,7 @@ const ProspectingStrategy = () => {
             {isNarrow && (
               <div className="mb-4">
                 <button
-                  onClick={() => navigate("/prospecting")}
+                  onClick={() => navigate(cyclePath("/prospecting"))}
                   className="flex items-center gap-1 body-125 text-text-interactive hover:underline transition-colors">
                   <TrellisIcon name="left" size={12} />
                   P1 companies
