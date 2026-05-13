@@ -1,4 +1,4 @@
-import type { IterationEntry as IterationEntryType } from "@/data/about";
+import type { IterationEntry as IterationEntryType } from "@/data/cycles";
 
 interface IterationEntryProps {
   entry: IterationEntryType;

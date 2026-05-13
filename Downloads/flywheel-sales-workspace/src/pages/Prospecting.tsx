@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useCyclePath } from "@/hooks/useCyclePath";
 import { Layout } from "@/components/Layout";
 import CompanyTakeoverView from "@/components/CompanyTakeoverView";
 import CompanyExpandedPanel from "@/components/CompanyExpandedPanel";
@@ -41,6 +42,7 @@ import { useVariant } from "@/contexts/VariantContext";
 const Prospecting = () => {
   const { campaignId } = useParams();
   const navigate = useNavigate();
+  const { cyclePath } = useCyclePath();
   const [takeoverCompanyId, setTakeoverCompanyId] = useState<string | null>(null);
   const [expandedPanelCompanyId, setExpandedPanelCompanyId] = useState<string | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -163,7 +165,7 @@ const Prospecting = () => {
     }));
   };
   const handleCompanyClick = (companyId: string) => {
-    navigate(`/prospecting/strategy/${companyId}`);
+    navigate(cyclePath(`/prospecting/strategy/${companyId}`));
   };
   const handleCompanyNameClick = (companyId: string) => {
     setSelectedCompanyId(companyId);

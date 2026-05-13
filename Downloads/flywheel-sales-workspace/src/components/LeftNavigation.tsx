@@ -1,13 +1,15 @@
 import { Link, useLocation } from "react-router-dom";
 import { TrellisIcon } from "./ui/trellis-icon";
+import { useCyclePath } from "@/hooks/useCyclePath";
 
 export const LeftNavigation = () => {
   const location = useLocation();
+  const { cyclePath } = useCyclePath();
   const items: Array<{ name: any; to?: string }> = [
     { name: "bookmark" },
   ];
   const branchItems: Array<{ name: any; to?: string }> = [
-    { name: "crm", to: "/" },
+    { name: "crm", to: cyclePath("/summary") },
     { name: "campaigns" },
     { name: "documents" },
     { name: "salesTemplates" },

@@ -18,7 +18,7 @@ const baseUrl = process.env.CAPTURE_BASE_URL ?? "http://localhost:8080";
 // Read screenshotConfig.ts as text and extract route entries
 // (avoids needing tsx/ts-node to run a TS file)
 const configSource = readFileSync(
-  resolve(projectRoot, "src/data/about/screenshotConfig.ts"),
+  resolve(projectRoot, "src/data/cycles/screenshotConfig.ts"),
   "utf8",
 );
 const routeRegex =
@@ -32,6 +32,25 @@ while ((match = routeRegex.exec(configSource)) !== null) {
 if (routes.length === 0) {
   console.error("No routes found in screenshotConfig.ts");
   process.exit(1);
+}
+
+// Routes in the config are stored relative to a cycle; prefix them with the
+// current cycle slug pulled from src/data/cycles/index.ts so the capture
+// script targets the live prototype URLs.
+const indexSource = readFileSync(
+  resolve(projectRoot, "src/data/cycles/index.ts"),
+  "utf8",
+);
+const currentCycleMatch = indexSource.match(
+  /currentCycleSlug:\s*CycleSlug\s*=\s*["']([^"']+)["']/,
+);
+if (!currentCycleMatch) {
+  console.error("Could not find currentCycleSlug in src/data/cycles/index.ts");
+  process.exit(1);
+}
+const currentCycleSlug = currentCycleMatch[1];
+for (const route of routes) {
+  route.path = `/${currentCycleSlug}${route.path}`;
 }
 
 // Pre-flight: confirm dev server is reachable

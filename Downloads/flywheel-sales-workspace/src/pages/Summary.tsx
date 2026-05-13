@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useCyclePath } from "@/hooks/useCyclePath";
 import { Layout } from "@/components/Layout";
 import WorkspaceHeader from "@/components/WorkspaceHeader";
 import { Card } from "@/components/ui/card";
@@ -118,6 +119,7 @@ for (let h = SCHEDULE_START; h < SCHEDULE_END; h += 0.5) {
 
 const Summary = () => {
   const navigate = useNavigate();
+  const { cyclePath } = useCyclePath();
   const [activeActivityTab, setActiveActivityTab] = useState<ActivityTab>("agents");
 
   const activityTabs: { id: ActivityTab; label: string; icon: string }[] = [
@@ -316,7 +318,7 @@ const Summary = () => {
                               <span className="heading-25 text-foreground">{evt.title}</span>
                               {evt.subtitle && <span className="detail-200 text-muted-foreground">{evt.subtitle}</span>}
                             </div>
-                            <Button variant="secondary" size="small" className="whitespace-nowrap flex-shrink-0" onClick={() => evt.link && navigate(evt.link)}>
+                            <Button variant="secondary" size="small" className="whitespace-nowrap flex-shrink-0" onClick={() => evt.link && navigate(cyclePath(evt.link))}>
                               Start now
                             </Button>
                           </div>

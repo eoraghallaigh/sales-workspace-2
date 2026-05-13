@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss'
+import typography from '@tailwindcss/typography'
 
 const config: Config = {
   content: [
@@ -449,7 +450,8 @@ const config: Config = {
         '.bg-trellis-gradient-breeze': { background: 'linear-gradient(135deg, #FF3842 0%, #D20688 100%)' },
         '.bg-trellis-gradient-shimmer': { background: 'linear-gradient(135deg, #FBDDD2 0%, #FCC3DC 100%)' },
       })
-    }
+    },
+    typography,
   ],
 }
 
