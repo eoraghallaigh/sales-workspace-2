@@ -1,9 +1,26 @@
-import type { IterationEntry } from "./types";
+import type { IterationEntry } from "../types";
 
 // Iteration entries are auto-appended by the /ship slash command.
 // New entries should be added at the TOP of this array (newest first).
 // Each entry's `id` matches the folder name under public/about/iterations/.
-export const iterations: IterationEntry[] = [
+export const q2c2Iterations: IterationEntry[] = [
+  {
+    id: "2026-05-13-team-home-cycle-prototypes",
+    date: "2026-05-13",
+    label: "team-home-cycle-prototypes",
+    whatChanged:
+      "Replaced the single /about page with a Team Home at / (Flywheel Prospecting) and a Cycle page at /:cycleSlug (e.g. /q2c2). Prototype routes are now cycle-prefixed (/q2c2/summary, /q2c2/prospecting, …) so future cycles can ship their own frozen prototypes alongside. The Cycle page is organised around Commitments — each commitment owns its own Problem / Opportunity, Design goals, User feedback, Metrics & KPIs, and Iteration history. Cycle hero now leads with the cycle label (Q2C2) and date range, dropping the legacy status badge and Alpha/GA milestone strip. Added a project-scoped /freeze-cycle skill that namespaces the current cycle's pages into src/pages/<slug>/ and forks them into the new cycle when a cycle boundary rolls.",
+    why: "The team is moving to a 6-week cycle cadence with multiple feature commitments per cycle, often with different problems, design goals, and KPIs. A single flat About page can't represent that. The new shape gives any viewer one shareable URL per cycle that frames the work, lets each commitment carry its own design rationale, and keeps every cycle's prototype reachable at its own URL as the team ships more cycles over time.",
+    commitment: "outreach-strategy",
+    screenshots: [
+      { src: "/about/iterations/2026-05-13-team-home-cycle-prototypes/summary.png", alt: "Summary route screenshot" },
+      { src: "/about/iterations/2026-05-13-team-home-cycle-prototypes/prospecting.png", alt: "Prospecting route screenshot" },
+      { src: "/about/iterations/2026-05-13-team-home-cycle-prototypes/power-hour.png", alt: "Power Hour route screenshot" },
+      { src: "/about/iterations/2026-05-13-team-home-cycle-prototypes/sales-workspace.png", alt: "Sales Workspace route screenshot" },
+      { src: "/about/iterations/2026-05-13-team-home-cycle-prototypes/deals.png", alt: "Deals route screenshot" },
+      { src: "/about/iterations/2026-05-13-team-home-cycle-prototypes/dashboard.png", alt: "Dashboard route screenshot" },
+    ],
+  },
   {
     id: "2026-05-12-outreach-row-edit-affordance",
     date: "2026-05-12",
@@ -12,6 +29,7 @@ export const iterations: IterationEntry[] = [
       "Outreach sequence rows now highlight on hover across their full row height (rounded 4px) and the subject is no longer an inline input, so clicking anywhere on a collapsed row expands it. Email bodies show a dark-grey \"Click to edit\" overlay on hover; clicking opens an explicit edit state with two separate labelled form fields (Subject and Body) styled with the subtle border tokens, rich-text controls (Bold/Italic/Underline/Link) bottom-left, and Undo/Redo/Discard/Save bottom-right (Save and Undo/Redo disabled until dirty). The strategy company card is now capped at max-width 1000px and left-aligned, and the Recent Company News & Triggers section was moved up to sit directly under Business Intelligence.",
     why: "Reps weren't noticing they could edit the AI-generated emails or that the whole row was clickable to expand. An explicit edit state gives us a clean boundary to log rep edits to AI content, and the stronger hover affordance plus full-row hit area should make both the expand and edit interactions obvious. Splitting subject and body into separate labelled form fields (per Figma) removes the inbox-style framing so the form reads as two discrete inputs the rep is filling out.",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/30",
+    commitment: "outreach-strategy",
     screenshots: [
       { src: "/about/iterations/2026-05-12-outreach-row-edit-affordance/summary.png", alt: "Summary route screenshot" },
       { src: "/about/iterations/2026-05-12-outreach-row-edit-affordance/prospecting.png", alt: "Prospecting route screenshot" },
@@ -29,6 +47,7 @@ export const iterations: IterationEntry[] = [
       "Reworked the About page: hero image now sits inline between the tagline and Open prototype CTA with everything center-aligned and the main column centered in its container. Iteration history shows the latest entry as an open card and wraps the previous 27 PRs in a paged accordion (5 visible at a time, with a small ghost \"Show 5 more\" button to reveal the rest). All 27 historical PRs from git.hubteam.com are now imported into the changelog.",
     why: "The user wanted the hero to read as the centered marketing-style headline of the page, the latest iteration to read instantly without a click, and the long tail of historical PRs to be present but compressed so they don't dominate. Importing the full PR history makes /about an actual project archive, not just a forward-looking changelog.",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/29",
+    commitment: "outreach-strategy",
     screenshots: [
       { src: "/about/iterations/2026-05-07-prototype-homepage-hub-2/summary.png", alt: "Summary route screenshot" },
       { src: "/about/iterations/2026-05-07-prototype-homepage-hub-2/prospecting.png", alt: "Prospecting route screenshot" },
@@ -46,6 +65,7 @@ export const iterations: IterationEntry[] = [
       "Added a project homepage at /about: hero with status badge and Open prototype CTA, iteration history, project context, links, and open questions, plus a sticky anchor nav with scroll-spy. On wide screens (≥ 2xl) the hero image of the Variant C company list moves to a third column that stays put while the content scrolls. About page renders in HubSpot Sans / HubSpot Serif (loaded from HubSpot's CDN) while the rest of the prototype keeps Lexend Deca.",
     why: "Viewers (PMs, eng leads, execs, customers) land on the prototype with no surrounding context today. The homepage is a single shareable URL that gives anyone the project framing, the iteration history, and a one-click jump into the prototype — and stays cheap to maintain because /ship populates the changelog automatically on every ship.",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/28",
+    commitment: "outreach-strategy",
     screenshots: [
       { src: "/about/iterations/2026-05-07-prototype-homepage-hub/summary.png", alt: "Summary route screenshot" },
       { src: "/about/iterations/2026-05-07-prototype-homepage-hub/prospecting.png", alt: "Prospecting route screenshot" },
@@ -63,6 +83,7 @@ export const iterations: IterationEntry[] = [
     why: "The contact panel was duplicated inline in `Prospecting.tsx` and `ProspectingStrategy.tsx`. Improvements (reasoning, Breeze badge, drawer behavior) had to be made in two places and would inevitably drift. Extracting `ContactDetailPanel` and `ReasoningPanel` lets the strategy page open the same drawer reps already know from the prospecting workspace, and gives one home for AI-context affordances going forward.",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/27",
     commitSha: "f9325ed944696718dbf82e6e73fba73c8ce67ac1",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -73,6 +94,7 @@ export const iterations: IterationEntry[] = [
     why: "Reps know context the prospecting agent doesn't — a competitor's contract is ending, a HubSpot campaign just launched, etc. Today the strategy is a fixed single variant; reps can read it but not steer it. This prototype lets the rep ask the AI assistant to rewrite the strategy with a particular angle in mind, so we can test whether the steerable-strategy model resonates before investing in real LLM plumbing. Also tightens a few prospecting UI details that came up in review: - PVS hover tooltip e",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/26",
     commitSha: "b90f97fbde58a29fc052cf2e2631e403b42d56ba",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -83,6 +105,7 @@ export const iterations: IterationEntry[] = [
     why: "- Add a project-scoped `/ship` override at `.claude/commands/ship.md` that mirrors `master` to the public github remote as the final step. Netlify watches that remote and rebuilds on each push, so deploys no longer drift behind a manual catch-up command.",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/25",
     commitSha: "8f36b6b88f9235910b391500e8fc6667988425bd",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -93,6 +116,7 @@ export const iterations: IterationEntry[] = [
     why: "- Commit `.claude/skills/run-app/SKILL.md` (previously untracked) so the skill ships with the repo and works in any conductor worktree or fresh clone.",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/24",
     commitSha: "25d27f7114c833c1795fe5a4d0e77fc3ef02f355",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -103,6 +127,7 @@ export const iterations: IterationEntry[] = [
     why: "- Below 1600px, the 280px company sub-nav now collapses to a `w-16` rail (matching the Original UI prospecting list pattern), with a `PanelLeftClose` / `PanelLeftOpen` toggle for manual control. - \"P1 companies\" backlink moves above the company card on narrow screens so reps can navigate back without expanding the sub-nav. - Contact column top edge stays aligned with the company card via an invisi",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/23",
     commitSha: "eadcff178a848c39a3bbeee59508f233d3b4ec2b",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -113,6 +138,7 @@ export const iterations: IterationEntry[] = [
     why: "- **Chat panel**: floating gradient-bordered panel with the actual Breeze magenta gradient (`#fc0849 → #d20688` at 114deg), 24×24 send button, 16px-radius input pill with production shadow, focus/hover-revealed toolbar — so the prototype reads as HubSpot at a glance instead of brand orange/pink. - **Sequence card**: Enrolled state now uses the shared `Badge` component plus a vertical timeline with",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/22",
     commitSha: "b859eca5aceabd1921da62b60f72a60d2a7b5f79",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -123,6 +149,7 @@ export const iterations: IterationEntry[] = [
     why: "- Collapse the three Call / LinkedIn / Email-sequence cards on the strategy page into one 5-touch sequence with a single Enroll button and drag-to-reorder. Reps don't execute calls or LinkedIn messages on demand — they create tasks that run inside a sequence alongside automated emails, so the UI now matches that workflow. - Stand up a Netlify deploy of the prototype (https://prospecting-strategy.n",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/21",
     commitSha: "4aa36148c6bdd8e958cfddb9956de0aa1804e3ba",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -133,6 +160,7 @@ export const iterations: IterationEntry[] = [
     why: "Surface the manager-side research findings as durable product context so future sessions ground design proposals in the prospecting behaviours we're explicitly optimizing for, not just rep-side feedback themes.",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/20",
     commitSha: "e5e27076877bf964a0e2a4b3af7dcd1f42af5cdd",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -143,6 +171,7 @@ export const iterations: IterationEntry[] = [
     why: "Swapping in the version of the plan we're actually running with starting May 4 — scoped to GS, structured around the three prospecting skills, and including the interview guide stub, scheduled sessions, and rep-facing comms so the whole study lives in one doc.",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/19",
     commitSha: "1ebc6391065db5f6707200c7863f3adf1c572687",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -153,6 +182,7 @@ export const iterations: IterationEntry[] = [
     why: "Trim the plan back to what the prototype can actually evaluate before Alpha. The earlier draft layered in workflow-loop and call-list questions that need a different research vehicle (diary study, observational); this version keeps the four bets that gate the Alpha go/no-go: AI trust, source-data hiding, auto-pause on connected call, and deep vs. burst workflow.",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/18",
     commitSha: "4e4ca207ca53e09c6656f32a50da82b72cffecd5",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -163,6 +193,7 @@ export const iterations: IterationEntry[] = [
     why: "To pressure-test the rep-workflow bets baked into Variant C — AI-drafted outreach as the default, auto-pause on connected call, deep-per-company vs. burst-call lists, per-target call CTAs — before we commit to them at Alpha (Dec 8). The plan is grounded in the three prospecting skills (planning / targeting / depth) and structured so each finding tags back to a customer-feedback theme and design principle, separating pains the prototype resolves from ones it may introduce.",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/17",
     commitSha: "38b1035fbb37e7ac05e6d838fc9d89e9fa66ca42",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -173,6 +204,7 @@ export const iterations: IterationEntry[] = [
     why: "User testing for the prototype starts soon. Two things were getting in the way: 1. **Four competing card variants on the Prospecting page** — testers shouldn't have to choose. We've decided Variant C is the design we want them to see by default. A/B/Original need to stay reachable for demos and fallback, but not in the main UI. 2. **Three independent mock data sources** drove the touch dot indicator, the outreach panels, and the Activity tab — and they never agreed. A tester clicking into a \"3-t",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/16",
     commitSha: "7af6e998c02fe8e1546ec793426c3f593d341599",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -183,6 +215,7 @@ export const iterations: IterationEntry[] = [
     why: "- Activity cards (Call / LinkedIn / 3-step Email sequence) now derive from a typed state model in \\`src/data/outreachStates.ts\\` and surface state inline (chip + avatar + locked/editable bodies). Replies render under the relevant email; Reply button opens the floating communicator with subject prefilled. - Strategy page heading shows an outreach summary strip (replied / awaiting response / not sta",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/15",
     commitSha: "d66c73256983bb69a8382f09348f19d46f0b9313",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -193,6 +226,7 @@ export const iterations: IterationEntry[] = [
     why: "- Top + side nav restyled to match HubSpot global shell (#333 bg, HubSpot logo, 16px icons) - Strategy page: removed \"Prospecting Strategy\" header bar, moved P1 companies backlink into the company sub-nav, padding/typography tweaks - Shadow emphasis moved onto right-column contact cards (and Other Contacts) instead of outreach targets - Variant B: due date now sits with the touch count; row gap bu",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/14",
     commitSha: "9a9a9d528d7b11ea2a6b9f9b67aaeb4f85ca4d31",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -203,6 +237,7 @@ export const iterations: IterationEntry[] = [
     why: "Why: the deals cards added in #11 were only used in the expanded company panel, leaving the strategy page's Deals tab empty. Reusing the existing card keeps the two views consistent. Cards are capped at 600px and centred with 24px spacing so they read well at the strategy view's wider column.",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/13",
     commitSha: "f1c1210efe6973ba165dbe48e5316e14c7743ccd",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -213,6 +248,7 @@ export const iterations: IterationEntry[] = [
     why: "Why: the strategy view's Activity and Company Data tabs were placeholders. This populates Activity with email/call cards (with open/click status indicators matching the contact card pattern) and adds a searchable CRM property list with grouped accordions to Company Data. Also animates the tab underline between tabs and tightens the tab bottom border to respect card padding.",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/12",
     commitSha: "af128a293ecb2f504970b2e0b6f9c4765f9549ba",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -223,6 +259,7 @@ export const iterations: IterationEntry[] = [
     why: "Replaces the skeleton placeholder so reps can see prior deal context (amount, close date, stage progress) without leaving the workspace.",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/11",
     commitSha: "9565256f6b6a851e9c73399cee5b3df62f6d626d",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -233,6 +270,7 @@ export const iterations: IterationEntry[] = [
     why: "Why: explore motion for the AI assistant panel and tighten the contact/strategy column gutter to match design intent (48px). ",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/10",
     commitSha: "bf53ae7cc992dcab0134fa22c4028f4702ea7951",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -243,6 +281,7 @@ export const iterations: IterationEntry[] = [
     why: "- Adds `framer-motion` as a dependency to the prototype so we can layer animations into upcoming UI explorations.",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/9",
     commitSha: "020f8832df80cc31d3a47c015975857db509da69",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -253,6 +292,7 @@ export const iterations: IterationEntry[] = [
     why: "- Adds a root-level `.gitignore` that excludes the debug artifacts Claude Code / Playwright MCP sessions deposit at the repo root (`.playwright-mcp/`, `breeze-*.png`, `strategy-*.png`). - Without this, Conductor's \"Saving uncommitted changes before archiving\" auto-commit sweeps all of those files into a commit, polluting the next PR with ~30 debug files that have to be reset out by hand.",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/8",
     commitSha: "e27ffb12c8eedabd4638b82bbc5aace371a8be7c",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -263,6 +303,7 @@ export const iterations: IterationEntry[] = [
     why: "- Reorder Prospecting Strategy so Outreach Targets appears above Recent Company News & Triggers, and cap the strategy + contacts wrapper at 1600px so the columns stay legibly paired on ultra-wide monitors. - Replace the Prospecting Assistant panel body with a Breeze-styled layout (gradient greeting, teal \"Add assistant\" link, composer with Apps/attach/bookmark/mention toolbar, prompt categories, P",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/7",
     commitSha: "e2f3f40507673f45bf6f9076b399734a2ccc02fa",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -273,6 +314,7 @@ export const iterations: IterationEntry[] = [
     why: "Avoids wasted clicks into a dead-end dialler and surfaces missing-phone as a data gap on the card itself — useful for reps deciding whether to hunt down a number or pivot to email/LinkedIn.",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/5",
     commitSha: "39f19d506d8c05fc51f24fd8314e992e2d335aad",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -283,6 +325,7 @@ export const iterations: IterationEntry[] = [
     why: "Surface A/B/C Priority Prospects list designs behind the view toggle so the alpha cohort can compare them head-to-head before the Dec 8 cut. Factor the Snooze action out into a shared modal matching the Figma spec so reason-code snoozing stays consistent across variants, and portal the hover-card popover so Variant C's Strategy Preview escapes the row transform's stacking context.",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/6",
     commitSha: "6fa1f2b1d4c6b09bf36272a631ff5c627146571d",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -293,6 +336,7 @@ export const iterations: IterationEntry[] = [
     why: "Blank page at https://git.hubteam.com/pages/eoraghallaigh/flywheel-sales-workspace/ was caused by a mismatched base path — Vite was generating asset URLs under \\`/flywheel-sales-workspace/\\` but GHE actually serves the site at \\`/pages/<owner>/<repo>/\\`, so every asset 404'd.",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/4",
     commitSha: "475028a650a3317b9fea887aff9a9231c8fcbba4",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -303,6 +347,7 @@ export const iterations: IterationEntry[] = [
     why: "HubSpot's GHE doesn't provide hosted Actions runners for this repo, so the previous workflow couldn't run. Switch to the simpler branch-deploy approach: \\`npm run deploy\\` builds locally and pushes \\`dist/\\` to a \\`gh-pages\\` branch via the \\`gh-pages\\` package.",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/3",
     commitSha: "7755017762284306302a8139d3db43379e270aa3",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -313,6 +358,7 @@ export const iterations: IterationEntry[] = [
     why: "Gives HubSpot teammates a stable URL to view the prototype without needing to run it locally. Pages serves the app at a subpath, so this sets Vite's \\`base\\`, matches \\`BrowserRouter\\`'s \\`basename\\`, and copies \\`index.html\\` → \\`404.html\\` in the build so client-side deep links don't 404.",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/2",
     commitSha: "8b24d1c20628c3ec45c960c7e2509b4d88b1a08d",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
   {
@@ -323,6 +369,7 @@ export const iterations: IterationEntry[] = [
     why: "- Persistent Call/Enrol/Hide CTAs on the contact card so reps don't have to hunt for actions - In-card dismissal countdown with pause-on-hover and inline feedback chips — reversible, lightweight way to shape BoB - Two-column sequence enrollment modal so reps can enrol multiple contacts from a company in one go - Modal backgrounds unified to white; Submit feedback hugs its contents; card fade-out e",
     prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/1",
     commitSha: "d8c75bb0215237005fb263db4657c876c2213dc9",
+    commitment: "outreach-strategy",
     screenshots: [],
   },
 ];

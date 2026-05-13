@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useCyclePath } from "@/hooks/useCyclePath";
 
 const agentsData = [
   {
@@ -30,6 +31,7 @@ const agentsData = [
 
 const Agents = () => {
   const navigate = useNavigate();
+  const { cyclePath } = useCyclePath();
   return (
     <Layout>
       <div className="flex flex-col h-screen overflow-hidden">
@@ -61,7 +63,7 @@ const Agents = () => {
 
                 {/* Review button */}
                 <div>
-                  <Button variant="outline" size="sm" className="body-100" onClick={() => navigate(`/agents/${agent.id}`)}>
+                  <Button variant="outline" size="sm" className="body-100" onClick={() => navigate(cyclePath(`/agents/${agent.id}`))}>
                     Review
                   </Button>
                 </div>

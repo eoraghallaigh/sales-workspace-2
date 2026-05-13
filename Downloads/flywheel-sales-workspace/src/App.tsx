@@ -7,7 +7,6 @@ import { TourProvider } from "@/contexts/TourContext";
 import { VariantProvider } from "@/contexts/VariantContext";
 import { StrategyAssistantProvider } from "@/contexts/StrategyAssistantContext";
 import GuidedTour from "@/components/GuidedTour";
-import TourLauncher from "@/components/TourLauncher";
 import SalesWorkspace from "./pages/SalesWorkspace";
 import Summary from "./pages/Summary";
 import Prospecting from "./pages/Prospecting";
@@ -21,7 +20,8 @@ import DesignSystem from "./pages/DesignSystem";
 import ProspectingStrategy from "./pages/ProspectingStrategy";
 import HoverPreviewDemo from "./pages/HoverPreviewDemo";
 import OutreachStates from "./pages/OutreachStates";
-import About from "./pages/About";
+import TeamHome from "./pages/TeamHome";
+import CyclePage from "./pages/CyclePage";
 
 const queryClient = new QueryClient();
 
@@ -35,25 +35,24 @@ const App = () => (
           <VariantProvider>
           <StrategyAssistantProvider>
           <Routes>
-            <Route path="/" element={<Summary />} />
-            <Route path="/summary" element={<Summary />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/design-system" element={<DesignSystem />} />
-            <Route path="/prospecting" element={<Prospecting />} />
-            <Route path="/prospecting/campaign/:campaignId" element={<Prospecting />} />
-            <Route path="/prospecting/strategy/:companyId" element={<ProspectingStrategy />} />
-            <Route path="/power-hour" element={<PowerHour />} />
-            <Route path="/power-hour/review" element={<PowerHourReview />} />
-            <Route path="/sales-workspace" element={<SalesWorkspace />} />
-             <Route path="/deals" element={<Deals />} />
-            <Route path="/agents" element={<Agents />} />
-            <Route path="/agents/:agentId" element={<AgentDetail />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/hover-preview" element={<HoverPreviewDemo />} />
-            <Route path="/outreach-states" element={<OutreachStates />} />
+            <Route path="/" element={<TeamHome />} />
+            <Route path="/:cycleSlug" element={<CyclePage />} />
+            <Route path="/:cycleSlug/summary" element={<Summary />} />
+            <Route path="/:cycleSlug/design-system" element={<DesignSystem />} />
+            <Route path="/:cycleSlug/prospecting" element={<Prospecting />} />
+            <Route path="/:cycleSlug/prospecting/campaign/:campaignId" element={<Prospecting />} />
+            <Route path="/:cycleSlug/prospecting/strategy/:companyId" element={<ProspectingStrategy />} />
+            <Route path="/:cycleSlug/power-hour" element={<PowerHour />} />
+            <Route path="/:cycleSlug/power-hour/review" element={<PowerHourReview />} />
+            <Route path="/:cycleSlug/sales-workspace" element={<SalesWorkspace />} />
+            <Route path="/:cycleSlug/deals" element={<Deals />} />
+            <Route path="/:cycleSlug/agents" element={<Agents />} />
+            <Route path="/:cycleSlug/agents/:agentId" element={<AgentDetail />} />
+            <Route path="/:cycleSlug/dashboard" element={<Dashboard />} />
+            <Route path="/:cycleSlug/hover-preview" element={<HoverPreviewDemo />} />
+            <Route path="/:cycleSlug/outreach-states" element={<OutreachStates />} />
           </Routes>
           <GuidedTour />
-          {/* <TourLauncher /> */}
           </StrategyAssistantProvider>
           </VariantProvider>
         </TourProvider>
