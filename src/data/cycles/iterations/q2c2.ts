@@ -11,6 +11,7 @@ export const q2c2Iterations: IterationEntry[] = [
     whatChanged:
       "Replaced the single /about page with a Team Home at / (Flywheel Prospecting) and a Cycle page at /:cycleSlug (e.g. /q2c2). Prototype routes are now cycle-prefixed (/q2c2/summary, /q2c2/prospecting, …) so future cycles can ship their own frozen prototypes alongside. The Cycle page is organised around Commitments — each commitment owns its own Problem / Opportunity, Design goals, User feedback, Metrics & KPIs, and Iteration history. Cycle hero now leads with the cycle label (Q2C2) and date range, dropping the legacy status badge and Alpha/GA milestone strip. Added a project-scoped /freeze-cycle skill that namespaces the current cycle's pages into src/pages/<slug>/ and forks them into the new cycle when a cycle boundary rolls.",
     why: "The team is moving to a 6-week cycle cadence with multiple feature commitments per cycle, often with different problems, design goals, and KPIs. A single flat About page can't represent that. The new shape gives any viewer one shareable URL per cycle that frames the work, lets each commitment carry its own design rationale, and keeps every cycle's prototype reachable at its own URL as the team ships more cycles over time.",
+    prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/31",
     commitment: "outreach-strategy",
     screenshots: [
       { src: "/about/iterations/2026-05-13-team-home-cycle-prototypes/summary.png", alt: "Summary route screenshot" },
