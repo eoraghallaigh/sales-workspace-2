@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useCyclePath } from "@/hooks/useCyclePath";
 import DiallerCommunicator from "@/components/DiallerCommunicator";
 
 import { Card } from "@/components/ui/card";
@@ -48,6 +49,7 @@ const conversions = [
 
 const PowerHour = () => {
   const navigate = useNavigate();
+  const { cyclePath } = useCyclePath();
   const [selectedContactId, setSelectedContactId] = useState("1");
   const [expandedActivityIds, setExpandedActivityIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -115,7 +117,7 @@ const PowerHour = () => {
         <div className="h-16 bg-trellis-magenta-1400 flex items-center justify-between px-6 shrink-0">
           <span className="heading-100 text-white">Power Hour</span>
           <button
-            onClick={() => navigate("/prospecting")}
+            onClick={() => navigate(cyclePath("/prospecting"))}
             className="text-white hover:opacity-80 transition-opacity"
           >
             <TrellisIcon name="remove" size={20} className="brightness-0 invert" />

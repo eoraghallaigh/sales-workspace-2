@@ -4,8 +4,10 @@ export interface CaptureRoute {
   waitFor?: string;
 }
 
+// Routes captured by the /ship slash command. Paths are relative to the
+// current cycle — the capture script prefixes them with /<currentCycleSlug>
+// at runtime. Add new routes here when adding new prototype screens.
 export const captureRoutes: CaptureRoute[] = [
-  { path: "/about", name: "about" },
   { path: "/summary", name: "summary" },
   { path: "/prospecting", name: "prospecting" },
   { path: "/power-hour", name: "power-hour" },

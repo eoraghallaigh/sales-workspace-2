@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { useCyclePath } from "@/hooks/useCyclePath";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -17,8 +18,9 @@ const ProspectingSubNav = ({
 }: ProspectingSubNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { cyclePath, cycleSlug } = useCyclePath();
   const { campaignId } = useParams();
-  const isPowerHourRoute = location.pathname.startsWith("/power-hour");
+  const isPowerHourRoute = location.pathname.startsWith(`/${cycleSlug}/power-hour`);
   const defaultItem = campaignId || (isPowerHourRoute ? "" : "p1-now");
   const campaignIds = ["salesforce-switchers", "q3-aeo-push", "enterprise-expansion", "smb-winback"];
   const [activeItem, setActiveItemState] = useState(defaultItem);
@@ -29,9 +31,9 @@ const ProspectingSubNav = ({
     onActiveItemChange?.(id);
     const campaignIds = ["salesforce-switchers", "q3-aeo-push", "enterprise-expansion", "smb-winback"];
     if (campaignIds.includes(id)) {
-      navigate(`/prospecting/campaign/${id}`);
+      navigate(cyclePath(`/prospecting/campaign/${id}`));
     } else {
-      navigate("/prospecting");
+      navigate(cyclePath("/prospecting"));
     }
   };
   
@@ -92,7 +94,7 @@ const ProspectingSubNav = ({
             <div className="my-4 border-t border-border" />
 
             {/* Daily Power Hour */}
-            <Button variant="ghost" onClick={() => navigate("/power-hour/review")} className={`w-[214px] flex items-center justify-start px-3 py-2 rounded-100 transition-colors relative h-auto mb-2 ${isPowerHourRoute ? "bg-trellis-neutral-200 hover:bg-trellis-neutral-200 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-foreground before:rounded-r" : "hover:bg-trellis-neutral-100"}`}>
+            <Button variant="ghost" onClick={() => navigate(cyclePath("/power-hour/review"))} className={`w-[214px] flex items-center justify-start px-3 py-2 rounded-100 transition-colors relative h-auto mb-2 ${isPowerHourRoute ? "bg-trellis-neutral-200 hover:bg-trellis-neutral-200 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-foreground before:rounded-r" : "hover:bg-trellis-neutral-100"}`}>
               <span className="body-100 text-foreground">Daily Power Hour</span>
             </Button>
 

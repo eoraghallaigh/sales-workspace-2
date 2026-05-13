@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useCyclePath } from "@/hooks/useCyclePath";
 import { Layout } from "@/components/Layout";
 import WorkspaceHeader from "@/components/WorkspaceHeader";
 import { Button } from "@/components/ui/button";
@@ -360,6 +361,7 @@ const getSignalVariant = (signal: string): "green" | "blue" | "orange" | "yellow
 
 const PowerHourReview = () => {
   const navigate = useNavigate();
+  const { cyclePath } = useCyclePath();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [contacts, setContacts] = useState(powerHourContacts);
 
@@ -485,7 +487,7 @@ const PowerHourReview = () => {
               <Button
                     variant="primary"
                     size="small"
-                    onClick={() => navigate("/power-hour")}>
+                    onClick={() => navigate(cyclePath("/power-hour"))}>
                 <TrellisIcon name="calling" size={16} className="brightness-0 invert mr-1" />
                 Start Power Hour ({contacts.length})
               </Button>

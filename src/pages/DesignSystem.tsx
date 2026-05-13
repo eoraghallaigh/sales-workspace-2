@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
+import { useCyclePath } from "@/hooks/useCyclePath";
 import { ArrowLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 import { TableHeaderCell } from "@/components/ui/table-header-cell";
 import { TableDataCell } from "@/components/ui/table-data-cell";
@@ -479,11 +480,12 @@ const IconGallery = () => {
 };
 
 const DesignSystem = () => {
+  const { cyclePath } = useCyclePath();
   return (
     <div className="h-screen bg-fill-surface-recessed">
       {/* Header */}
       <div className="h-12 bg-trellis-magenta-1400 border-b border-trellis-magenta-1100 flex items-center px-4 gap-4 shrink-0">
-        <Link to="/" className="flex items-center gap-2 text-[var(--color-text-primary-default)] hover:opacity-80 transition-opacity">
+        <Link to={cyclePath("/summary")} className="flex items-center gap-2 text-[var(--color-text-primary-default)] hover:opacity-80 transition-opacity">
           <ArrowLeft className="h-4 w-4" />
           <span className="body-125">Back</span>
         </Link>

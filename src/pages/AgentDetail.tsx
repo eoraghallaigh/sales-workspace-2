@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { useCyclePath } from "@/hooks/useCyclePath";
 
 const powerHourContacts = [
   { id: 1, name: "Olivia Carmichael" },
@@ -13,6 +14,7 @@ const powerHourContacts = [
 
 const AgentDetail = () => {
   const [activeTab, setActiveTab] = useState<"activity" | "configuration">("activity");
+  const { cyclePath } = useCyclePath();
 
   return (
     <Layout>
@@ -21,7 +23,7 @@ const AgentDetail = () => {
         <div className="bg-card border-b border-core-subtle px-8 pt-6 pb-0">
           {/* Breadcrumb */}
           <div className="flex items-center gap-1.5 body-100 text-muted-foreground mb-2">
-            <Link to="/agents" className="hover:text-foreground text-primary">Agents</Link>
+            <Link to={cyclePath("/agents")} className="hover:text-foreground text-primary">Agents</Link>
             <ChevronRight size={14} />
             <span>Cold call preparation</span>
           </div>
