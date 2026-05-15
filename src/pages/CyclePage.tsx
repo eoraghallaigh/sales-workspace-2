@@ -52,7 +52,7 @@ const CommitmentSection = ({
         ) : null}
 
         <div>
-          <p className="heading-50 text-muted-foreground uppercase tracking-wide mb-2">
+          <p className="heading-400 text-foreground mb-3">
             Problem / Opportunity
           </p>
           {commitment.problem ? (
@@ -67,7 +67,7 @@ const CommitmentSection = ({
         </div>
 
         <div>
-          <p className="heading-50 text-muted-foreground uppercase tracking-wide mb-2">
+          <p className="heading-400 text-foreground mb-3">
             Design goals
           </p>
           {commitment.designGoals.length === 0 ? (
@@ -94,7 +94,7 @@ const CommitmentSection = ({
         </div>
 
         <div>
-          <p className="heading-50 text-muted-foreground uppercase tracking-wide mb-2">
+          <p className="heading-400 text-foreground mb-3">
             User feedback
           </p>
           {commitment.feedback.length === 0 ? (
@@ -129,7 +129,7 @@ const CommitmentSection = ({
         </div>
 
         <div>
-          <p className="heading-50 text-muted-foreground uppercase tracking-wide mb-2">
+          <p className="heading-400 text-foreground mb-3">
             Metrics & KPIs
           </p>
           {commitment.metrics.length === 0 ? (

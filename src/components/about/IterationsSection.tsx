@@ -180,7 +180,7 @@ export const IterationsSection = ({
   if (inline) {
     return (
       <div>
-        <p className="heading-50 text-muted-foreground uppercase tracking-wide mb-2">
+        <p className="heading-400 text-foreground mb-3">
           Iteration history
         </p>
         <IterationsBody
