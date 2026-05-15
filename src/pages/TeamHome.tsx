@@ -1,6 +1,9 @@
 import { useRef } from "react";
 import { Link } from "react-router-dom";
-import { AnchorNav, type AnchorNavSection } from "@/components/about/AnchorNav";
+import {
+  FloatingNav,
+  type FloatingNavSection,
+} from "@/components/about/FloatingNav";
 import { Section } from "@/components/about/Section";
 import { MarkdownDoc } from "@/components/about/MarkdownDoc";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,14 +21,14 @@ const TEAM_NAME = "Flywheel Prospecting";
 const TEAM_MISSION =
   "Help HubSpot reps prospect as efficiently as possible — and grow pipeline dollars per rep.";
 
-const SECTIONS: AnchorNavSection[] = [
-  { id: "hero", label: "Overview" },
-  { id: "release-cycles", label: "Release cycles" },
-  { id: "business-goals", label: "Business goals" },
-  { id: "user-research", label: "User research" },
-  { id: "metrics", label: "Metrics & KPIs" },
-  { id: "personas", label: "Personas" },
-  { id: "design-principles", label: "Design principles" },
+const SECTIONS: FloatingNavSection[] = [
+  { id: "hero", label: "Overview", icon: "home" },
+  { id: "release-cycles", label: "Release cycles", icon: "globalGroup" },
+  { id: "business-goals", label: "Business goals", icon: "goal" },
+  { id: "user-research", label: "User research", icon: "test" },
+  { id: "metrics", label: "Metrics & KPIs", icon: "reportingAndData" },
+  { id: "personas", label: "Personas", icon: "user" },
+  { id: "design-principles", label: "Design principles", icon: "conditionalFormulaDataSetField" },
 ];
 
 const formatDateRange = (range?: { start: string; end?: string }) => {
@@ -48,17 +51,12 @@ const TeamHome = () => {
 
   return (
     <div className="about-doc h-screen overflow-hidden bg-background text-foreground">
-      <div className="grid h-full grid-cols-1 md:grid-cols-[15rem_minmax(0,1fr)]">
-        <AnchorNav
-          sections={SECTIONS}
-          projectName={TEAM_NAME}
-          scrollRoot={scrollRef}
-        />
-        <main
-          ref={scrollRef}
-          className="h-full overflow-y-auto bg-white px-6 md:px-12 py-10"
-        >
-          <div className="md:max-w-3xl mx-auto">
+      <FloatingNav sections={SECTIONS} scrollRoot={scrollRef} />
+      <main
+        ref={scrollRef}
+        className="h-full overflow-y-auto bg-white px-6 md:px-12 py-10"
+      >
+        <div className="md:max-w-3xl mx-auto">
             <header
               id="hero"
               className="scroll-mt-12 pt-4 pb-16 border-b border-border"
@@ -147,12 +145,11 @@ const TeamHome = () => {
               <MarkdownDoc source={personasMd} />
             </Section>
 
-            <Section id="design-principles" title="Design principles">
-              <MarkdownDoc source={designPrinciplesMd} />
-            </Section>
-          </div>
-        </main>
-      </div>
+          <Section id="design-principles" title="Design principles">
+            <MarkdownDoc source={designPrinciplesMd} />
+          </Section>
+        </div>
+      </main>
     </div>
   );
 };
