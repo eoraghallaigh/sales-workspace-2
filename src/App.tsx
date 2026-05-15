@@ -22,6 +22,7 @@ import HoverPreviewDemo from "./pages/HoverPreviewDemo";
 import OutreachStates from "./pages/OutreachStates";
 import TeamHome from "./pages/TeamHome";
 import CyclePage from "./pages/CyclePage";
+import MotionSandbox from "./pages/MotionSandbox";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
           <StrategyAssistantProvider>
           <Routes>
             <Route path="/" element={<TeamHome />} />
+            <Route path="/motion-sandbox" element={<MotionSandbox />} />
             <Route path="/:cycleSlug" element={<CyclePage />} />
             <Route path="/:cycleSlug/summary" element={<Summary />} />
             <Route path="/:cycleSlug/design-system" element={<DesignSystem />} />
