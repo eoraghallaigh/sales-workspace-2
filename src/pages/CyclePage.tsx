@@ -1,9 +1,4 @@
-import { useRef } from "react";
 import { Link, useParams, Navigate } from "react-router-dom";
-import {
-  FloatingNav,
-  type FloatingNavSection,
-} from "@/components/about/FloatingNav";
 import { Section } from "@/components/about/Section";
 import { IterationsSection } from "@/components/about/IterationsSection";
 import { Button } from "@/components/ui/button";
@@ -179,20 +174,10 @@ const CommitmentSection = ({
 const CyclePage = () => {
   const { cycleSlug } = useParams<{ cycleSlug: string }>();
   const cycle = getCycle(cycleSlug);
-  const scrollRef = useRef<HTMLElement | null>(null);
 
   if (!cycle) return <Navigate to="/" replace />;
 
   const prototypePath = `/${cycle.slug}${cycle.hero.prototypeEntryPath ?? "/summary"}`;
-
-  const sections: FloatingNavSection[] = [
-    { id: "hero", label: "Overview", icon: "home" },
-    ...cycle.commitments.map<FloatingNavSection>((c) => ({
-      id: commitmentSectionId(c.id),
-      label: c.title,
-      icon: "goal",
-    })),
-  ];
 
   const iterationsByCommitment = new Map<string, IterationEntry[]>();
   for (const entry of cycle.iterations) {
@@ -204,11 +189,7 @@ const CyclePage = () => {
 
   return (
     <div className="about-doc h-screen overflow-hidden bg-background text-foreground">
-      <FloatingNav sections={sections} scrollRoot={scrollRef} />
-      <main
-        ref={scrollRef}
-        className="h-full overflow-y-auto bg-white px-6 md:px-12 py-10"
-      >
+      <main className="h-full overflow-y-auto bg-white px-6 md:px-12 py-10">
         <div className="md:max-w-3xl mx-auto">
             <header
               id="hero"
