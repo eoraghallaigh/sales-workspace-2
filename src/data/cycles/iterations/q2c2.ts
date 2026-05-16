@@ -5,6 +5,25 @@ import type { IterationEntry } from "../types";
 // Each entry's `id` matches the folder name under public/about/iterations/.
 export const q2c2Iterations: IterationEntry[] = [
   {
+    id: "2026-05-16-find-campaign-creator",
+    date: "2026-05-16",
+    label: "find-campaign-creator",
+    whatChanged:
+      "Added a dedicated Campaigns sub-section to the Sales Workspace at /:cycleSlug/campaigns: filterable table over all campaigns (Status / Segment / Geo / Owner dropdowns mirroring the P1 companies pattern), a primary 'Create campaign' CTA that launches the existing agentic creation modal, and row-click-to-edit that reopens the same modal pre-filled. Header is a new back-link variant of WorkspaceHeader (< Prospecting > Campaigns). Campaign shape extended with required status + owner fields; CreateViewModal gained an initialCampaign prop and a Status select so create and edit share the same surface. The rep-facing left nav now links 'View all campaigns →' into the new page instead of opening a modal directly.",
+    why: "Campaign creation was previously locked inside a modal in the rep nav, and there was no surface for marketing to draft, schedule, share, or even survey campaigns across states. As soon as we started brainstorming the real requirements (drafts, scheduling, sharing, ownership, history, lifecycle), the modal was clearly the wrong home for the management surface. Splitting the work — focused creation stays in the modal, management lives on a dedicated page — unlocks all those growth dimensions without forcing them into the modal.",
+    prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/34",
+    commitment: "campaigns",
+    screenshots: [
+      { src: "/about/iterations/2026-05-16-find-campaign-creator/summary.png", alt: "Summary route screenshot" },
+      { src: "/about/iterations/2026-05-16-find-campaign-creator/prospecting.png", alt: "Prospecting route screenshot" },
+      { src: "/about/iterations/2026-05-16-find-campaign-creator/campaigns.png", alt: "Campaigns route screenshot" },
+      { src: "/about/iterations/2026-05-16-find-campaign-creator/power-hour.png", alt: "Power Hour route screenshot" },
+      { src: "/about/iterations/2026-05-16-find-campaign-creator/sales-workspace.png", alt: "Sales Workspace route screenshot" },
+      { src: "/about/iterations/2026-05-16-find-campaign-creator/deals.png", alt: "Deals route screenshot" },
+      { src: "/about/iterations/2026-05-16-find-campaign-creator/dashboard.png", alt: "Dashboard route screenshot" },
+    ],
+  },
+  {
     id: "2026-05-13-team-home-cycle-prototypes",
     date: "2026-05-13",
     label: "team-home-cycle-prototypes",
