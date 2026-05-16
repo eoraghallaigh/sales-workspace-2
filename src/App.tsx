@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { TourProvider } from "@/contexts/TourContext";
 import { VariantProvider } from "@/contexts/VariantContext";
 import { StrategyAssistantProvider } from "@/contexts/StrategyAssistantContext";
+import { CampaignsProvider } from "@/contexts/CampaignsContext";
 import GuidedTour from "@/components/GuidedTour";
 import SalesWorkspace from "./pages/SalesWorkspace";
 import Summary from "./pages/Summary";
@@ -23,6 +24,7 @@ import OutreachStates from "./pages/OutreachStates";
 import TeamHome from "./pages/TeamHome";
 import CyclePage from "./pages/CyclePage";
 import MotionSandbox from "./pages/MotionSandbox";
+import Campaigns from "./pages/Campaigns";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +37,7 @@ const App = () => (
         <TourProvider>
           <VariantProvider>
           <StrategyAssistantProvider>
+          <CampaignsProvider>
           <Routes>
             <Route path="/" element={<TeamHome />} />
             <Route path="/motion-sandbox" element={<MotionSandbox />} />
@@ -43,6 +46,7 @@ const App = () => (
             <Route path="/:cycleSlug/design-system" element={<DesignSystem />} />
             <Route path="/:cycleSlug/prospecting" element={<Prospecting />} />
             <Route path="/:cycleSlug/prospecting/campaign/:campaignId" element={<Prospecting />} />
+            <Route path="/:cycleSlug/campaigns" element={<Campaigns />} />
             <Route path="/:cycleSlug/prospecting/strategy/:companyId" element={<ProspectingStrategy />} />
             <Route path="/:cycleSlug/power-hour" element={<PowerHour />} />
             <Route path="/:cycleSlug/power-hour/review" element={<PowerHourReview />} />
@@ -55,6 +59,7 @@ const App = () => (
             <Route path="/:cycleSlug/outreach-states" element={<OutreachStates />} />
           </Routes>
           <GuidedTour />
+          </CampaignsProvider>
           </StrategyAssistantProvider>
           </VariantProvider>
         </TourProvider>
