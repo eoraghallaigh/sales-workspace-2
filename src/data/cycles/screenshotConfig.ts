@@ -10,6 +10,7 @@ export interface CaptureRoute {
 export const captureRoutes: CaptureRoute[] = [
   { path: "/summary", name: "summary" },
   { path: "/prospecting", name: "prospecting" },
+  { path: "/campaigns", name: "campaigns" },
   { path: "/power-hour", name: "power-hour" },
   { path: "/sales-workspace", name: "sales-workspace" },
   { path: "/deals", name: "deals" },
