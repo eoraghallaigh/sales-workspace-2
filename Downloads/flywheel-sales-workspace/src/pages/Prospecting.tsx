@@ -7,7 +7,7 @@ import CompanyExpandedPanel from "@/components/CompanyExpandedPanel";
 import WorkspaceHeader from "@/components/WorkspaceHeader";
 import ProspectingSubNav from "@/components/ProspectingSubNav";
 import CampaignHeader from "@/components/CampaignHeader";
-import { campaigns } from "@/data/campaignData";
+import { useCampaigns } from "@/contexts/CampaignsContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -71,6 +71,7 @@ const Prospecting = () => {
   const [callPrepContactId, setCallPrepContactId] = useState<string | null>(null);
   const [activeNavItem, setActiveNavItem] = useState<string>(campaignId || "p1-now");
   const { variant: cardVariant } = useVariant();
+  const { campaigns } = useCampaigns();
   useEffect(() => {
     if (campaignId) {
       setActiveNavItem(campaignId);

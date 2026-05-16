@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
-import { X, Plus, Trash2, Copy, Search, Check, Hash, Calendar, Type, ChevronDown, ArrowUpDown, Loader2 } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { X, Plus, Trash2, Copy, Search, Check, Hash, Calendar, Type, ChevronDown, ArrowUpDown, Loader2, Sparkles, FileText, Swords, MessageSquareText, Video, File as FileIcon, Link as LinkIcon } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -11,11 +12,35 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { TableHeaderCell } from "@/components/ui/table-header-cell";
+import { TableDataCell } from "@/components/ui/table-data-cell";
+import { AITextarea } from "@/components/ui/ai-textarea";
 import Tag from "@/components/Tag";
 import { prospectingCompanies } from "@/data/prospectingCompanies";
+import { repPersonas, defaultViewerLabel, RepPersona } from "@/data/repPersonas";
+import { Campaign, CampaignFilter, CampaignStatus, EnablementMaterial } from "@/data/campaignData";
+
 interface CreateViewModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSave?: (campaign: Campaign) => void;
+  initialCampaign?: Campaign;
+}
+
+interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  timestamp: number;
+}
+
+interface ScriptedIntent {
+  trigger: (text: string) => boolean;
+  statusMessages: string[];
+  name: string;
+  description: string;
+  filterSeeds: { filterId: string; condition: string; value: string; listValues?: string[]; listOptions?: string[] }[];
+  reply: string;
 }
 type Step = "settings" | "filters" | "columns";
 type FilterType = "string" | "number" | "boolean" | "date" | "list";
@@ -2494,9 +2519,57 @@ const OrgTreeNode = ({
   );
 };
 
+const SCRIPTED_INTENTS: ScriptedIntent[] = [
+  {
+    trigger: (t) => /salesforce|sfdc|switcher/i.test(t),
+    name: "Salesforce Switchers — Mid-Market US",
+    description: "Mid-market US companies showing signals of Salesforce contract renewal or dissatisfaction. Prioritize competitive win data and migration case studies.",
+    statusMessages: [
+      "Reading firmographic data…",
+      "Identifying competitive renewal signals…",
+      "Filtering by segment and geo…",
+      "Sampling matching companies…",
+      "Drafting campaign details…",
+    ],
+    filterSeeds: [
+      { filterId: "account-group-territory", condition: "is any of", value: "Americas", listValues: ["Americas"], listOptions: ["APAC", "EMEA", "Americas", "LATAM", "ANZ"] },
+    ],
+    reply: "I've drafted a Salesforce Switchers campaign for US mid-market. I added a territory filter and pre-filled the name and description — review the manual filters on the right to fine-tune.",
+  },
+  {
+    trigger: (t) => /aeo|analytics|ai.*push/i.test(t),
+    name: "Q3 AEO Push",
+    description: "Companies with 500+ employees showing intent signals around AI-powered analytics. Push the AEO product line ahead of Q3 targets.",
+    statusMessages: [
+      "Reading intent signal data…",
+      "Filtering by employee count and industry…",
+      "Cross-referencing intent + fit scores…",
+      "Sampling matching companies…",
+      "Drafting campaign details…",
+    ],
+    filterSeeds: [
+      { filterId: "annual-revenue", condition: "is greater than", value: "50000000" },
+    ],
+    reply: "I've drafted a Q3 AEO Push campaign. I added a revenue filter for larger accounts — you may want to add an intent-signal filter manually as well.",
+  },
+  {
+    trigger: () => true,
+    name: "",
+    description: "",
+    statusMessages: [
+      "Reading your prompt…",
+      "Thinking…",
+    ],
+    filterSeeds: [],
+    reply: "I can help you build a campaign. Try something like: \"Target Salesforce renewals in mid-market US\" or \"Q3 AEO push for companies with intent signals\". You can also switch to manual filter editing on the right.",
+  },
+];
+
 const CreateViewModal = ({
   isOpen,
-  onClose
+  onClose,
+  onSave,
+  initialCampaign
 }: CreateViewModalProps) => {
   const [currentStep, setCurrentStep] = useState<Step>("settings");
   const [filterGroups, setFilterGroups] = useState<FilterGroup[]>([{
@@ -2521,8 +2594,67 @@ const CreateViewModal = ({
   const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null);
   const [previewCompanies, setPreviewCompanies] = useState(prospectingCompanies.slice(0, 10));
   const [filterVersion, setFilterVersion] = useState(0);
-  const [filterMode, setFilterMode] = useState<"prompt" | "manual">("prompt");
+  const [view, setView] = useState<"landing" | "agent" | "wizard">("landing");
   const [filterPromptText, setFilterPromptText] = useState("");
+
+  // Agent chat state
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    {
+      id: "intro",
+      role: "assistant",
+      text: "What play are you running? Describe the companies you want reps to work — I'll build the filter for you.",
+      timestamp: Date.now(),
+    },
+  ]);
+  const [agentBusy, setAgentBusy] = useState(false);
+  const [agentStatus, setAgentStatus] = useState<string | null>(null);
+  const chatScrollRef = useRef<HTMLDivElement | null>(null);
+
+  // Rep persona for preview
+  const [previewRepId, setPreviewRepId] = useState<string | null>(null);
+
+  // Resizable left panel
+  const LEFT_PANEL_MIN = 280;
+  const LEFT_PANEL_MAX = 800;
+  const [leftPanelWidth, setLeftPanelWidth] = useState(380);
+  const [isResizing, setIsResizing] = useState(false);
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = leftPanelWidth;
+    setIsResizing(true);
+    const handleMove = (ev: MouseEvent) => {
+      const next = startWidth + (ev.clientX - startX);
+      setLeftPanelWidth(Math.max(LEFT_PANEL_MIN, Math.min(LEFT_PANEL_MAX, next)));
+    };
+    const handleUp = () => {
+      setIsResizing(false);
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleUp);
+  };
+  const resizeHandle = (
+    <div
+      onMouseDown={handleResizeStart}
+      className={`absolute top-0 right-0 h-full w-1 cursor-col-resize group/resize ${isResizing ? "bg-[var(--color-fill-brand-default)]" : "hover:bg-[var(--color-fill-brand-default)]/40"} transition-colors z-20`}
+      style={{ transform: "translateX(50%)" }}
+      aria-label="Resize panel"
+      role="separator"
+    />
+  );
+  const previewRep: RepPersona | null = previewRepId ? repPersonas.find(r => r.id === previewRepId) || null : null;
+
+  // Enablement materials
+  const [enablementMaterials, setEnablementMaterials] = useState<EnablementMaterial[]>([]);
+  const [newMaterialTitle, setNewMaterialTitle] = useState("");
+  const [newMaterialUrl, setNewMaterialUrl] = useState("");
+  const [newMaterialType, setNewMaterialType] = useState<EnablementMaterial["type"]>("case-study");
   
   // Columns step state
   const [selectedColumns, setSelectedColumns] = useState<ColumnItem[]>([]);
@@ -2540,6 +2672,27 @@ const CreateViewModal = ({
   const [completionAction, setCompletionAction] = useState<string>("add-to-sequence");
   const [completionCount, setCompletionCount] = useState<number>(1);
   const [completionPer, setCompletionPer] = useState<"company" | "contact">("company");
+  const [campaignStatus, setCampaignStatus] = useState<CampaignStatus>("draft");
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (initialCampaign) {
+      setViewName(initialCampaign.label);
+      setViewDescription(initialCampaign.description);
+      setExpiryDate(initialCampaign.endDate ? new Date(initialCampaign.endDate) : undefined);
+      setEnablementMaterials(initialCampaign.enablementMaterials);
+      setSelectedTeams(initialCampaign.teams ?? []);
+      setCampaignStatus(initialCampaign.status);
+      setFilterGroups([{ id: "group-1", filters: [] }, { id: "group-2", filters: [] }]);
+    } else {
+      setViewName("Campaign name");
+      setViewDescription("Campaign description");
+      setExpiryDate(undefined);
+      setEnablementMaterials([]);
+      setSelectedTeams([]);
+      setCampaignStatus("draft");
+    }
+  }, [isOpen, initialCampaign]);
 
   // Hierarchical sales org for access control
   interface OrgNode {
@@ -2848,6 +3001,125 @@ const CreateViewModal = ({
   const findFilterDefinition = (filterId: string): FilterItem | undefined => {
     return ALL_FILTERS.find(f => f.id === filterId);
   };
+
+  // Scripted agent — drives the prompt mode chat
+  const handleAgentTurn = useCallback((userText: string) => {
+    if (!userText.trim() || agentBusy) return;
+    const intent = SCRIPTED_INTENTS.find(i => i.trigger(userText)) ?? SCRIPTED_INTENTS[SCRIPTED_INTENTS.length - 1];
+    const userMessage: ChatMessage = {
+      id: `u-${Date.now()}`,
+      role: "user",
+      text: userText,
+      timestamp: Date.now(),
+    };
+    setChatMessages(prev => [...prev, userMessage]);
+    setFilterPromptText("");
+    setAgentBusy(true);
+
+    // Cycle through status messages
+    const stepDelay = 800;
+    intent.statusMessages.forEach((msg, idx) => {
+      setTimeout(() => setAgentStatus(msg), idx * stepDelay);
+    });
+
+    const totalDelay = intent.statusMessages.length * stepDelay + 400;
+    setTimeout(() => {
+      // Apply intent: name + description + filter seeds
+      if (intent.name) setViewName(intent.name);
+      if (intent.description) setViewDescription(intent.description);
+      if (intent.filterSeeds.length > 0) {
+        const seededFilters: ActiveFilter[] = intent.filterSeeds.map((seed, i) => {
+          const def = ALL_FILTERS.find(f => f.id === seed.filterId);
+          return {
+            id: `${seed.filterId}-agent-${Date.now()}-${i}`,
+            filterId: seed.filterId,
+            filterName: def?.name ?? seed.filterId,
+            filterType: def?.type ?? "string",
+            condition: seed.condition,
+            value: seed.value,
+            listValues: seed.listValues,
+            listOptions: seed.listOptions ?? def?.listOptions,
+          };
+        });
+        setFilterGroups(prev => prev.map((g, idx) => idx === 0 ? { ...g, filters: [...g.filters, ...seededFilters] } : g));
+        triggerTableReload();
+      }
+      const assistantMessage: ChatMessage = {
+        id: `a-${Date.now()}`,
+        role: "assistant",
+        text: intent.reply,
+        timestamp: Date.now(),
+      };
+      setChatMessages(prev => [...prev, assistantMessage]);
+      setAgentStatus(null);
+      setAgentBusy(false);
+    }, totalDelay);
+    // Advance to the chat-and-preview view immediately so the agent's
+    // status messages play out in the new layout, not on the landing.
+    setView(prev => prev === "landing" ? "agent" : prev);
+  }, [agentBusy, triggerTableReload]);
+
+  // Auto-scroll chat to bottom on new message or status update
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }
+  }, [chatMessages, agentStatus]);
+
+  const handleAddEnablementMaterial = () => {
+    if (!newMaterialTitle.trim()) return;
+    const material: EnablementMaterial = {
+      id: `em-new-${Date.now()}`,
+      title: newMaterialTitle.trim(),
+      type: newMaterialType,
+      description: newMaterialUrl.trim() || "Added during campaign creation",
+    };
+    setEnablementMaterials(prev => [...prev, material]);
+    setNewMaterialTitle("");
+    setNewMaterialUrl("");
+  };
+
+  const handleRemoveEnablementMaterial = (id: string) => {
+    setEnablementMaterials(prev => prev.filter(m => m.id !== id));
+  };
+
+  // Build a Campaign object from current state
+  const buildCampaign = useCallback((): Campaign => {
+    const allActiveFilters = filterGroups.flatMap(g => g.filters);
+    const editedFilters: CampaignFilter[] = allActiveFilters.map(f => ({
+      id: f.id,
+      filterName: f.filterName,
+      condition: f.condition,
+      displayValue: f.listValues && f.listValues.length > 0 ? f.listValues.join(", ") : f.value,
+    }));
+    const newId = (viewName || "new-campaign")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") + `-${Date.now().toString(36).slice(-4)}`;
+    const startDate = initialCampaign?.startDate ?? new Date().toISOString().slice(0, 10);
+    const endDate = (expiryDate ?? (initialCampaign ? new Date(initialCampaign.endDate) : new Date(Date.now() + 1000 * 60 * 60 * 24 * 60))).toISOString().slice(0, 10);
+    // In edit mode, preserve filters the user didn't change (modal can't yet reverse-map CampaignFilter → ActiveFilter)
+    const filters = editedFilters.length > 0
+      ? editedFilters
+      : initialCampaign?.filters;
+    return {
+      id: initialCampaign?.id ?? newId,
+      label: viewName || "New campaign",
+      description: viewDescription || "",
+      startDate,
+      endDate,
+      createdBy: initialCampaign?.createdBy ?? defaultViewerLabel,
+      completionCriteria: `${completionCount} ${completionAction.replace(/-/g, " ")} per ${completionPer}`,
+      enablementMaterials,
+      metrics: initialCampaign?.metrics ?? { totalCompanies: previewCompanies.length, worked: 0, meetings: 0, target: previewCompanies.length },
+      status: campaignStatus,
+      owner: initialCampaign?.owner ?? defaultViewerLabel,
+      geo: initialCampaign?.geo,
+      marketSegment: initialCampaign?.marketSegment,
+      teams: selectedTeams.length > 0 ? selectedTeams : undefined,
+      filters,
+    };
+  }, [filterGroups, viewName, viewDescription, expiryDate, completionAction, completionCount, completionPer, enablementMaterials, previewCompanies.length, selectedTeams, campaignStatus, initialCampaign]);
   const handleAddFilterToGroup = (filter: FilterItem, groupId: string) => {
     const newFilter: ActiveFilter = {
       id: `${filter.id}-${Date.now()}`,
@@ -3283,84 +3555,91 @@ const CreateViewModal = ({
           </div>
         </div>
       )}
-      <div className={`overflow-hidden bg-[var(--color-fill-surface-default)] border border-[var(--color-border-container-default)] rounded-lg shadow-100 transition-all duration-300 ${isTableLoading ? 'opacity-40 blur-[1px]' : ''}`} style={{ minWidth: '800px' }}>
-        {/* Table Header */}
-        <div className="flex border-b border-[var(--color-border-container-default)]">
-          {["Company name", "Industry", "PVS Score", "Signals"].map((col, i) => (
-            <div
-              key={col}
-              className={`flex flex-col justify-center items-start bg-[var(--color-fill-surface-recessed)] min-h-[44px] max-h-[44px] py-3 px-6 ${i === 0 ? 'w-[260px]' : 'flex-1'}`}
-            >
-              <button className="flex items-center gap-2 body-125">
-                {col}
-                <ArrowUpDown className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {/* Table Body */}
-        <div>
-          {previewCompanies.map((company, index) => (
-            <div
-              key={company.id}
-              className={`flex transition-colors hover:bg-[var(--color-fill-secondary-hover)] ${index < 9 ? 'border-b border-[var(--color-border-container-default)]' : ''} ${index % 2 === 1 ? 'bg-[var(--color-fill-surface-recessed)]' : ''}`}
-            >
-              {/* Company name */}
-              <div className="flex flex-col justify-center items-start w-[260px] min-h-[56px] py-4 px-6 self-stretch">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-6 w-6">
-                    <AvatarFallback className="text-xs bg-[var(--color-fill-secondary-subtle)]">
-                      {company.name.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="body-125 text-[var(--color-text-core-default)]">
-                    {company.name}
-                  </span>
-                </div>
-              </div>
-              {/* Industry */}
-              <div className="flex flex-col justify-center items-start flex-1 min-h-[56px] py-4 px-6 self-stretch">
-                <span className="body-100 text-[var(--color-text-core-subtle)]">
-                  {company.industry || "—"}
-                </span>
-              </div>
-              {/* PVS Score */}
-              <div className="flex flex-col justify-center items-start flex-1 min-h-[56px] py-4 px-6 self-stretch">
-                <span className={`body-100 ${
-                  company.pvsScore === "High"
-                    ? "text-[var(--color-text-success-default)]"
-                    : company.pvsScore === "Medium"
-                    ? "text-[var(--color-text-warning-default)]"
-                    : "text-[var(--color-text-core-subtle)]"
-                }`}>
-                  {company.pvsScore || "—"}
-                </span>
-              </div>
-              {/* Signals */}
-              <div className="flex flex-col justify-center items-start flex-1 min-h-[56px] py-4 px-6 self-stretch">
-                <div className="flex flex-wrap gap-1">
-                  {company.signals.slice(0, 2).map((signal, idx) => (
-                    <Tag
-                      key={idx}
-                      variant={(signal.variant as "green" | "blue" | "yellow" | "orange" | "neutral") || "neutral"}
-                    >
-                      {signal.text}
-                    </Tag>
-                  ))}
-                  {company.signals.length > 2 && (
-                    <span className="body-100 text-[var(--color-text-core-subtle)]">
-                      +{company.signals.length - 2}
+      <div className={`border border-border rounded-lg overflow-hidden transition-all duration-300 ${isTableLoading ? 'opacity-40 blur-[1px]' : ''}`} style={{ minWidth: '800px' }}>
+        <table className="w-full">
+          <thead>
+            <tr className="flex">
+              <TableHeaderCell className="w-[260px]">
+                <button className="flex items-center gap-2">
+                  Company name
+                  <ArrowUpDown className="h-3 w-3" />
+                </button>
+              </TableHeaderCell>
+              <TableHeaderCell className="flex-1 w-auto">
+                <button className="flex items-center gap-2">
+                  Industry
+                  <ArrowUpDown className="h-3 w-3" />
+                </button>
+              </TableHeaderCell>
+              <TableHeaderCell className="flex-1 w-auto">
+                <button className="flex items-center gap-2">
+                  PVS Score
+                  <ArrowUpDown className="h-3 w-3" />
+                </button>
+              </TableHeaderCell>
+              <TableHeaderCell className="flex-1 w-auto">
+                <button className="flex items-center gap-2">
+                  Signals
+                  <ArrowUpDown className="h-3 w-3" />
+                </button>
+              </TableHeaderCell>
+            </tr>
+          </thead>
+          <tbody>
+            {previewCompanies.map((company) => (
+              <tr key={company.id} className="flex transition-colors hover:bg-[var(--color-fill-secondary-hover)]">
+                <TableDataCell className="w-[260px]">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-6 w-6">
+                      <AvatarFallback className="text-xs bg-[var(--color-fill-secondary-subtle)]">
+                        {company.name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="body-125 text-[var(--color-text-core-default)]">
+                      {company.name}
                     </span>
-                  )}
-                  {company.signals.length === 0 && (
-                    <span className="body-100 text-[var(--color-text-core-subtle)]">—</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+                  </div>
+                </TableDataCell>
+                <TableDataCell className="flex-1 w-auto">
+                  <span className="text-[var(--color-text-core-subtle)]">
+                    {company.industry || "—"}
+                  </span>
+                </TableDataCell>
+                <TableDataCell className="flex-1 w-auto">
+                  <span className={
+                    company.pvsScore === "High"
+                      ? "text-[var(--color-text-success-default)]"
+                      : company.pvsScore === "Medium"
+                      ? "text-[var(--color-text-warning-default)]"
+                      : "text-[var(--color-text-core-subtle)]"
+                  }>
+                    {company.pvsScore || "—"}
+                  </span>
+                </TableDataCell>
+                <TableDataCell className="flex-1 w-auto">
+                  <div className="flex flex-wrap gap-1">
+                    {company.signals.slice(0, 2).map((signal, idx) => (
+                      <Tag
+                        key={idx}
+                        variant={(signal.variant as "green" | "blue" | "yellow" | "orange" | "neutral") || "neutral"}
+                      >
+                        {signal.text}
+                      </Tag>
+                    ))}
+                    {company.signals.length > 2 && (
+                      <span className="text-[var(--color-text-core-subtle)]">
+                        +{company.signals.length - 2}
+                      </span>
+                    )}
+                    {company.signals.length === 0 && (
+                      <span className="text-[var(--color-text-core-subtle)]">—</span>
+                    )}
+                  </div>
+                </TableDataCell>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -3370,10 +3649,46 @@ const CreateViewModal = ({
     <>
       <div className="mb-4">
         <span className="body-75 text-[var(--color-text-core-subtle)]">View as</span>
-        <div className="flex items-center gap-1 mt-1">
-          <span className="heading-100 text-[var(--color-text-core-default)]">Eoin Ó Raghallaigh</span>
-          <ChevronDown className="h-4 w-4 text-[var(--color-text-core-subtle)]" />
-        </div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="flex items-center gap-1 mt-1 hover:bg-[var(--color-fill-secondary-hover)] rounded px-1 -mx-1">
+              <span className="heading-100 text-[var(--color-text-core-default)]">
+                {previewRep ? `${previewRep.name} (${previewRep.geo}, ${previewRep.segment})` : defaultViewerLabel}
+              </span>
+              <ChevronDown className="h-4 w-4 text-[var(--color-text-core-subtle)]" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-[280px] p-1 bg-[var(--color-fill-surface-default)] border-[var(--color-border-core-default)] z-[100]">
+            <button
+              onClick={() => { setPreviewRepId(null); triggerTableReload(); }}
+              className={`w-full flex items-center gap-2 px-2 py-2 rounded text-left hover:bg-[var(--color-fill-secondary-hover)] ${!previewRep ? "bg-[var(--color-fill-secondary-subtle)]" : ""}`}
+            >
+              <Avatar className="h-6 w-6">
+                <AvatarFallback className="text-xs bg-[var(--color-fill-secondary-subtle)]">{defaultViewerLabel.split(" ").map(p => p[0]).join("").slice(0, 2)}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <div className="body-100 text-[var(--color-text-core-default)]">{defaultViewerLabel}</div>
+                <div className="body-75 text-[var(--color-text-core-subtle)]">Admin (no rep filter)</div>
+              </div>
+            </button>
+            <div className="my-1 border-t border-[var(--color-border-core-subtle)]" />
+            {repPersonas.map(rep => (
+              <button
+                key={rep.id}
+                onClick={() => { setPreviewRepId(rep.id); triggerTableReload(); }}
+                className={`w-full flex items-center gap-2 px-2 py-2 rounded text-left hover:bg-[var(--color-fill-secondary-hover)] ${previewRep?.id === rep.id ? "bg-[var(--color-fill-secondary-subtle)]" : ""}`}
+              >
+                <Avatar className="h-6 w-6">
+                  <AvatarFallback className="text-xs bg-[var(--color-fill-secondary-subtle)]">{rep.initials}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <div className="body-100 text-[var(--color-text-core-default)]">{rep.name}</div>
+                  <div className="body-75 text-[var(--color-text-core-subtle)]">{rep.geo} · {rep.segment}</div>
+                </div>
+              </button>
+            ))}
+          </PopoverContent>
+        </Popover>
       </div>
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
@@ -3397,13 +3712,19 @@ const CreateViewModal = ({
   );
 
   // Shared results count
-  const renderResultsCount = () => (
-    <div className="mt-4">
-      <span className="body-100 text-[var(--color-text-core-subtle)]">
-        Showing {previewCompanies.length} of {prospectingCompanies.length} companies
-      </span>
-    </div>
-  );
+  const renderResultsCount = () => {
+    const total = prospectingCompanies.length;
+    const visible = previewRep
+      ? Math.max(1, Math.round(previewCompanies.length * previewRep.matchRatio))
+      : previewCompanies.length;
+    return (
+      <div className="mt-4">
+        <span className="body-100 text-[var(--color-text-core-subtle)]">
+          Showing {visible} of {total} companies{previewRep ? ` in ${previewRep.name}'s book` : ""}
+        </span>
+      </div>
+    );
+  };
   if (!isOpen) return null;
   return <div className="fixed inset-0 z-50 flex flex-col animate-in slide-in-from-bottom duration-300">
       {/* Full screen white background */}
@@ -3411,97 +3732,238 @@ const CreateViewModal = ({
       
       {/* Header/Navigation Bar */}
       <div className="relative flex items-center justify-between h-16 px-6 border-b border-[var(--color-border-container-default)]">
-        {/* Left - Back button */}
+        {/* Left - Back button (wizard only) */}
         <div className="w-32 flex items-center">
-          {currentStep !== "settings" && (
-            <Button 
-              variant="outline" 
+          {view === "wizard" && currentStep !== "settings" && (
+            <Button
+              variant="outline"
               onClick={() => {
                 if (currentStep === "filters") setCurrentStep("settings");
                 else if (currentStep === "columns") setCurrentStep("filters");
-              }} 
+              }}
               className="h-10 px-6 rounded-[4px] border-[var(--color-border-core-default)]"
             >
               Back
             </Button>
           )}
         </div>
-        
-        {/* Center - Stepper */}
-        <div className="flex items-center gap-0">
-          {steps.map((step, index) => <div key={step.key} className="flex items-center">
-              {/* Step indicator */}
-              <div className="flex flex-col items-center">
-                <div className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full border-2 transition-colors ${index <= currentStepIndex ? "border-[var(--color-fill-brand-default)] bg-[var(--color-fill-brand-default)]" : "border-[var(--color-border-core-subtle)] bg-transparent"}`} />
+
+        {/* Center - Stepper (wizard only) */}
+        {view === "wizard" ? (
+          <div className="flex items-center gap-0">
+            {steps.map((step, index) => <div key={step.key} className="flex items-center">
+                <div className="flex flex-col items-center">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full border-2 transition-colors ${index <= currentStepIndex ? "border-[var(--color-fill-brand-default)] bg-[var(--color-fill-brand-default)]" : "border-[var(--color-border-core-subtle)] bg-transparent"}`} />
+                  </div>
+                  <span className={`mt-2 body-100 ${index === currentStepIndex ? "text-[var(--color-text-core-default)]" : "text-[var(--color-text-core-subtle)]"}`}>
+                    {step.label}
+                  </span>
                 </div>
-                <span className={`mt-2 body-100 ${index === currentStepIndex ? "text-[var(--color-text-core-default)]" : "text-[var(--color-text-core-subtle)]"}`}>
-                  {step.label}
-                </span>
-              </div>
-              
-              {/* Connector line */}
-              {index < steps.length - 1 && <div className={`w-48 h-0.5 mx-2 ${index < currentStepIndex ? "bg-[var(--color-fill-brand-default)]" : "bg-[var(--color-border-core-subtle)]"}`} style={{
-            marginTop: "-18px"
-          }} />}
-            </div>)}
-        </div>
-        
+                {index < steps.length - 1 && <div className={`w-48 h-0.5 mx-2 ${index < currentStepIndex ? "bg-[var(--color-fill-brand-default)]" : "bg-[var(--color-border-core-subtle)]"}`} style={{ marginTop: "-18px" }} />}
+              </div>)}
+          </div>
+        ) : (
+          <div />
+        )}
+
         {/* Right - Action buttons */}
         <div className="flex items-center gap-3">
           <Button variant="outline" onClick={onClose} className="h-10 px-6 rounded-[4px] border-[var(--color-border-core-default)]">
             Exit
           </Button>
-          <Button onClick={() => {
-          if (currentStep === "settings") setCurrentStep("filters");else if (currentStep === "filters") setCurrentStep("columns");else onClose();
-        }} className="h-10 px-6 rounded-[4px] bg-[var(--color-fill-primary-default)] hover:bg-[var(--color-fill-primary-hover)] text-[var(--color-text-primary-default)]">
-            {currentStep === "columns" ? "Save" : "Next"}
-          </Button>
+          {view === "agent" && (
+            <Button
+              onClick={() => {
+                if (onSave) onSave(buildCampaign());
+                onClose();
+              }}
+              disabled={agentBusy}
+              className="h-10 px-6 rounded-[4px] bg-[var(--color-fill-primary-default)] hover:bg-[var(--color-fill-primary-hover)] text-[var(--color-text-primary-default)]"
+            >
+              Save campaign
+            </Button>
+          )}
+          {view === "wizard" && (
+            <Button onClick={() => {
+              if (currentStep === "settings") setCurrentStep("filters");
+              else if (currentStep === "filters") setCurrentStep("columns");
+              else {
+                if (onSave) onSave(buildCampaign());
+                onClose();
+              }
+            }} className="h-10 px-6 rounded-[4px] bg-[var(--color-fill-primary-default)] hover:bg-[var(--color-fill-primary-hover)] text-[var(--color-text-primary-default)]">
+              {currentStep === "columns" ? "Save campaign" : "Next"}
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Content Area */}
       <div className="relative flex flex-1 overflow-hidden">
-        {currentStep === "filters" && <>
-            {/* Single Column: Filter Groups with Add Filter Popovers */}
-            <div className="w-[320px] border-r border-[var(--color-border-container-default)] flex flex-col">
-              {filterMode === "prompt" ? (
-                <div className="flex flex-col p-4">
-                  <div className="flex flex-col">
-                    <textarea
-                      value={filterPromptText}
-                      onChange={(e) => setFilterPromptText(e.target.value)}
-                      placeholder="Which companies do you want to include in your campaign?"
-                      rows={4}
-                      className="w-full resize-none rounded-[var(--borderRadius-100,4px)] border border-[var(--color-border-core-default)] bg-[var(--color-fill-field-default)] p-3 body-100 text-[var(--color-text-core-default)] placeholder:text-[var(--color-text-core-subtle)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2 mt-4">
-                    <Button
-                      className="w-full h-10 rounded-[4px] bg-[var(--color-fill-primary-default)] hover:bg-[var(--color-fill-primary-hover)] text-[var(--color-text-primary-default)]"
-                      disabled={!filterPromptText.trim()}
-                    >
-                      Create list
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full h-10 rounded-[4px] border border-solid border-[var(--color-border-secondary-default,#8A8A8A)] bg-[var(--color-fill-secondary-default,#FFF)] hover:bg-[var(--color-fill-secondary-hover)]"
-                      onClick={() => setFilterMode("manual")}
-                    >
-                      Select filters manually
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-              <>
-              <div className="p-4 pb-2 border-b border-[var(--color-border-container-default)] flex items-center justify-between">
-                <h3 className="heading-200 text-[var(--color-text-core-default)]">Filter groups</h3>
-                <button
-                  onClick={() => setFilterMode("prompt")}
-                  className="body-100 text-[var(--color-text-brand-default)] hover:underline"
+        <AnimatePresence mode="wait" initial={false}>
+          {view === "landing" && (
+            <motion.div
+              key="landing"
+              className="flex-1 flex flex-col items-center justify-center px-6 overflow-y-auto"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, scale: 0.97 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+            >
+              <div className="w-full max-w-2xl py-12 space-y-8">
+                <motion.div
+                  className="text-center space-y-3"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.05 }}
                 >
-                  Use AI
-                </button>
+                  <h1
+                    className="bg-clip-text text-transparent font-medium leading-[1.15] text-[40px]"
+                    style={{ backgroundImage: "linear-gradient(114deg, #fc0849 0%, #d20688 100%)" }}
+                  >
+                    Welcome to the campaign creation agent
+                  </h1>
+                  <p className="body-200 text-muted-foreground">
+                    Tell me what kind of campaign you want and I'll build the settings, filters, and columns for you.
+                  </p>
+                </motion.div>
+
+                <motion.div layoutId="campaign-agent-textarea" className="space-y-3" transition={{ duration: 0.4, ease: "easeInOut" }}>
+                  <AITextarea
+                    value={filterPromptText}
+                    onChange={setFilterPromptText}
+                    onSubmit={handleAgentTurn}
+                    placeholder="Describe the type of campaign you want…"
+                    disabled={agentBusy}
+                    rows={4}
+                  />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3, delay: 0.15 }}
+                  className="space-y-8"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1 h-px bg-border" />
+                    <span className="body-100 text-muted-foreground">or</span>
+                    <div className="flex-1 h-px bg-border" />
+                  </div>
+
+                  <div className="flex justify-center">
+                    <Button
+                      variant="secondary"
+                      size="medium"
+                      onClick={() => { setView("wizard"); setCurrentStep("settings"); }}
+                      disabled={agentBusy}
+                    >
+                      Create campaign manually
+                    </Button>
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+          )}
+
+          {view === "agent" && (
+            <motion.div
+              key="agent"
+              className="flex flex-1 overflow-hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              {/* Left: chat */}
+              <div style={{ width: leftPanelWidth }} className="relative shrink-0 border-r border-[var(--color-border-container-default)] flex flex-col bg-card">
+                {resizeHandle}
+                <motion.div
+                  className="px-4 pt-4 pb-3 border-b border-[var(--color-border-container-default)] flex items-center gap-2"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                >
+                  <Sparkles className="h-4 w-4 text-[var(--color-fill-brand-default)]" />
+                  <h3 className="heading-200 text-[var(--color-text-core-default)]">Campaign agent</h3>
+                </motion.div>
+                <div ref={chatScrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+                  <AnimatePresence initial={false}>
+                    {chatMessages.map((msg) => (
+                      <motion.div
+                        key={msg.id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                      >
+                        <div className={`rounded-lg px-3 py-2 max-w-[85%] body-100 ${
+                          msg.role === "user"
+                            ? "bg-[var(--color-fill-primary-default)] text-[var(--color-text-primary-default)]"
+                            : "bg-[var(--color-fill-surface-recessed)] text-[var(--color-text-core-default)]"
+                        }`}>
+                          {msg.text}
+                        </div>
+                      </motion.div>
+                    ))}
+                    {agentStatus && (
+                      <motion.div
+                        key={agentStatus}
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="flex items-center gap-2 text-[var(--color-text-core-subtle)] body-100"
+                      >
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <span>{agentStatus}</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+                <motion.div layoutId="campaign-agent-textarea" className="border-t border-[var(--color-border-container-default)] p-3 space-y-2" transition={{ duration: 0.4, ease: "easeInOut" }}>
+                  <AITextarea
+                    value={filterPromptText}
+                    onChange={setFilterPromptText}
+                    onSubmit={handleAgentTurn}
+                    placeholder="Refine the campaign…"
+                    disabled={agentBusy}
+                    rows={3}
+                  />
+                  <button
+                    onClick={() => { setView("wizard"); setCurrentStep("settings"); }}
+                    className="w-full body-75 text-[var(--color-text-brand-default)] hover:underline py-1"
+                  >
+                    Open campaign details to edit manually
+                  </button>
+                </motion.div>
+              </div>
+
+              {/* Right: preview */}
+              <motion.div
+                className="flex-1 flex flex-col bg-[var(--color-fill-surface-recessed)] overflow-y-auto"
+                initial={{ opacity: 0, x: 24 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.35, delay: 0.1, ease: "easeOut" }}
+              >
+                <div className="p-6">
+                  {renderPreviewHeader()}
+                  {renderPreviewTable()}
+                  {renderResultsCount()}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {view === "wizard" && currentStep === "filters" && <>
+            {/* Single Column: Filter Groups with Add Filter Popovers */}
+            <div style={{ width: leftPanelWidth }} className="relative shrink-0 border-r border-[var(--color-border-container-default)] flex flex-col">
+              {resizeHandle}
+              <div className="p-4 pb-2 border-b border-[var(--color-border-container-default)]">
+                <h3 className="heading-200 text-[var(--color-text-core-default)]">Filter groups</h3>
               </div>
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-4">
@@ -3715,8 +4177,6 @@ const CreateViewModal = ({
                   </Button>
                 </div>
               </ScrollArea>
-              </>
-              )}
             </div>
 
             {/* Column 3: Preview (~50%) */}
@@ -3729,9 +4189,10 @@ const CreateViewModal = ({
             </div>
           </>}
 
-        {currentStep === "columns" && <>
+        {view === "wizard" && currentStep === "columns" && <>
           {/* Left Panel - Column Selection */}
-          <div className="w-[320px] border-r border-[var(--color-border-core-default)] flex flex-col">
+          <div style={{ width: leftPanelWidth }} className="relative shrink-0 border-r border-[var(--color-border-core-default)] flex flex-col">
+            {resizeHandle}
             <div className="p-6 border-b border-[var(--color-border-core-default)]">
               <h3 className="heading-200 text-[var(--color-text-core-default)] mb-4">Select Columns</h3>
               
@@ -3838,9 +4299,10 @@ const CreateViewModal = ({
           </div>
         </>}
 
-        {currentStep === "settings" && <>
+        {view === "wizard" && currentStep === "settings" && <>
           {/* Left Panel - Settings Controls */}
-          <div className="w-[320px] border-r border-[var(--color-border-core-default)] flex flex-col">
+          <div style={{ width: leftPanelWidth }} className="relative shrink-0 border-r border-[var(--color-border-core-default)] flex flex-col">
+            {resizeHandle}
             <ScrollArea className="flex-1">
               <div className="p-6 space-y-6 divide-y divide-[var(--color-border-container-default)] [&>div:not(:first-child)]:pt-6">
                 {/* Based on Section - FIRST */}
@@ -4024,6 +4486,23 @@ const CreateViewModal = ({
                   </Popover>
                 </div>
 
+                {/* Status Section */}
+                <div>
+                  <h3 className="heading-200 text-[var(--color-text-core-default)] mb-4">Status</h3>
+                  <Select value={campaignStatus} onValueChange={(v) => setCampaignStatus(v as CampaignStatus)}>
+                    <SelectTrigger className="w-auto min-w-[160px] h-9 rounded-[4px] border-[var(--color-border-secondary-default,#8A8A8A)] bg-[var(--color-fill-secondary-default,#FFF)] body-75 text-[var(--color-text-core-default)]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[var(--color-fill-surface-default,#FFF)] border-[var(--color-border-core-default)] z-[9999]">
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="scheduled">Scheduled</SelectItem>
+                      <SelectItem value="live">Live</SelectItem>
+                      <SelectItem value="ended">Ended</SelectItem>
+                      <SelectItem value="archived">Archived</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {/* Access Section */}
                 <div>
                   <h3 className="heading-200 text-[var(--color-text-core-default)] mb-4">Access</h3>
@@ -4072,6 +4551,73 @@ const CreateViewModal = ({
                       </ScrollArea>
                     </PopoverContent>
                   </Popover>
+                </div>
+
+                {/* Enablement Materials Section */}
+                <div>
+                  <h3 className="heading-200 text-[var(--color-text-core-default)] mb-4">Enablement materials</h3>
+                  <div className="space-y-2 mb-3">
+                    {enablementMaterials.length === 0 ? (
+                      <p className="body-75 text-[var(--color-text-core-subtle)]">No materials added yet.</p>
+                    ) : (
+                      enablementMaterials.map(m => {
+                        const Icon = m.type === "case-study" ? FileText : m.type === "battle-card" ? Swords : m.type === "talk-track" ? MessageSquareText : m.type === "video" ? Video : FileIcon;
+                        return (
+                          <div key={m.id} className="flex items-center gap-2 p-2 rounded-[4px] border border-[var(--color-border-core-subtle)]">
+                            <Icon className="h-4 w-4 text-[var(--color-text-core-subtle)] shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <div className="body-100 text-[var(--color-text-core-default)] truncate">{m.title}</div>
+                              <div className="body-75 text-[var(--color-text-core-subtle)] truncate">{m.description}</div>
+                            </div>
+                            <button onClick={() => handleRemoveEnablementMaterial(m.id)} className="p-1 rounded hover:bg-[var(--color-fill-secondary-hover)]">
+                              <Trash2 className="h-3.5 w-3.5 text-[var(--color-text-core-subtle)]" />
+                            </button>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="Title (e.g. Migration Case Study)"
+                      value={newMaterialTitle}
+                      onChange={(e) => setNewMaterialTitle(e.target.value)}
+                      className="h-9 body-75"
+                    />
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <LinkIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--color-text-core-subtle)]" />
+                        <Input
+                          placeholder="URL"
+                          value={newMaterialUrl}
+                          onChange={(e) => setNewMaterialUrl(e.target.value)}
+                          className="h-9 pl-8 body-75"
+                        />
+                      </div>
+                      <Select value={newMaterialType} onValueChange={(v) => setNewMaterialType(v as EnablementMaterial["type"])}>
+                        <SelectTrigger className="w-[120px] h-9 body-75">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="z-[9999]">
+                          <SelectItem value="case-study">Case study</SelectItem>
+                          <SelectItem value="one-pager">One-pager</SelectItem>
+                          <SelectItem value="talk-track">Talk track</SelectItem>
+                          <SelectItem value="battle-card">Battle card</SelectItem>
+                          <SelectItem value="video">Video</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleAddEnablementMaterial}
+                      disabled={!newMaterialTitle.trim()}
+                      className="w-full h-9 rounded-[4px]"
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" />
+                      Add material
+                    </Button>
+                  </div>
                 </div>
               </div>
             </ScrollArea>

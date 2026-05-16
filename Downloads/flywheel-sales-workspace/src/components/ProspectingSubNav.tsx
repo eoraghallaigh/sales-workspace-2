@@ -4,7 +4,8 @@ import { useCyclePath } from "@/hooks/useCyclePath";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, PanelLeftClose } from "lucide-react";
+import { ChevronDown, PanelLeftClose, ArrowRight } from "lucide-react";
+import { useCampaigns } from "@/contexts/CampaignsContext";
 
 interface ProspectingSubNavProps {
   onCollapse?: () => void;
@@ -20,25 +21,22 @@ const ProspectingSubNav = ({
   const location = useLocation();
   const { cyclePath, cycleSlug } = useCyclePath();
   const { campaignId } = useParams();
+  const { campaigns } = useCampaigns();
   const isPowerHourRoute = location.pathname.startsWith(`/${cycleSlug}/power-hour`);
   const defaultItem = campaignId || (isPowerHourRoute ? "" : "p1-now");
-  const campaignIds = ["salesforce-switchers", "q3-aeo-push", "enterprise-expansion", "smb-winback"];
+  const campaignIds = campaigns.map(c => c.id);
   const [activeItem, setActiveItemState] = useState(defaultItem);
   const [isPriorityOpen, setIsPriorityOpen] = useState(!campaignId);
   const [isOtherOpen, setIsOtherOpen] = useState(!!campaignId);
   const setActiveItem = (id: string) => {
     setActiveItemState(id);
     onActiveItemChange?.(id);
-    const campaignIds = ["salesforce-switchers", "q3-aeo-push", "enterprise-expansion", "smb-winback"];
     if (campaignIds.includes(id)) {
       navigate(cyclePath(`/prospecting/campaign/${id}`));
     } else {
       navigate(cyclePath("/prospecting"));
     }
   };
-  
-  
-  
 
   const priorityItems = [{
     id: "p1-now",
@@ -108,14 +106,17 @@ const ProspectingSubNav = ({
                 <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isOtherOpen ? '' : '-rotate-90'}`} />
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-1 mt-1">
-                {[
-                  { id: "salesforce-switchers", label: "Salesforce Switchers" },
-                  { id: "q3-aeo-push", label: "Q3 AEO Push" },
-                  { id: "enterprise-expansion", label: "Enterprise Expansion" },
-                  { id: "smb-winback", label: "SMB Winback" },
-                ].map((item) => <Button key={item.id} variant="ghost" onClick={() => setActiveItem(item.id)} className={`w-[214px] flex items-center justify-start pl-6 pr-3 py-2 rounded-100 transition-colors relative h-auto ${activeItem === item.id ? "bg-trellis-neutral-200 hover:bg-trellis-neutral-200 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-foreground before:rounded-r" : "hover:bg-trellis-neutral-100"}`}>
+                {campaigns.map((item) => <Button key={item.id} variant="ghost" onClick={() => setActiveItem(item.id)} className={`w-[214px] flex items-center justify-start pl-6 pr-3 py-2 rounded-100 transition-colors relative h-auto ${activeItem === item.id ? "bg-trellis-neutral-200 hover:bg-trellis-neutral-200 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-foreground before:rounded-r" : "hover:bg-trellis-neutral-100"}`}>
                     <span className="body-100 text-foreground">{item.label}</span>
                   </Button>)}
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate(cyclePath("/campaigns"))}
+                  className="w-[214px] flex items-center justify-start pl-6 pr-3 py-2 rounded-100 transition-colors relative h-auto text-muted-foreground hover:bg-trellis-neutral-100"
+                >
+                  <span className="body-100">View all campaigns</span>
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
               </CollapsibleContent>
             </Collapsible>
 
