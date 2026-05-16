@@ -5,6 +5,15 @@ export interface EnablementMaterial {
   description: string;
 }
 
+export interface CampaignFilter {
+  id: string;
+  filterName: string;
+  condition: string;
+  displayValue: string;
+}
+
+export type CampaignStatus = "draft" | "scheduled" | "live" | "ended" | "archived";
+
 export interface Campaign {
   id: string;
   label: string;
@@ -20,6 +29,12 @@ export interface Campaign {
     meetings: number;
     target: number;
   };
+  status: CampaignStatus;
+  owner: string;
+  geo?: string[];
+  marketSegment?: string[];
+  teams?: string[];
+  filters?: CampaignFilter[];
 }
 
 export const campaigns: Campaign[] = [
@@ -62,7 +77,11 @@ export const campaigns: Campaign[] = [
       worked: 10,
       meetings: 4,
       target: 16
-    }
+    },
+    status: "live",
+    owner: "Sarah Chen",
+    geo: ["US"],
+    marketSegment: ["Mid-Market"]
   },
   {
     id: "q3-aeo-push",
@@ -91,7 +110,11 @@ export const campaigns: Campaign[] = [
       worked: 8,
       meetings: 2,
       target: 15
-    }
+    },
+    status: "live",
+    owner: "Marcus Johnson",
+    geo: ["US", "EMEA"],
+    marketSegment: ["Mid-Market", "Enterprise"]
   },
   {
     id: "enterprise-expansion",
@@ -126,7 +149,11 @@ export const campaigns: Campaign[] = [
       worked: 15,
       meetings: 7,
       target: 12
-    }
+    },
+    status: "live",
+    owner: "Sarah Chen",
+    geo: ["US", "EMEA", "APAC"],
+    marketSegment: ["Enterprise"]
   },
   {
     id: "smb-winback",
@@ -155,6 +182,10 @@ export const campaigns: Campaign[] = [
       worked: 31,
       meetings: 9,
       target: 20
-    }
+    },
+    status: "live",
+    owner: "Lisa Park",
+    geo: ["US"],
+    marketSegment: ["SMB"]
   }
 ];
