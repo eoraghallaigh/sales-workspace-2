@@ -5,6 +5,24 @@ import type { IterationEntry } from "../types";
 // Each entry's `id` matches the folder name under public/about/iterations/.
 export const q2c2Iterations: IterationEntry[] = [
   {
+    id: "2026-05-18-campaigns-iteration-entry",
+    date: "2026-05-18",
+    label: "campaigns-iteration-entry",
+    whatChanged:
+      "Polish pass across the campaign creation experience: campaign creator moved out of the modal and onto a dedicated workspace page; chat panel becomes a floating card with a visible 6-dot drag handle column between it and the preview; agent + manual modes now share the same shell with a stepper-style progress bar and consistent transparent 'Switch to…' link in the footer. Form chrome aligned to Trellis Light — new FormControl wrapper, Select rebuilt to match Figma (40px / body-200 / 4px radius / DownCarat token via inline SVG), Access and Expiry date popovers rebadged through the same SelectAnchor (Expiry uses the date icon), Input border bumped to core-default, table cells lose their last-row border, skeleton bars switched to the lightest grey, body-75 typography token defined.",
+    why: "Tightening the campaign creation flow against the Trellis Light spec so the prototype reads as native HubSpot rather than ad-hoc shadcn. Moving the creator out of the modal opens it up to richer per-step interactions, and standardising the form chrome makes future additions cheaper.",
+    commitment: "campaigns",
+    screenshots: [
+      { src: "/about/iterations/2026-05-18-campaigns-iteration-entry/summary.png", alt: "Summary route screenshot" },
+      { src: "/about/iterations/2026-05-18-campaigns-iteration-entry/prospecting.png", alt: "Prospecting route screenshot" },
+      { src: "/about/iterations/2026-05-18-campaigns-iteration-entry/campaigns.png", alt: "Campaigns route screenshot" },
+      { src: "/about/iterations/2026-05-18-campaigns-iteration-entry/power-hour.png", alt: "Power Hour route screenshot" },
+      { src: "/about/iterations/2026-05-18-campaigns-iteration-entry/sales-workspace.png", alt: "Sales Workspace route screenshot" },
+      { src: "/about/iterations/2026-05-18-campaigns-iteration-entry/deals.png", alt: "Deals route screenshot" },
+      { src: "/about/iterations/2026-05-18-campaigns-iteration-entry/dashboard.png", alt: "Dashboard route screenshot" },
+    ],
+  },
+  {
     id: "2026-05-16-find-campaign-creator",
     date: "2026-05-16",
     label: "find-campaign-creator",

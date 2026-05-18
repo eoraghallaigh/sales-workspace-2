@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Check, X } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import WorkspaceHeader from "@/components/WorkspaceHeader";
@@ -12,7 +13,6 @@ import {
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import { useCyclePath } from "@/hooks/useCyclePath";
 import { useCampaigns } from "@/contexts/CampaignsContext";
-import CreateViewModal from "@/components/CreateViewModal";
 import { Campaign, CampaignStatus } from "@/data/campaignData";
 
 const STATUS_OPTIONS: { value: CampaignStatus; label: string }[] = [
@@ -103,16 +103,14 @@ const MultiSelectDropdown = ({ label, options, selected, onToggle, onClear, widt
 );
 
 const Campaigns = () => {
+  const navigate = useNavigate();
   const { cyclePath } = useCyclePath();
-  const { campaigns, addCampaign, updateCampaign } = useCampaigns();
+  const { campaigns } = useCampaigns();
 
   const [selectedStatuses, setSelectedStatuses] = useState<Set<string>>(new Set());
   const [selectedSegments, setSelectedSegments] = useState<Set<string>>(new Set());
   const [selectedGeos, setSelectedGeos] = useState<Set<string>>(new Set());
   const [selectedOwners, setSelectedOwners] = useState<Set<string>>(new Set());
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
 
   const ownerOptions = useMemo(
     () => Array.from(new Set(campaigns.map((c) => c.owner))).sort(),
@@ -146,26 +144,11 @@ const Campaigns = () => {
   const clear = (setter: React.Dispatch<React.SetStateAction<Set<string>>>) => () => setter(new Set());
 
   const handleRowClick = (campaign: Campaign) => {
-    setEditingCampaign(campaign);
-    setIsModalOpen(true);
+    navigate(cyclePath(`/campaigns/${campaign.id}/edit`));
   };
 
   const handleCreateClick = () => {
-    setEditingCampaign(null);
-    setIsModalOpen(true);
-  };
-
-  const handleModalSave = (campaign: Campaign) => {
-    if (editingCampaign) {
-      updateCampaign(editingCampaign.id, campaign);
-    } else {
-      addCampaign(campaign);
-    }
-  };
-
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setEditingCampaign(null);
+    navigate(cyclePath("/campaigns/new"));
   };
 
   const anyFilterActive =
@@ -291,12 +274,6 @@ const Campaigns = () => {
         </div>
       </div>
 
-      <CreateViewModal
-        isOpen={isModalOpen}
-        onClose={handleModalClose}
-        onSave={handleModalSave}
-        initialCampaign={editingCampaign ?? undefined}
-      />
     </Layout>
   );
 };
