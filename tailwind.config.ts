@@ -321,6 +321,7 @@ const config: Config = {
         'heading-1000': ['55px', { lineHeight: '67px', fontWeight: '700' }],
         
         // Body Typography
+        'body-75': ['12px', { lineHeight: '18px', fontWeight: '300' }],
         'body-100': ['14px', { lineHeight: '24px', fontWeight: '300' }],
         'body-125': ['14px', { lineHeight: '24px', fontWeight: '600' }],
         'body-200': ['16px', { lineHeight: '24px', fontWeight: '300' }],
@@ -412,6 +413,7 @@ const config: Config = {
         '.heading-1000': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '55px', lineHeight: '67px', fontWeight: '700' },
         
         // Body Typography
+        '.body-75': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '12px', lineHeight: '18px', fontWeight: '300' },
         '.body-100': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '14px', lineHeight: '24px', fontWeight: '300' },
         '.body-125': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '14px', lineHeight: '24px', fontWeight: '600' },
         '.body-200': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '16px', lineHeight: '24px', fontWeight: '300' },
