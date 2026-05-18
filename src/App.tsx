@@ -25,6 +25,7 @@ import TeamHome from "./pages/TeamHome";
 import CyclePage from "./pages/CyclePage";
 import MotionSandbox from "./pages/MotionSandbox";
 import Campaigns from "./pages/Campaigns";
+import CampaignBuilder from "./pages/CampaignBuilder";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,8 @@ const App = () => (
             <Route path="/:cycleSlug/prospecting" element={<Prospecting />} />
             <Route path="/:cycleSlug/prospecting/campaign/:campaignId" element={<Prospecting />} />
             <Route path="/:cycleSlug/campaigns" element={<Campaigns />} />
+            <Route path="/:cycleSlug/campaigns/new" element={<CampaignBuilder />} />
+            <Route path="/:cycleSlug/campaigns/:campaignId/edit" element={<CampaignBuilder />} />
             <Route path="/:cycleSlug/prospecting/strategy/:companyId" element={<ProspectingStrategy />} />
             <Route path="/:cycleSlug/power-hour" element={<PowerHour />} />
             <Route path="/:cycleSlug/power-hour/review" element={<PowerHourReview />} />

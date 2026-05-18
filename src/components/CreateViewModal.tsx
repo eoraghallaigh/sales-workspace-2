@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Fragment } from "react";
 import { X, Plus, Trash2, Copy, Search, Check, Hash, Calendar, Type, ChevronDown, ArrowUpDown, Loader2, Sparkles, FileText, Swords, MessageSquareText, Video, File as FileIcon, Link as LinkIcon } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -10,11 +10,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectAnchor, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TrellisIcon } from "@/components/ui/trellis-icon";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { TableHeaderCell } from "@/components/ui/table-header-cell";
 import { TableDataCell } from "@/components/ui/table-data-cell";
 import { AITextarea } from "@/components/ui/ai-textarea";
+import { FormControl } from "@/components/ui/form-control";
 import Tag from "@/components/Tag";
 import { prospectingCompanies } from "@/data/prospectingCompanies";
 import { repPersonas, defaultViewerLabel, RepPersona } from "@/data/repPersonas";
@@ -2486,16 +2488,13 @@ const OrgTreeNode = ({
         ) : (
           <span className="w-4" />
         )}
-        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ${
-          state === "all"
-            ? "bg-white border-[var(--color-fill-core-default)]"
-            : state === "some"
-            ? "bg-white border-[var(--color-fill-core-default)]"
-            : "border-[var(--color-border-core-default)]"
-        }`}>
-          {state === "all" && <Check className="h-3 w-3 text-[var(--color-text-core-default)]" />}
-          {state === "some" && <div className="w-2 h-0.5 bg-[var(--color-text-core-default)] rounded-full" />}
-        </div>
+        <Checkbox
+          checked={state === "all" ? true : state === "some" ? "indeterminate" : false}
+          onClick={(e) => e.stopPropagation()}
+          onCheckedChange={() => toggleNode(node)}
+          className="shrink-0"
+          aria-label={node.label}
+        />
         <span className="body-75 text-[var(--color-text-core-default)] truncate">{node.label}</span>
       </div>
       {hasChildren && shouldExpand && (
@@ -2554,14 +2553,19 @@ const SCRIPTED_INTENTS: ScriptedIntent[] = [
   },
   {
     trigger: () => true,
-    name: "",
-    description: "",
+    name: "New prospecting campaign",
+    description: "Companies matching the criteria you described. Refine the filters on the right or keep chatting to narrow further.",
     statusMessages: [
       "Reading your prompt…",
-      "Thinking…",
+      "Identifying target segment…",
+      "Filtering company data…",
+      "Sampling matching companies…",
+      "Drafting campaign details…",
     ],
-    filterSeeds: [],
-    reply: "I can help you build a campaign. Try something like: \"Target Salesforce renewals in mid-market US\" or \"Q3 AEO push for companies with intent signals\". You can also switch to manual filter editing on the right.",
+    filterSeeds: [
+      { filterId: "account-group-territory", condition: "is any of", value: "Americas", listValues: ["Americas"], listOptions: ["APAC", "EMEA", "Americas", "LATAM", "ANZ"] },
+    ],
+    reply: "I've drafted a campaign based on your prompt. I added a starter territory filter and pre-filled the name and description — review the filters on the right and tell me how you'd like to refine it.",
   },
 ];
 
@@ -2616,7 +2620,11 @@ const CreateViewModal = ({
   // Resizable left panel
   const LEFT_PANEL_MIN = 280;
   const LEFT_PANEL_MAX = 800;
-  const [leftPanelWidth, setLeftPanelWidth] = useState(380);
+  const [leftPanelWidth, setLeftPanelWidth] = useState(() =>
+    typeof window !== "undefined"
+      ? Math.max(280, Math.min(800, Math.round(window.innerWidth * 0.25)))
+      : 380
+  );
   const [isResizing, setIsResizing] = useState(false);
   const handleResizeStart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -2639,14 +2647,31 @@ const CreateViewModal = ({
     window.addEventListener("mousemove", handleMove);
     window.addEventListener("mouseup", handleUp);
   };
-  const resizeHandle = (
+  const dragHandleColumn = (
     <div
       onMouseDown={handleResizeStart}
-      className={`absolute top-0 right-0 h-full w-1 cursor-col-resize group/resize ${isResizing ? "bg-[var(--color-fill-brand-default)]" : "hover:bg-[var(--color-fill-brand-default)]/40"} transition-colors z-20`}
-      style={{ transform: "translateX(50%)" }}
-      aria-label="Resize panel"
+      className={`shrink-0 w-4 mx-2 cursor-col-resize transition-colors flex items-center justify-center ${
+        isResizing ? "bg-white" : "hover:bg-white"
+      }`}
       role="separator"
-    />
+      aria-label="Resize chat panel"
+    >
+      <svg
+        aria-hidden="true"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 32 32"
+        width="12"
+        height="12"
+        className="text-[var(--color-icon-interactive-default,#141414)]"
+      >
+        <circle cx="10.14" cy="4.14" r="2.29" fill="currentColor" />
+        <circle cx="10.14" cy="15.57" r="2.29" fill="currentColor" />
+        <circle cx="10.14" cy="27" r="2.29" fill="currentColor" />
+        <circle cx="21.57" cy="4.14" r="2.29" fill="currentColor" />
+        <circle cx="21.57" cy="15.57" r="2.29" fill="currentColor" />
+        <circle cx="21.57" cy="27" r="2.29" fill="currentColor" />
+      </svg>
+    </div>
   );
   const previewRep: RepPersona | null = previewRepId ? repPersonas.find(r => r.id === previewRepId) || null : null;
 
@@ -2667,8 +2692,7 @@ const CreateViewModal = ({
   // Settings step state
   const [expiryDate, setExpiryDate] = useState<Date | undefined>(undefined);
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
-  const [viewType, setViewType] = useState<"table" | "nested" | "book">("table");
-  const [campaignBasis, setCampaignBasis] = useState<"companies" | "portals">("companies");
+  const [campaignBasis, setCampaignBasis] = useState<"companies" | "portals" | "contacts">("companies");
   const [completionAction, setCompletionAction] = useState<string>("add-to-sequence");
   const [completionCount, setCompletionCount] = useState<number>(1);
   const [completionPer, setCompletionPer] = useState<"company" | "contact">("company");
@@ -3556,7 +3580,7 @@ const CreateViewModal = ({
         </div>
       )}
       <div className={`border border-border rounded-lg overflow-hidden transition-all duration-300 ${isTableLoading ? 'opacity-40 blur-[1px]' : ''}`} style={{ minWidth: '800px' }}>
-        <table className="w-full">
+        <table className="w-full [&_tr:last-child_td]:border-b-0">
           <thead>
             <tr className="flex">
               <TableHeaderCell className="w-[260px]">
@@ -3725,79 +3749,302 @@ const CreateViewModal = ({
       </div>
     );
   };
-  if (!isOpen) return null;
-  return <div className="fixed inset-0 z-50 flex flex-col animate-in slide-in-from-bottom duration-300">
-      {/* Full screen white background */}
-      <div className="absolute inset-0 bg-[var(--color-fill-surface-default)]" />
-      
-      {/* Header/Navigation Bar */}
-      <div className="relative flex items-center justify-between h-16 px-6 border-b border-[var(--color-border-container-default)]">
-        {/* Left - Back button (wizard only) */}
-        <div className="w-32 flex items-center">
-          {view === "wizard" && currentStep !== "settings" && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (currentStep === "filters") setCurrentStep("settings");
-                else if (currentStep === "columns") setCurrentStep("filters");
-              }}
-              className="h-10 px-6 rounded-[4px] border-[var(--color-border-core-default)]"
-            >
-              Back
-            </Button>
-          )}
+
+  // Mock contacts preview (derived from prospectingCompanies)
+  const renderContactsPreview = () => {
+    const TITLES = ["VP Sales", "Director of Marketing", "RevOps Lead", "Head of Growth", "CMO", "Sales Manager", "CRO", "BizOps Manager"];
+    const rows = previewCompanies.flatMap((company, ci) => {
+      const count = 1 + (ci % 2);
+      return Array.from({ length: count }).map((_, i) => ({
+        id: `${company.id}-c${i}`,
+        name: `${["Avery", "Jordan", "Sam", "Riley", "Taylor", "Casey", "Quinn", "Morgan"][(ci + i) % 8]} ${["Carter", "Reed", "Patel", "Nguyen", "Brown", "Diaz", "Khan", "Walsh"][(ci + i * 2) % 8]}`,
+        title: TITLES[(ci + i) % TITLES.length],
+        company,
+        signals: company.signals,
+      }));
+    });
+    return (
+      <>
+        {renderPreviewHeader()}
+        <div className="overflow-x-auto relative">
+          <div className="border border-border rounded-lg overflow-hidden" style={{ minWidth: "800px" }}>
+            <table className="w-full [&_tr:last-child_td]:border-b-0">
+              <thead>
+                <tr className="flex">
+                  <TableHeaderCell className="w-[220px]">
+                    <button className="flex items-center gap-2">Name <ArrowUpDown className="h-3 w-3" /></button>
+                  </TableHeaderCell>
+                  <TableHeaderCell className="flex-1 w-auto">
+                    <button className="flex items-center gap-2">Title <ArrowUpDown className="h-3 w-3" /></button>
+                  </TableHeaderCell>
+                  <TableHeaderCell className="flex-1 w-auto">
+                    <button className="flex items-center gap-2">Company <ArrowUpDown className="h-3 w-3" /></button>
+                  </TableHeaderCell>
+                  <TableHeaderCell className="flex-1 w-auto">
+                    <button className="flex items-center gap-2">Signals <ArrowUpDown className="h-3 w-3" /></button>
+                  </TableHeaderCell>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.id} className="flex hover:bg-[var(--color-fill-secondary-hover)]">
+                    <TableDataCell className="w-[220px]">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback className="text-xs bg-[var(--color-fill-secondary-subtle)]">{row.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <span className="body-125 text-[var(--color-text-core-default)]">{row.name}</span>
+                      </div>
+                    </TableDataCell>
+                    <TableDataCell className="flex-1 w-auto">
+                      <span className="text-[var(--color-text-core-subtle)]">{row.title}</span>
+                    </TableDataCell>
+                    <TableDataCell className="flex-1 w-auto">
+                      <span className="text-[var(--color-text-core-default)]">{row.company.name}</span>
+                    </TableDataCell>
+                    <TableDataCell className="flex-1 w-auto">
+                      <div className="flex flex-wrap gap-1">
+                        {row.signals.slice(0, 2).map((s, idx) => (
+                          <Tag key={idx} variant={(s.variant as "green" | "blue" | "yellow" | "orange" | "neutral") || "neutral"}>{s.text}</Tag>
+                        ))}
+                        {row.signals.length === 0 && <span className="text-[var(--color-text-core-subtle)]">—</span>}
+                      </div>
+                    </TableDataCell>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="mt-4">
+          <span className="body-100 text-[var(--color-text-core-subtle)]">Showing {rows.length} contacts</span>
+        </div>
+      </>
+    );
+  };
+
+  // Mock portals preview
+  const renderPortalsPreview = () => {
+    const rows = previewCompanies.map((company, i) => ({
+      id: company.id,
+      portalId: `${4_300_000 + i * 137}`,
+      name: company.name,
+      hubs: ["Marketing Hub", "Sales Hub", "Service Hub", "Operations Hub", "Content Hub"].slice(0, 1 + (i % 4)),
+      mrr: ["$1.2k", "$2.4k", "$4.8k", "$9.6k", "$14k", "$22k"][(i * 3) % 6],
+      signals: company.signals,
+    }));
+    return (
+      <>
+        {renderPreviewHeader()}
+        <div className="overflow-x-auto relative">
+          <div className="border border-border rounded-lg overflow-hidden" style={{ minWidth: "800px" }}>
+            <table className="w-full [&_tr:last-child_td]:border-b-0">
+              <thead>
+                <tr className="flex">
+                  <TableHeaderCell className="w-[140px]">
+                    <button className="flex items-center gap-2">Portal ID <ArrowUpDown className="h-3 w-3" /></button>
+                  </TableHeaderCell>
+                  <TableHeaderCell className="flex-1 w-auto">
+                    <button className="flex items-center gap-2">Account name <ArrowUpDown className="h-3 w-3" /></button>
+                  </TableHeaderCell>
+                  <TableHeaderCell className="flex-1 w-auto">
+                    <button className="flex items-center gap-2">Hubs <ArrowUpDown className="h-3 w-3" /></button>
+                  </TableHeaderCell>
+                  <TableHeaderCell className="flex-1 w-auto">
+                    <button className="flex items-center gap-2">MRR <ArrowUpDown className="h-3 w-3" /></button>
+                  </TableHeaderCell>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.id} className="flex hover:bg-[var(--color-fill-secondary-hover)]">
+                    <TableDataCell className="w-[140px]">
+                      <span className="body-125 text-[var(--color-text-core-default)]">{row.portalId}</span>
+                    </TableDataCell>
+                    <TableDataCell className="flex-1 w-auto">
+                      <span className="text-[var(--color-text-core-default)]">{row.name}</span>
+                    </TableDataCell>
+                    <TableDataCell className="flex-1 w-auto">
+                      <div className="flex flex-wrap gap-1">
+                        {row.hubs.map((h, idx) => (
+                          <Tag key={idx} variant="neutral">{h.replace(" Hub", "")}</Tag>
+                        ))}
+                      </div>
+                    </TableDataCell>
+                    <TableDataCell className="flex-1 w-auto">
+                      <span className="text-[var(--color-text-core-default)]">{row.mrr}</span>
+                    </TableDataCell>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="mt-4">
+          <span className="body-100 text-[var(--color-text-core-subtle)]">Showing {rows.length} portals</span>
+        </div>
+      </>
+    );
+  };
+
+  // Persistent skeleton preview shown on the right pane regardless of view
+  const renderSkeletonPreview = () => (
+    <div className="py-6 pr-12">
+      {/* Skeleton table using design-system cells */}
+      <div className="overflow-x-auto relative">
+        <div className="border border-border rounded-lg overflow-hidden" style={{ minWidth: "800px" }}>
+          <table className="w-full [&_tr:last-child_td]:border-b-0">
+            <thead>
+              <tr className="flex">
+                <TableHeaderCell className="w-[260px]">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-24 bg-[#F5F5F5] rounded" />
+                    <ArrowUpDown className="h-3 w-3 text-[var(--color-text-core-subtle)]" />
+                  </div>
+                </TableHeaderCell>
+                <TableHeaderCell className="flex-1 w-auto">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-16 bg-[#F5F5F5] rounded" />
+                    <ArrowUpDown className="h-3 w-3 text-[var(--color-text-core-subtle)]" />
+                  </div>
+                </TableHeaderCell>
+                <TableHeaderCell className="flex-1 w-auto">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-20 bg-[#F5F5F5] rounded" />
+                    <ArrowUpDown className="h-3 w-3 text-[var(--color-text-core-subtle)]" />
+                  </div>
+                </TableHeaderCell>
+                <TableHeaderCell className="flex-1 w-auto">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-14 bg-[#F5F5F5] rounded" />
+                    <ArrowUpDown className="h-3 w-3 text-[var(--color-text-core-subtle)]" />
+                  </div>
+                </TableHeaderCell>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { c1: 180, c2: 90, c3: 56, c4: 110 },
+                { c1: 150, c2: 110, c3: 56, c4: 80 },
+                { c1: 200, c2: 80, c3: 56, c4: 130 },
+                { c1: 160, c2: 100, c3: 56, c4: 90 },
+                { c1: 190, c2: 120, c3: 56, c4: 110 },
+                { c1: 140, c2: 90, c3: 56, c4: 80 },
+                { c1: 170, c2: 100, c3: 56, c4: 100 },
+              ].map((row, r) => (
+                <tr key={r} className="flex">
+                  <TableDataCell className="w-[260px]">
+                    <div className="flex items-center gap-3">
+                      <div className="h-6 w-6 rounded-full bg-[#F5F5F5]" />
+                      <div className="h-3 bg-[#F5F5F5] rounded" style={{ width: row.c1 }} />
+                    </div>
+                  </TableDataCell>
+                  <TableDataCell className="flex-1 w-auto">
+                    <div className="h-3 bg-[#F5F5F5] rounded" style={{ width: row.c2 }} />
+                  </TableDataCell>
+                  <TableDataCell className="flex-1 w-auto">
+                    <div className="h-3 bg-[#F5F5F5] rounded" style={{ width: row.c3 }} />
+                  </TableDataCell>
+                  <TableDataCell className="flex-1 w-auto">
+                    <div className="flex flex-wrap gap-1">
+                      <div className="h-5 bg-[#F5F5F5] rounded-[4px]" style={{ width: row.c4 }} />
+                    </div>
+                  </TableDataCell>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
-        {/* Center - Stepper (wizard only) */}
-        {view === "wizard" ? (
-          <div className="flex items-center gap-0">
-            {steps.map((step, index) => <div key={step.key} className="flex items-center">
-                <div className="flex flex-col items-center">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full border-2 transition-colors ${index <= currentStepIndex ? "border-[var(--color-fill-brand-default)] bg-[var(--color-fill-brand-default)]" : "border-[var(--color-border-core-subtle)] bg-transparent"}`} />
-                  </div>
-                  <span className={`mt-2 body-100 ${index === currentStepIndex ? "text-[var(--color-text-core-default)]" : "text-[var(--color-text-core-subtle)]"}`}>
-                    {step.label}
-                  </span>
-                </div>
-                {index < steps.length - 1 && <div className={`w-48 h-0.5 mx-2 ${index < currentStepIndex ? "bg-[var(--color-fill-brand-default)]" : "bg-[var(--color-border-core-subtle)]"}`} style={{ marginTop: "-18px" }} />}
-              </div>)}
+        {/* Empty-state message */}
+        <div className="absolute inset-x-0 top-0 bottom-0 flex items-center justify-center pointer-events-none">
+          <div className="bg-card border border-[var(--color-border-container-default)] rounded-[4px] px-6 py-4 shadow-sm max-w-md text-center">
+            <p className="body-100 text-[var(--color-text-core-default)]">
+              Your campaign preview will appear here once you start describing it.
+            </p>
           </div>
-        ) : (
-          <div />
-        )}
-
-        {/* Right - Action buttons */}
-        <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={onClose} className="h-10 px-6 rounded-[4px] border-[var(--color-border-core-default)]">
-            Exit
-          </Button>
-          {view === "agent" && (
-            <Button
-              onClick={() => {
-                if (onSave) onSave(buildCampaign());
-                onClose();
-              }}
-              disabled={agentBusy}
-              className="h-10 px-6 rounded-[4px] bg-[var(--color-fill-primary-default)] hover:bg-[var(--color-fill-primary-hover)] text-[var(--color-text-primary-default)]"
-            >
-              Save campaign
-            </Button>
-          )}
-          {view === "wizard" && (
-            <Button onClick={() => {
-              if (currentStep === "settings") setCurrentStep("filters");
-              else if (currentStep === "filters") setCurrentStep("columns");
-              else {
-                if (onSave) onSave(buildCampaign());
-                onClose();
-              }
-            }} className="h-10 px-6 rounded-[4px] bg-[var(--color-fill-primary-default)] hover:bg-[var(--color-fill-primary-hover)] text-[var(--color-text-primary-default)]">
-              {currentStep === "columns" ? "Save campaign" : "Next"}
-            </Button>
-          )}
         </div>
       </div>
+    </div>
+  );
+
+  const wizardStepperBar = (
+    <div className="px-4 py-4 border-b border-[var(--color-border-container-default)] flex items-start">
+      {steps.map((step, idx) => (
+        <Fragment key={step.key}>
+          {idx > 0 && (
+            <div
+              className="flex-1 h-0.5 mt-[9px]"
+              style={{
+                backgroundColor:
+                  idx <= currentStepIndex
+                    ? "var(--color-border-brand-default)"
+                    : "var(--color-border-core-default)",
+              }}
+            />
+          )}
+          <button
+            type="button"
+            onClick={() => setCurrentStep(step.key)}
+            className="flex flex-col items-center gap-1 shrink-0"
+          >
+            <div
+              className="w-5 h-5 rounded-full border-2"
+              style={{
+                borderColor:
+                  idx <= currentStepIndex
+                    ? "var(--color-border-brand-default)"
+                    : "var(--color-border-core-default)",
+                backgroundColor:
+                  idx < currentStepIndex
+                    ? "var(--color-border-brand-default)"
+                    : "var(--color-fill-field-default-alt, white)",
+              }}
+            />
+            <span
+              className={`heading-25 whitespace-nowrap ${
+                idx === currentStepIndex
+                  ? "text-[var(--color-text-core-default)]"
+                  : "text-[var(--color-text-core-subtle)]"
+              }`}
+            >
+              {step.label}
+            </span>
+          </button>
+        </Fragment>
+      ))}
+    </div>
+  );
+
+  const handleWizardContinue = () => {
+    if (currentStep === "settings") setCurrentStep("filters");
+    else if (currentStep === "filters") setCurrentStep("columns");
+    else {
+      if (onSave) onSave(buildCampaign());
+      onClose();
+    }
+  };
+
+  const wizardFooter = (
+    <div className="border-t border-[var(--color-border-container-default)] p-3 flex flex-col gap-2">
+      <Button
+        onClick={handleWizardContinue}
+        className="w-full h-10 rounded-[4px] bg-[var(--color-fill-primary-default)] hover:bg-[var(--color-fill-primary-hover)] text-[var(--color-text-primary-default)]"
+      >
+        {currentStep === "columns" ? "Save campaign" : "Continue"}
+      </Button>
+      <button
+        type="button"
+        onClick={() => setView("agent")}
+        className="inline-flex items-center justify-center gap-2 px-[13px] py-[1px] rounded-[4px] border border-transparent heading-50 text-[var(--color-specialty-text-interactive-alt-default)] hover:bg-[var(--color-fill-secondary-hover)] transition-colors mx-auto"
+      >
+        Switch to agent mode
+      </button>
+    </div>
+  );
+
+  if (!isOpen) return null;
+  return <div className="flex flex-col h-full">
 
       {/* Content Area */}
       <div className="relative flex flex-1 overflow-hidden">
@@ -3805,64 +4052,75 @@ const CreateViewModal = ({
           {view === "landing" && (
             <motion.div
               key="landing"
-              className="flex-1 flex flex-col items-center justify-center px-6 overflow-y-auto"
+              style={{ width: leftPanelWidth }}
+              className="relative shrink-0 flex flex-col ml-12 my-6 rounded-lg shadow-100 border border-core-subtle bg-card overflow-hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0, scale: 0.97 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
             >
-              <div className="w-full max-w-2xl py-12 space-y-8">
-                <motion.div
-                  className="text-center space-y-3"
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.05 }}
-                >
-                  <h1
-                    className="bg-clip-text text-transparent font-medium leading-[1.15] text-[40px]"
-                    style={{ backgroundImage: "linear-gradient(114deg, #fc0849 0%, #d20688 100%)" }}
+              <div className="flex-1 flex flex-col justify-center px-6 py-12 overflow-y-auto">
+                <div className="w-full space-y-8">
+                  <motion.div
+                    className="space-y-3"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.05 }}
                   >
-                    Welcome to the campaign creation agent
-                  </h1>
-                  <p className="body-200 text-muted-foreground">
-                    Tell me what kind of campaign you want and I'll build the settings, filters, and columns for you.
-                  </p>
-                </motion.div>
-
-                <motion.div layoutId="campaign-agent-textarea" className="space-y-3" transition={{ duration: 0.4, ease: "easeInOut" }}>
-                  <AITextarea
-                    value={filterPromptText}
-                    onChange={setFilterPromptText}
-                    onSubmit={handleAgentTurn}
-                    placeholder="Describe the type of campaign you want…"
-                    disabled={agentBusy}
-                    rows={4}
-                  />
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3, delay: 0.15 }}
-                  className="space-y-8"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1 h-px bg-border" />
-                    <span className="body-100 text-muted-foreground">or</span>
-                    <div className="flex-1 h-px bg-border" />
-                  </div>
-
-                  <div className="flex justify-center">
-                    <Button
-                      variant="secondary"
-                      size="medium"
-                      onClick={() => { setView("wizard"); setCurrentStep("settings"); }}
-                      disabled={agentBusy}
+                    <h1
+                      className="bg-clip-text"
+                      style={{
+                        fontFamily: '"HubSpot Sans", sans-serif',
+                        fontSize: "32px",
+                        fontWeight: 300,
+                        lineHeight: "40px",
+                        backgroundImage: "linear-gradient(135deg, rgb(255, 72, 0) 20%, rgb(210, 6, 136) 80%)",
+                        WebkitTextFillColor: "transparent",
+                        marginBottom: 0,
+                      }}
                     >
-                      Create campaign manually
-                    </Button>
+                      Welcome to the campaign creation agent
+                    </h1>
+                    <p className="body-100 text-core-default">
+                      Tell me what kind of campaign you want and I'll build the settings, filters, and columns for you.
+                    </p>
+                  </motion.div>
+
+                  <div className="space-y-3">
+                    <AITextarea
+                      value={filterPromptText}
+                      onChange={setFilterPromptText}
+                      onSubmit={handleAgentTurn}
+                      placeholder="Describe the type of campaign you want…"
+                      disabled={agentBusy}
+                      rows={4}
+                    />
                   </div>
-                </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3, delay: 0.15 }}
+                    className="space-y-6"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1 h-px bg-border" />
+                      <span className="body-100 text-muted-foreground">or</span>
+                      <div className="flex-1 h-px bg-border" />
+                    </div>
+
+                    <div className="flex justify-center">
+                      <Button
+                        variant="secondary"
+                        size="medium"
+                        onClick={() => { setView("wizard"); setCurrentStep("settings"); }}
+                        disabled={agentBusy}
+                      >
+                        Create campaign manually
+                      </Button>
+                    </div>
+                  </motion.div>
+                </div>
               </div>
             </motion.div>
           )}
@@ -3870,15 +4128,13 @@ const CreateViewModal = ({
           {view === "agent" && (
             <motion.div
               key="agent"
-              className="flex flex-1 overflow-hidden"
+              style={{ width: leftPanelWidth }}
+              className="relative shrink-0 flex flex-col ml-12 my-6 rounded-lg shadow-100 border border-core-subtle bg-card overflow-hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
             >
-              {/* Left: chat */}
-              <div style={{ width: leftPanelWidth }} className="relative shrink-0 border-r border-[var(--color-border-container-default)] flex flex-col bg-card">
-                {resizeHandle}
                 <motion.div
                   className="px-4 pt-4 pb-3 border-b border-[var(--color-border-container-default)] flex items-center gap-2"
                   initial={{ opacity: 0, y: -8 }}
@@ -3923,7 +4179,7 @@ const CreateViewModal = ({
                     )}
                   </AnimatePresence>
                 </div>
-                <motion.div layoutId="campaign-agent-textarea" className="border-t border-[var(--color-border-container-default)] p-3 space-y-2" transition={{ duration: 0.4, ease: "easeInOut" }}>
+                <div className="border-t border-[var(--color-border-container-default)] p-3">
                   <AITextarea
                     value={filterPromptText}
                     onChange={setFilterPromptText}
@@ -3932,36 +4188,31 @@ const CreateViewModal = ({
                     disabled={agentBusy}
                     rows={3}
                   />
-                  <button
-                    onClick={() => { setView("wizard"); setCurrentStep("settings"); }}
-                    className="w-full body-75 text-[var(--color-text-brand-default)] hover:underline py-1"
-                  >
-                    Open campaign details to edit manually
-                  </button>
-                </motion.div>
-              </div>
-
-              {/* Right: preview */}
-              <motion.div
-                className="flex-1 flex flex-col bg-[var(--color-fill-surface-recessed)] overflow-y-auto"
-                initial={{ opacity: 0, x: 24 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.35, delay: 0.1, ease: "easeOut" }}
-              >
-                <div className="p-6">
-                  {renderPreviewHeader()}
-                  {renderPreviewTable()}
-                  {renderResultsCount()}
                 </div>
-              </motion.div>
+                <div className="border-t border-[var(--color-border-container-default)] p-3 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => { setView("wizard"); setCurrentStep("settings"); }}
+                    className="inline-flex items-center justify-center gap-2 px-[13px] py-[1px] rounded-[4px] border border-transparent heading-50 text-[var(--color-specialty-text-interactive-alt-default)] hover:bg-[var(--color-fill-secondary-hover)] transition-colors"
+                  >
+                    Switch to manual mode
+                  </button>
+                </div>
             </motion.div>
           )}
-        </AnimatePresence>
 
-        {view === "wizard" && currentStep === "filters" && <>
-            {/* Single Column: Filter Groups with Add Filter Popovers */}
-            <div style={{ width: leftPanelWidth }} className="relative shrink-0 border-r border-[var(--color-border-container-default)] flex flex-col">
-              {resizeHandle}
+        {view === "wizard" && currentStep === "filters" && (
+            /* Single Column: Filter Groups with Add Filter Popovers */
+            <motion.div
+              key="wizard-filters"
+              style={{ width: leftPanelWidth }}
+              className="relative shrink-0 flex flex-col ml-12 my-6 rounded-lg shadow-100 border border-core-subtle bg-card overflow-hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+            >
+              {wizardStepperBar}
               <div className="p-4 pb-2 border-b border-[var(--color-border-container-default)]">
                 <h3 className="heading-200 text-[var(--color-text-core-default)]">Filter groups</h3>
               </div>
@@ -4177,22 +4428,22 @@ const CreateViewModal = ({
                   </Button>
                 </div>
               </ScrollArea>
-            </div>
+              {wizardFooter}
+            </motion.div>
+          )}
 
-            {/* Column 3: Preview (~50%) */}
-            <div className="flex-1 flex flex-col bg-[var(--color-fill-surface-recessed)]">
-              <div className="p-6">
-                {renderPreviewHeader()}
-                {renderPreviewTable()}
-                {renderResultsCount()}
-              </div>
-            </div>
-          </>}
-
-        {view === "wizard" && currentStep === "columns" && <>
-          {/* Left Panel - Column Selection */}
-          <div style={{ width: leftPanelWidth }} className="relative shrink-0 border-r border-[var(--color-border-core-default)] flex flex-col">
-            {resizeHandle}
+        {view === "wizard" && currentStep === "columns" && (
+          /* Left Panel - Column Selection */
+          <motion.div
+            key="wizard-columns"
+            style={{ width: leftPanelWidth }}
+            className="relative shrink-0 flex flex-col ml-12 my-6 rounded-lg shadow-100 border border-core-subtle bg-card overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+          >
+            {wizardStepperBar}
             <div className="p-6 border-b border-[var(--color-border-core-default)]">
               <h3 className="heading-200 text-[var(--color-text-core-default)] mb-4">Select Columns</h3>
               
@@ -4287,153 +4538,50 @@ const CreateViewModal = ({
                 {selectedColumns.length} columns selected
               </span>
             </div>
-          </div>
+            {wizardFooter}
+          </motion.div>
+        )}
 
-          {/* Right Panel - Preview */}
-          <div className="flex-1 flex flex-col bg-[var(--color-fill-surface-recessed)] overflow-y-auto">
-            <div className="p-6">
-            {renderPreviewHeader()}
-            {renderPreviewTable()}
-            {renderResultsCount()}
-            </div>
-          </div>
-        </>}
-
-        {view === "wizard" && currentStep === "settings" && <>
-          {/* Left Panel - Settings Controls */}
-          <div style={{ width: leftPanelWidth }} className="relative shrink-0 border-r border-[var(--color-border-core-default)] flex flex-col">
-            {resizeHandle}
+        {view === "wizard" && currentStep === "settings" && (
+          /* Left Panel - Settings Controls */
+          <motion.div
+            key="wizard-settings"
+            style={{ width: leftPanelWidth }}
+            className="relative shrink-0 flex flex-col ml-12 my-6 rounded-lg shadow-100 border border-core-subtle bg-card overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+          >
+            {wizardStepperBar}
             <ScrollArea className="flex-1">
               <div className="p-6 space-y-6 divide-y divide-[var(--color-border-container-default)] [&>div:not(:first-child)]:pt-6">
                 {/* Based on Section - FIRST */}
-                <div>
-                  <h3 className="heading-200 text-[var(--color-text-core-default)] mb-4">Based on</h3>
-                  <RadioGroup value={campaignBasis} onValueChange={(v) => setCampaignBasis(v as "companies" | "portals")} className="space-y-3">
+                <FormControl label="Based on">
+                  <RadioGroup value={campaignBasis} onValueChange={(v) => setCampaignBasis(v as "companies" | "portals" | "contacts")} className="space-y-1">
                     <div className="flex items-center gap-2">
                       <RadioGroupItem value="companies" id="basis-companies" />
-                      <Label htmlFor="basis-companies" className="body-75 text-[var(--color-text-core-default)] cursor-pointer">Companies</Label>
+                      <Label htmlFor="basis-companies" className="body-200 text-[var(--color-text-core-default)] cursor-pointer">Companies</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="contacts" id="basis-contacts" />
+                      <Label htmlFor="basis-contacts" className="body-200 text-[var(--color-text-core-default)] cursor-pointer">Contacts</Label>
                     </div>
                     <div className="flex items-center gap-2">
                       <RadioGroupItem value="portals" id="basis-portals" />
-                      <Label htmlFor="basis-portals" className="body-75 text-[var(--color-text-core-default)] cursor-pointer">Portals</Label>
+                      <Label htmlFor="basis-portals" className="body-200 text-[var(--color-text-core-default)] cursor-pointer">Portals</Label>
                     </div>
                   </RadioGroup>
-                </div>
-
-                {/* Campaign Type Section */}
-                <div>
-                  <h3 className="heading-200 text-[var(--color-text-core-default)] mb-4">Campaign type</h3>
-                  <div className="space-y-4">
-                    {/* Table View */}
-                    <div>
-                      <span className="body-75 text-[var(--color-text-core-default)] mb-2 block">Table view</span>
-                      <button
-                        onClick={() => setViewType("table")}
-                        className={`w-full p-4 rounded-lg border-2 transition-colors ${
-                          viewType === "table"
-                            ? "border-[var(--color-fill-brand-default)] bg-[var(--color-fill-surface-default)] shadow-100"
-                            : "border-[var(--color-border-core-default)] bg-[var(--color-fill-surface-default)] hover:border-[var(--color-border-core-subtle)]"
-                        }`}
-                      >
-                        {/* Mini table illustration */}
-                        <div className="rounded border border-[var(--color-border-container-default)] overflow-hidden">
-                          {/* Header row */}
-                          <div className="flex gap-1.5 px-2 py-1.5 bg-[var(--color-fill-surface-recessed)]">
-                            <div className="h-1.5 w-10 bg-[var(--color-border-core-default)] rounded-full" />
-                            <div className="h-1.5 w-14 bg-[var(--color-border-core-default)] rounded-full" />
-                            <div className="h-1.5 flex-1 bg-[var(--color-border-core-default)] rounded-full" />
-                          </div>
-                          {/* Data rows */}
-                          {[0, 1, 2].map(r => (
-                            <div key={r} className={`flex gap-1.5 px-2 py-1.5 ${r < 2 ? 'border-b border-[var(--color-border-container-default)]' : ''}`}>
-                              <div className="h-1.5 w-10 bg-[var(--color-fill-secondary-subtle)] rounded-full" />
-                              <div className="h-1.5 w-14 bg-[var(--color-fill-secondary-subtle)] rounded-full" />
-                              <div className="h-1.5 flex-1 bg-[var(--color-fill-secondary-subtle)] rounded-full" />
-                            </div>
-                          ))}
-                        </div>
-                      </button>
-                    </div>
-
-                    {/* Nested Contact View */}
-                    <div>
-                      <span className="body-75 text-[var(--color-text-core-default)] mb-2 block">Nested contact view</span>
-                      <button
-                        onClick={() => setViewType("nested")}
-                        className={`w-full p-4 rounded-lg border-2 transition-colors ${
-                          viewType === "nested"
-                            ? "border-[var(--color-fill-brand-default)] bg-[var(--color-fill-surface-default)] shadow-100"
-                            : "border-[var(--color-border-core-default)] bg-[var(--color-fill-surface-default)] hover:border-[var(--color-border-core-subtle)]"
-                        }`}
-                      >
-                        {/* Mini nested table illustration */}
-                        <div className="rounded border border-[var(--color-border-container-default)] overflow-hidden">
-                          {/* Parent row 1 */}
-                          <div className="flex gap-1.5 px-2 py-1.5 bg-[var(--color-fill-surface-recessed)] border-b border-[var(--color-border-container-default)]">
-                            <div className="h-1.5 w-3 bg-[var(--color-border-core-default)] rounded-full" />
-                            <div className="h-1.5 flex-1 bg-[var(--color-border-core-default)] rounded-full" />
-                            <div className="h-1.5 w-10 bg-[var(--color-border-core-default)] rounded-full" />
-                          </div>
-                          {/* Child rows */}
-                          {[0, 1].map(r => (
-                            <div key={r} className={`flex gap-1.5 px-2 py-1 pl-5 ${r < 1 ? 'border-b border-[var(--color-border-container-default)]' : ''}`}>
-                              <div className="h-1 w-2 bg-[var(--color-fill-secondary-subtle)] rounded-full" />
-                              <div className="h-1 flex-1 bg-[var(--color-fill-secondary-subtle)] rounded-full" />
-                              <div className="h-1 w-8 bg-[var(--color-fill-secondary-subtle)] rounded-full" />
-                            </div>
-                          ))}
-                          {/* Parent row 2 */}
-                          <div className="flex gap-1.5 px-2 py-1.5 bg-[var(--color-fill-surface-recessed)] border-t border-[var(--color-border-container-default)]">
-                            <div className="h-1.5 w-3 bg-[var(--color-border-core-default)] rounded-full" />
-                            <div className="h-1.5 flex-1 bg-[var(--color-border-core-default)] rounded-full" />
-                            <div className="h-1.5 w-10 bg-[var(--color-border-core-default)] rounded-full" />
-                          </div>
-                          <div className="flex gap-1.5 px-2 py-1 pl-5">
-                            <div className="h-1 w-2 bg-[var(--color-fill-secondary-subtle)] rounded-full" />
-                            <div className="h-1 flex-1 bg-[var(--color-fill-secondary-subtle)] rounded-full" />
-                            <div className="h-1 w-8 bg-[var(--color-fill-secondary-subtle)] rounded-full" />
-                          </div>
-                        </div>
-                      </button>
-                    </div>
-
-                    {/* Book of Business View */}
-                    <div>
-                      <span className="body-75 text-[var(--color-text-core-default)] mb-2 block">Book of business view</span>
-                      <button
-                        onClick={() => setViewType("book")}
-                        className={`w-full p-4 rounded-lg border-2 transition-colors ${
-                          viewType === "book"
-                            ? "border-[var(--color-fill-brand-default)] bg-[var(--color-fill-surface-default)] shadow-100"
-                            : "border-[var(--color-border-core-default)] bg-[var(--color-fill-surface-default)] hover:border-[var(--color-border-core-subtle)]"
-                        }`}
-                      >
-                        {/* Mini card list illustration */}
-                        <div className="space-y-1.5">
-                          {[0, 1, 2].map(r => (
-                            <div key={r} className="flex items-center gap-2 rounded border border-[var(--color-border-container-default)] px-2 py-1.5">
-                              <div className="h-5 w-5 bg-[var(--color-fill-secondary-subtle)] rounded-full shrink-0" />
-                              <div className="flex-1 space-y-1">
-                                <div className="h-1.5 w-3/4 bg-[var(--color-border-core-default)] rounded-full" />
-                                <div className="h-1 w-1/2 bg-[var(--color-fill-secondary-subtle)] rounded-full" />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                </FormControl>
 
                 {/* Completion Criteria Section */}
-                <div>
-                  <h3 className="heading-200 text-[var(--color-text-core-default)] mb-4">Completion criteria</h3>
+                <FormControl label="Completion criteria">
                   <div className="flex items-center gap-2 flex-wrap">
                     <Select value={completionAction} onValueChange={setCompletionAction}>
-                      <SelectTrigger className="w-auto min-w-[160px] h-9 rounded-[4px] border-[var(--color-border-secondary-default,#8A8A8A)] bg-[var(--color-fill-secondary-default,#FFF)] body-75 text-[var(--color-text-core-default)]">
+                      <SelectTrigger className="w-[180px]">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-[var(--color-fill-surface-default,#FFF)] border-[var(--color-border-core-default)] z-[9999]">
+                      <SelectContent className="z-[9999]">
                         <SelectItem value="add-to-sequence">Add to a sequence</SelectItem>
                         <SelectItem value="cold-call">Cold Call</SelectItem>
                         <SelectItem value="log-email">Log an email</SelectItem>
@@ -4446,77 +4594,55 @@ const CreateViewModal = ({
                       min={1}
                       value={completionCount}
                       onChange={(e) => setCompletionCount(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-16 h-9 rounded-[4px] border border-[var(--color-border-secondary-default,#8A8A8A)] bg-[var(--color-fill-secondary-default,#FFF)] body-75 text-[var(--color-text-core-default)] text-center px-2"
+                      className="w-16 h-10 rounded-[3px] border border-[var(--color-border-core-default,#8A8A8A)] bg-[var(--color-fill-field-default,#FFF)] body-200 text-[var(--color-text-core-default)] text-center px-2"
                     />
-                    <span className="body-75 text-[var(--color-text-core-default)]">time per</span>
+                    <span className="body-100 text-[var(--color-text-core-default)]">time per</span>
                     <Select value={completionPer} onValueChange={(v) => setCompletionPer(v as "company" | "contact")}>
-                      <SelectTrigger className="w-auto min-w-[110px] h-9 rounded-[4px] border-[var(--color-border-secondary-default,#8A8A8A)] bg-[var(--color-fill-secondary-default,#FFF)] body-75 text-[var(--color-text-core-default)]">
+                      <SelectTrigger className="w-[120px]">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-[var(--color-fill-surface-default,#FFF)] border-[var(--color-border-core-default)] z-[9999]">
+                      <SelectContent className="z-[9999]">
                         <SelectItem value="company">Company</SelectItem>
                         <SelectItem value="contact">Contact</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
+                </FormControl>
 
                 {/* Expiry Date Section */}
-                <div>
-                  <h3 className="heading-200 text-[var(--color-text-core-default)] mb-4">Expiry date</h3>
+                <FormControl label="Expiry date">
                   <Popover>
                     <PopoverTrigger asChild>
-                      <button className="w-full flex items-center justify-between px-3 py-2 border border-[var(--color-border-core-default)] rounded-[4px] bg-[var(--color-fill-surface-default)] hover:bg-[var(--color-fill-secondary-hover)]">
-                        <span className="body-100 text-[var(--color-text-core-default)]">
-                          {expiryDate ? format(expiryDate, "PPP") : "Select expiry date"}
-                        </span>
-                        <Calendar className="h-4 w-4 text-[var(--color-text-core-subtle)]" />
-                      </button>
+                      <SelectAnchor
+                        placeholder="Select expiry date"
+                        trailingIcon={<TrellisIcon name="date" size={16} />}
+                      >
+                        {expiryDate ? format(expiryDate, "PPP") : null}
+                      </SelectAnchor>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-[var(--color-fill-surface-default)] border-[var(--color-border-core-default)] z-[100]" align="start">
-                      <CalendarComponent 
-                        mode="single" 
-                        selected={expiryDate} 
+                    <PopoverContent className="w-auto p-0 bg-[var(--color-fill-surface-default)] border border-[var(--color-border-core-subtle)] rounded-[4px] z-[100]" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={expiryDate}
                         onSelect={setExpiryDate}
                         disabled={(date) => date < new Date()}
-                        initialFocus 
-                        className="p-3 pointer-events-auto" 
+                        initialFocus
+                        className="p-3 pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
-                </div>
-
-                {/* Status Section */}
-                <div>
-                  <h3 className="heading-200 text-[var(--color-text-core-default)] mb-4">Status</h3>
-                  <Select value={campaignStatus} onValueChange={(v) => setCampaignStatus(v as CampaignStatus)}>
-                    <SelectTrigger className="w-auto min-w-[160px] h-9 rounded-[4px] border-[var(--color-border-secondary-default,#8A8A8A)] bg-[var(--color-fill-secondary-default,#FFF)] body-75 text-[var(--color-text-core-default)]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[var(--color-fill-surface-default,#FFF)] border-[var(--color-border-core-default)] z-[9999]">
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="scheduled">Scheduled</SelectItem>
-                      <SelectItem value="live">Live</SelectItem>
-                      <SelectItem value="ended">Ended</SelectItem>
-                      <SelectItem value="archived">Archived</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                </FormControl>
 
                 {/* Access Section */}
-                <div>
-                  <h3 className="heading-200 text-[var(--color-text-core-default)] mb-4">Access</h3>
+                <FormControl label="Access">
                   <Popover>
                     <PopoverTrigger asChild>
-                      <button
-                        className="w-full flex items-center justify-between px-3 py-2 rounded-[4px] border border-[var(--color-border-secondary-default,#8A8A8A)] bg-[var(--color-fill-secondary-default,#FFF)] body-100 text-[var(--color-text-core-default)] hover:bg-[var(--color-fill-secondary-hover)]"
-                      >
-                        <span className="truncate">{getAccessSummary()}</span>
-                        <ChevronDown className="h-4 w-4 shrink-0 ml-2 text-[var(--color-text-core-subtle)]" />
-                      </button>
+                      <SelectAnchor placeholder="Select teams…">
+                        {selectedTeams.length > 0 ? getAccessSummary() : null}
+                      </SelectAnchor>
                     </PopoverTrigger>
                     <PopoverContent
-                      className="w-[340px] p-0 bg-[var(--color-fill-surface-default,#FFF)] border border-[var(--color-border-core-default)] shadow-lg z-[9999]"
+                      className="w-[340px] p-0 bg-[var(--color-fill-surface-default,#FFF)] border border-[var(--color-border-core-subtle)] rounded-[4px] shadow-lg z-[9999]"
                       align="start"
                       sideOffset={4}
                     >
@@ -4551,11 +4677,10 @@ const CreateViewModal = ({
                       </ScrollArea>
                     </PopoverContent>
                   </Popover>
-                </div>
+                </FormControl>
 
                 {/* Enablement Materials Section */}
-                <div>
-                  <h3 className="heading-200 text-[var(--color-text-core-default)] mb-4">Enablement materials</h3>
+                <FormControl label="Enablement materials">
                   <div className="space-y-2 mb-3">
                     {enablementMaterials.length === 0 ? (
                       <p className="body-75 text-[var(--color-text-core-subtle)]">No materials added yet.</p>
@@ -4582,7 +4707,6 @@ const CreateViewModal = ({
                       placeholder="Title (e.g. Migration Case Study)"
                       value={newMaterialTitle}
                       onChange={(e) => setNewMaterialTitle(e.target.value)}
-                      className="h-9 body-75"
                     />
                     <div className="flex gap-2">
                       <div className="relative flex-1">
@@ -4591,11 +4715,11 @@ const CreateViewModal = ({
                           placeholder="URL"
                           value={newMaterialUrl}
                           onChange={(e) => setNewMaterialUrl(e.target.value)}
-                          className="h-9 pl-8 body-75"
+                          className="pl-8"
                         />
                       </div>
                       <Select value={newMaterialType} onValueChange={(v) => setNewMaterialType(v as EnablementMaterial["type"])}>
-                        <SelectTrigger className="w-[120px] h-9 body-75">
+                        <SelectTrigger className="w-[140px]">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="z-[9999]">
@@ -4618,20 +4742,36 @@ const CreateViewModal = ({
                       Add material
                     </Button>
                   </div>
-                </div>
+                </FormControl>
               </div>
             </ScrollArea>
-          </div>
+            {wizardFooter}
+          </motion.div>
+        )}
+        </AnimatePresence>
 
-          {/* Right Panel - Preview */}
-          <div className="flex-1 flex flex-col bg-[var(--color-fill-surface-recessed)] overflow-y-auto">
-            <div className="p-6">
-            {renderPreviewHeader()}
-            {renderPreviewTable()}
-            {renderResultsCount()}
+        {dragHandleColumn}
+
+        {/* Persistent right pane — skeleton until the user has sent an agent prompt or added a filter */}
+        <div className="flex-1 flex flex-col bg-[var(--color-fill-surface-recessed)] overflow-y-auto">
+          {!(chatMessages.some(m => m.role === "user") || filterGroups.some(g => g.filters.length > 0)) ? (
+            renderSkeletonPreview()
+          ) : (
+            <div className="py-6 pr-12">
+              {campaignBasis === "contacts"
+                ? renderContactsPreview()
+                : campaignBasis === "portals"
+                ? renderPortalsPreview()
+                : (
+                  <>
+                    {renderPreviewHeader()}
+                    {renderPreviewTable()}
+                    {renderResultsCount()}
+                  </>
+                )}
             </div>
-          </div>
-        </>}
+          )}
+        </div>
       </div>
     </div>;
 };
