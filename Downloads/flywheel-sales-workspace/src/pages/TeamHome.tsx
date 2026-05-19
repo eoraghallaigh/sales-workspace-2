@@ -78,6 +78,33 @@ const formatDateRange = (range?: { start: string; end?: string }) => {
   return `${start} – ${end}`;
 };
 
+type CycleStatus = "Current" | "Upcoming" | "Past";
+
+const getCycleStatus = (range?: {
+  start: string;
+  end?: string;
+}): CycleStatus => {
+  if (!range) return "Current";
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const start = new Date(range.start);
+  if (today < start) return "Upcoming";
+  if (range.end) {
+    const end = new Date(range.end);
+    if (today > end) return "Past";
+  }
+  return "Current";
+};
+
+const CYCLE_STATUS_VARIANT: Record<
+  CycleStatus,
+  "status-green" | "status-blue" | "status-gray"
+> = {
+  Current: "status-green",
+  Upcoming: "status-blue",
+  Past: "status-gray",
+};
+
 type TileCardProps = {
   id: string;
   title: string;
@@ -336,49 +363,45 @@ const TeamHome = () => {
                 </p>
               </header>
               <ul className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                {cycles.map((cycle) => (
-                  <li key={cycle.slug}>
-                    <Link to={`/${cycle.slug}`} className="block group h-full">
-                      <Card className="h-full shadow-100 transition-colors group-hover:border-border-hover">
-                        <CardContent className="p-4 flex items-start gap-3">
-                          <Badge
-                            variant="outline"
-                            className="detail-100 font-mono uppercase shrink-0 mt-0.5"
-                          >
-                            {cycle.label}
-                          </Badge>
-                          <div className="flex flex-col gap-1 min-w-0 flex-1">
-                            <p className="heading-100 text-foreground group-hover:text-text-interactive transition-colors">
-                              {cycle.name}
-                            </p>
-                            <p className="body-100 text-muted-foreground line-clamp-2">
-                              {cycle.tagline}
-                            </p>
-                            <div className="flex flex-wrap items-center gap-2 mt-1">
-                              <Badge variant={cycle.status.badgeVariant}>
-                                {cycle.status.label}
+                {cycles.map((cycle) => {
+                  const status = getCycleStatus(cycle.dateRange);
+                  const dateRangeText = formatDateRange(cycle.dateRange);
+                  return (
+                    <li key={cycle.slug}>
+                      <Link to={`/${cycle.slug}`} className="block group h-full">
+                        <Card className="h-full shadow-100 transition-colors group-hover:border-border-hover">
+                          <CardContent className="p-4 flex flex-col gap-3">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex flex-col gap-0.5 min-w-0">
+                                <p className="heading-300 text-foreground group-hover:text-text-interactive transition-colors">
+                                  {cycle.label}
+                                </p>
+                                {dateRangeText ? (
+                                  <p className="body-100 text-muted-foreground">
+                                    {dateRangeText}
+                                  </p>
+                                ) : null}
+                              </div>
+                              <Badge
+                                variant={CYCLE_STATUS_VARIANT[status]}
+                                className="shrink-0"
+                              >
+                                {status}
                               </Badge>
-                              {formatDateRange(cycle.dateRange) ? (
-                                <span className="detail-200 text-muted-foreground">
-                                  {formatDateRange(cycle.dateRange)}
-                                </span>
-                              ) : null}
-                              <span className="detail-200 text-muted-foreground">
-                                {cycle.iterations.length} iteration
-                                {cycle.iterations.length === 1 ? "" : "s"}
-                              </span>
                             </div>
-                          </div>
-                          <TrellisIcon
-                            name="right"
-                            size={14}
-                            className="opacity-50 group-hover:opacity-100 transition-opacity shrink-0 mt-2"
-                          />
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  </li>
-                ))}
+                            {cycle.commitments.length > 0 ? (
+                              <ul className="body-100 text-foreground flex flex-col gap-1 list-disc pl-5">
+                                {cycle.commitments.map((c) => (
+                                  <li key={c.id}>{c.title}</li>
+                                ))}
+                              </ul>
+                            ) : null}
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             </section>
 
