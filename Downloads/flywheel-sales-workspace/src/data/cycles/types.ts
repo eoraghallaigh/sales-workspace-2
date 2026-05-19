@@ -33,8 +33,8 @@ export interface IterationEntry {
   id: IterationId;
   date: string;
   label: string;
-  whatChanged: string;
-  why: string;
+  whatChanged: string[];
+  why: string[];
   shownTo?: AudienceTag[];
   screenshots: IterationScreenshot[];
   prUrl?: string;

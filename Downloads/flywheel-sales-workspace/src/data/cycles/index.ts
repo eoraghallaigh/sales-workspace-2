@@ -1,3 +1,4 @@
+import { q2c1 } from "./q2c1";
 import { q2c2 } from "./q2c2";
 import type { Cycle, CycleMilestone, CycleSlug } from "./types";
 
@@ -18,7 +19,7 @@ export const cycleSchedule: Record<CycleSlug, CycleMilestone & { end: string }> 
 
 // All cycles with their own page record, newest first. New cycles are added
 // at the top by the /freeze-cycle skill.
-export const cycles: Cycle[] = [q2c2];
+export const cycles: Cycle[] = [q2c2, q2c1];
 
 // The cycle currently being shipped to. `/ship` appends iterations here.
 // When a cycle wraps, run /freeze-cycle to fork pages into the next slug.

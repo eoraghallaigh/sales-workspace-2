@@ -54,11 +54,11 @@ const CommitmentSection = ({
             Problem / Opportunity
           </p>
           {commitment.problem ? (
-            <p className="body-200 text-foreground whitespace-pre-line">
+            <p className="body-100 text-foreground whitespace-pre-line">
               {commitment.problem}
             </p>
           ) : (
-            <p className="body-200 text-muted-foreground">
+            <p className="body-100 text-muted-foreground">
               No problem statement captured yet.
             </p>
           )}
@@ -69,7 +69,7 @@ const CommitmentSection = ({
             Design goals
           </p>
           {commitment.designGoals.length === 0 ? (
-            <p className="body-200 text-muted-foreground">
+            <p className="body-100 text-muted-foreground">
               No design goals captured yet.
             </p>
           ) : (
@@ -84,7 +84,7 @@ const CommitmentSection = ({
                     size={16}
                     className="shrink-0 mt-1"
                   />
-                  <p className="body-200 text-foreground">{goal}</p>
+                  <p className="body-100 text-foreground">{goal}</p>
                 </li>
               ))}
             </ul>
@@ -96,7 +96,7 @@ const CommitmentSection = ({
             User feedback
           </p>
           {commitment.feedback.length === 0 ? (
-            <p className="body-200 text-muted-foreground">
+            <p className="body-100 text-muted-foreground">
               No feedback captured yet.
             </p>
           ) : (
@@ -112,7 +112,7 @@ const CommitmentSection = ({
                     className="shrink-0 mt-0.5"
                   />
                   <div className="flex flex-col gap-1 min-w-0">
-                    <p className="body-300 text-foreground italic">
+                    <p className="body-100 text-foreground italic">
                       “{q.quote}”
                     </p>
                     <p className="detail-100 text-muted-foreground">
@@ -131,7 +131,7 @@ const CommitmentSection = ({
             Metrics & KPIs
           </p>
           {commitment.metrics.length === 0 ? (
-            <p className="body-200 text-muted-foreground">
+            <p className="body-100 text-muted-foreground">
               No metrics captured yet.
             </p>
           ) : (
@@ -215,7 +215,7 @@ const CyclePage = () => {
                     {cycle.label}
                   </h1>
                   {formatCycleDates(cycle.dateRange) ? (
-                    <p className="body-300 text-muted-foreground">
+                    <p className="body-100 text-muted-foreground">
                       {formatCycleDates(cycle.dateRange)}
                     </p>
                   ) : null}
@@ -298,7 +298,7 @@ const CyclePage = () => {
                 title="Commitments"
                 description="No commitments scoped yet. Add one in src/data/cycles/<slug>.ts."
               >
-                <p className="body-200 text-muted-foreground">
+                <p className="body-100 text-muted-foreground">
                   Each commitment is a feature with its own problem, design
                   goals, feedback, and KPIs.
                 </p>
