@@ -55,7 +55,7 @@ const EntryHeader = ({
     ) : null}
     {showSummary ? (
       <span className="body-100 text-foreground line-clamp-1 min-w-0">
-        {entry.whatChanged}
+        {entry.whatChanged[0]}
       </span>
     ) : null}
     {entry.prUrl ? (
@@ -90,7 +90,7 @@ const IterationsBody = ({
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   if (ordered.length === 0) {
-    return <p className="body-200 text-muted-foreground">{emptyMessage}</p>;
+    return <p className="body-100 text-muted-foreground">{emptyMessage}</p>;
   }
 
   const [latest, ...previous] = ordered;
