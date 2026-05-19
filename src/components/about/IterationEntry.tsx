@@ -14,13 +14,21 @@ export const IterationEntry = ({ entry }: IterationEntryProps) => {
           <p className="heading-50 text-muted-foreground uppercase tracking-wide mb-1">
             What changed
           </p>
-          <p className="body-200 text-foreground">{entry.whatChanged}</p>
+          <ul className="body-100 text-foreground flex flex-col gap-1 list-disc pl-5">
+            {entry.whatChanged.map((bullet, i) => (
+              <li key={i}>{bullet}</li>
+            ))}
+          </ul>
         </div>
         <div>
           <p className="heading-50 text-muted-foreground uppercase tracking-wide mb-1">
             Why
           </p>
-          <p className="body-200 text-foreground">{entry.why}</p>
+          <ul className="body-100 text-foreground flex flex-col gap-1 list-disc pl-5">
+            {entry.why.map((bullet, i) => (
+              <li key={i}>{bullet}</li>
+            ))}
+          </ul>
         </div>
       </div>
 
