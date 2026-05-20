@@ -11,7 +11,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        'lexend': ['Lexend Deca', 'Helvetica', 'Arial', 'sans-serif'],
+        'lexend': ['HubSpot Sans', 'Helvetica', 'Arial', 'sans-serif'],
         'source-code': ['Source Code Pro', 'Consolas', 'Monaco', 'Courier New', 'monospace'],
       },
       colors: {
@@ -392,60 +392,60 @@ const config: Config = {
     function({ addUtilities }) {
       addUtilities({
         // Display Typography
-        '.display-100': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '56px', lineHeight: '72px', letterSpacing: '-0.32px', fontWeight: '500' },
-        '.display-200': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '66px', lineHeight: '76px', letterSpacing: '-0.32px', fontWeight: '500' },
-        '.display-300': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '76px', lineHeight: '88px', letterSpacing: '-0.32px', fontWeight: '500' },
-        '.display-400': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '84px', lineHeight: '96px', letterSpacing: '-0.32px', fontWeight: '500' },
-        '.display-500': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '94px', lineHeight: '100px', letterSpacing: '-0.32px', fontWeight: '500' },
+        '.display-100': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '56px', lineHeight: '72px', letterSpacing: '-0.32px', fontWeight: '500' },
+        '.display-200': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '66px', lineHeight: '76px', letterSpacing: '-0.32px', fontWeight: '500' },
+        '.display-300': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '76px', lineHeight: '88px', letterSpacing: '-0.32px', fontWeight: '500' },
+        '.display-400': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '84px', lineHeight: '96px', letterSpacing: '-0.32px', fontWeight: '500' },
+        '.display-500': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '94px', lineHeight: '100px', letterSpacing: '-0.32px', fontWeight: '500' },
         
         // Heading Typography
-        '.heading-25': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '12px', lineHeight: '18px', fontWeight: '600' },
-        '.heading-50': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '14px', lineHeight: '18px', fontWeight: '600' },
-        '.heading-100': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '16px', lineHeight: '20px', fontWeight: '600' },
-        '.heading-200': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '18px', lineHeight: '24px', fontWeight: '500' },
-        '.heading-300': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '20px', lineHeight: '24px', fontWeight: '600' },
-        '.heading-400': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '22px', lineHeight: '27px', fontWeight: '500' },
-        '.heading-500': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '24px', lineHeight: '29px', fontWeight: '300' },
-        '.heading-600': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '32px', lineHeight: '39px', fontWeight: '700' },
-        '.heading-700': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '36px', lineHeight: '44px', letterSpacing: '-0.16px', fontWeight: '500' },
-        '.heading-800': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '42px', lineHeight: '52px', letterSpacing: '-0.16px', fontWeight: '500' },
-        '.heading-900': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '46px', lineHeight: '56px', letterSpacing: '-0.16px', fontWeight: '500' },
-        '.heading-1000': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '55px', lineHeight: '67px', fontWeight: '700' },
+        '.heading-25': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '12px', lineHeight: '18px', fontWeight: '600' },
+        '.heading-50': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '14px', lineHeight: '18px', fontWeight: '600' },
+        '.heading-100': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '16px', lineHeight: '20px', fontWeight: '600' },
+        '.heading-200': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '18px', lineHeight: '24px', fontWeight: '500' },
+        '.heading-300': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '20px', lineHeight: '24px', fontWeight: '600' },
+        '.heading-400': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '22px', lineHeight: '27px', fontWeight: '500' },
+        '.heading-500': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '24px', lineHeight: '29px', fontWeight: '300' },
+        '.heading-600': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '32px', lineHeight: '39px', fontWeight: '700' },
+        '.heading-700': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '36px', lineHeight: '44px', letterSpacing: '-0.16px', fontWeight: '500' },
+        '.heading-800': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '42px', lineHeight: '52px', letterSpacing: '-0.16px', fontWeight: '500' },
+        '.heading-900': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '46px', lineHeight: '56px', letterSpacing: '-0.16px', fontWeight: '500' },
+        '.heading-1000': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '55px', lineHeight: '67px', fontWeight: '700' },
         
         // Body Typography
-        '.body-75': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '12px', lineHeight: '18px', fontWeight: '300' },
-        '.body-100': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '14px', lineHeight: '24px', fontWeight: '300' },
-        '.body-125': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '14px', lineHeight: '24px', fontWeight: '600' },
-        '.body-200': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '16px', lineHeight: '24px', fontWeight: '300' },
-        '.body-300': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '18px', lineHeight: '24px', fontWeight: '400' },
-        '.body-400': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '20px', lineHeight: '28px', fontWeight: '400' },
-        '.body-500': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '22px', lineHeight: '28px', fontWeight: '400' },
-        '.body-600': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '26px', lineHeight: '32px', fontWeight: '400' },
-        '.body-700': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '28px', lineHeight: '36px', fontWeight: '400' },
+        '.body-75': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '12px', lineHeight: '18px', fontWeight: '300' },
+        '.body-100': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '14px', lineHeight: '24px', fontWeight: '300' },
+        '.body-125': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '14px', lineHeight: '24px', fontWeight: '600' },
+        '.body-200': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '16px', lineHeight: '24px', fontWeight: '300' },
+        '.body-300': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '18px', lineHeight: '24px', fontWeight: '400' },
+        '.body-400': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '20px', lineHeight: '28px', fontWeight: '400' },
+        '.body-500': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '22px', lineHeight: '28px', fontWeight: '400' },
+        '.body-600': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '26px', lineHeight: '32px', fontWeight: '400' },
+        '.body-700': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '28px', lineHeight: '36px', fontWeight: '400' },
         
         // Detail Typography
-        '.detail-100': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '12px', lineHeight: '14px', fontWeight: '300' },
-        '.detail-200': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '12px', lineHeight: '18px', fontWeight: '300' },
+        '.detail-100': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '12px', lineHeight: '14px', fontWeight: '300' },
+        '.detail-200': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '12px', lineHeight: '18px', fontWeight: '300' },
         
         // Link Typography
-        '.link-25': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '12px', lineHeight: '18px', fontWeight: '700' },
-        '.link-100': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '14px', lineHeight: '24px', fontWeight: '700' },
-        '.link-200': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '16px', lineHeight: '24px', fontWeight: '700' },
-        '.link-300': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '20px', lineHeight: '24px', fontWeight: '700' },
-        '.link-400': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '22px', lineHeight: '27px', fontWeight: '700' },
-        '.link-500': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '24px', lineHeight: '29px', fontWeight: '700' },
-        '.link-600': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '32px', lineHeight: '39px', fontWeight: '700' },
+        '.link-25': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '12px', lineHeight: '18px', fontWeight: '700' },
+        '.link-100': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '14px', lineHeight: '24px', fontWeight: '700' },
+        '.link-200': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '16px', lineHeight: '24px', fontWeight: '700' },
+        '.link-300': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '20px', lineHeight: '24px', fontWeight: '700' },
+        '.link-400': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '22px', lineHeight: '27px', fontWeight: '700' },
+        '.link-500': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '24px', lineHeight: '29px', fontWeight: '700' },
+        '.link-600': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '32px', lineHeight: '39px', fontWeight: '700' },
         
         // Code Typography
         '.code-100': { fontFamily: 'Source Code Pro, Consolas, Monaco, Courier New, monospace', fontSize: '14px', lineHeight: '24px', fontWeight: '500' },
         
         // Table Header Typography
-        '.table-header': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '12px', lineHeight: '20px', fontWeight: '500' },
+        '.table-header': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '12px', lineHeight: '20px', fontWeight: '500' },
         
         // Legacy Trellis classes (for backwards compatibility)
-        '.text-trellis-display-100': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '56px', lineHeight: '72px', letterSpacing: '-0.32px', fontWeight: '500' },
-        '.text-trellis-heading-300': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '20px', lineHeight: '24px', fontWeight: '600' },
-        '.text-trellis-body-200': { fontFamily: 'Lexend Deca, Helvetica, Arial, sans-serif', fontSize: '16px', lineHeight: '24px', fontWeight: '300' },
+        '.text-trellis-display-100': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '56px', lineHeight: '72px', letterSpacing: '-0.32px', fontWeight: '500' },
+        '.text-trellis-heading-300': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '20px', lineHeight: '24px', fontWeight: '600' },
+        '.text-trellis-body-200': { fontFamily: 'HubSpot Sans, Helvetica, Arial, sans-serif', fontSize: '16px', lineHeight: '24px', fontWeight: '300' },
         
         // Gradients
         '.bg-trellis-gradient-hero': { background: 'linear-gradient(135deg, #FB31A7 0%, #FF4800 35%, #FBDDD2 100%)' },

@@ -27,6 +27,17 @@ const DialogOverlay = React.forwardRef<
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
+/*
+ * Dialog (Modal) — Trellis UI Design Library (Trellis Alpha)
+ * Figma: https://www.figma.com/design/WFHzemS77ZIN7J2syvCwwC/Trellis-UI-Design-Library?node-id=9200-35286
+ * Light mode values only. Token paths annotated inline.
+ *
+ * Note: the Trellis Alpha spec shows dividers under DialogHeader and above
+ * DialogFooter. Those are intentionally not implemented here because they
+ * require structural changes (per-section padding) that would affect every
+ * existing modal consumer. Visual properties (radius, shadow, typography)
+ * have been updated; dividers can be added in a follow-up.
+ */
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
@@ -35,8 +46,13 @@ const DialogContent = React.forwardRef<
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
+      data-figma-component-key="9200:35286"
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 p-6 duration-200",
+        "rounded-[16px]", // trellisSys/border/radius/200
+        "border border-[#cccccc] bg-white", // foundational/border/subtle + bg/normal
+        "shadow-[0px_8px_16px_0px_rgba(0,0,0,0.06)]", // trellisSys/shadow/400 (#0000000f ≈ 6% black)
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
         className
       )}
       {...props}
@@ -86,7 +102,7 @@ const DialogTitle = React.forwardRef<
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "heading-300 leading-none tracking-tight",
+      "text-[18px] leading-[24px] font-normal text-[#141414]", // Heading 04 (h4-18) — HubSpot Sans 18/24/400
       className
     )}
     {...props}
@@ -100,7 +116,10 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("body-100 text-muted-foreground", className)}
+    className={cn(
+      "text-[14px] leading-[20px] font-normal text-[#666666]", // Body Md + foundational/fg/subtle
+      className
+    )}
     {...props}
   />
 ))

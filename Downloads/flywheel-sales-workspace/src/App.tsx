@@ -8,6 +8,7 @@ import { VariantProvider } from "@/contexts/VariantContext";
 import { StrategyAssistantProvider } from "@/contexts/StrategyAssistantContext";
 import { CampaignsProvider } from "@/contexts/CampaignsContext";
 import GuidedTour from "@/components/GuidedTour";
+import AlphaPreviewBanner from "@/components/AlphaPreviewBanner";
 import SalesWorkspace from "./pages/SalesWorkspace";
 import Summary from "./pages/Summary";
 import Prospecting from "./pages/Prospecting";
@@ -39,6 +40,7 @@ const App = () => (
           <VariantProvider>
           <StrategyAssistantProvider>
           <CampaignsProvider>
+          <AlphaPreviewBanner />
           <Routes>
             <Route path="/" element={<TeamHome />} />
             <Route path="/motion-sandbox" element={<MotionSandbox />} />

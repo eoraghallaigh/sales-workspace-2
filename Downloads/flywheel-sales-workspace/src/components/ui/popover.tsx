@@ -60,7 +60,10 @@ const PopoverContent = React.forwardRef<
             sideOffset={sideOffset}
             asChild
             className={cn(
-              "z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none",
+              "z-50 w-72 p-4 outline-none",
+              "rounded-[16px]", // trellisSys/border/radius/200
+              "border border-[#cccccc] bg-white text-[#141414]", // foundational/border/subtle + bg/normal + fg/normal
+              "shadow-[0px_8px_16px_0px_rgba(0,0,0,0.06)]", // trellisSys/shadow/400 (#0000000f ≈ 6% black)
               className
             )}
             {...props}

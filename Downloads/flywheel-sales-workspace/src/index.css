@@ -29,7 +29,7 @@
 }
 
 /* Scope HubSpot fonts to the About page only — rest of the prototype keeps
-   Lexend Deca. !important needed because the typography utility classes
+   HubSpot Sans. !important needed because the typography utility classes
    (heading-700 etc.) hard-set font-family. */
 .about-doc,
 .about-doc * {
@@ -351,7 +351,7 @@
   --color-border-primary-default: rgba(20,20,20,0);
   --color-border-primary-disabled: rgba(20,20,20,0);
   --color-border-secondary-default: #8A8A8A;
-  --color-border-secondary-default-alt: #AB73B4;
+  --color-border-secondary-default-alt: #8A8A8A;
   --color-border-secondary-disabled: #E6E6E6;
   --color-border-tertiary-default: #8A8A8A;
   --color-border-tertiary-disabled: #E6E6E6;
@@ -427,9 +427,9 @@
   --color-fill-transitional-tabs-pressed: #F5F5F5;
 
   /* Specialty Colors */
-  --color-specialty-table-header-default: #F7F2F7;
-  --color-specialty-table-header-hover: #EFE7F0;
-  --color-specialty-table-header-pressed: #E4D7E6;
+  --color-specialty-table-header-default: #F0F0F0;
+  --color-specialty-table-header-hover: #EBEBEB;
+  --color-specialty-table-header-pressed: #E6E6E6;
   --color-specialty-table-zebra-stripe-default: #F5F5F5;
   --color-specialty-filter-pressed: #D9D9D9;
   --color-specialty-scrim: rgba(20,20,20,0.46);
@@ -447,10 +447,10 @@
   --color-specialty-primary-on-fill-disabled: #F5F5F5;
   --color-specialty-primary-on-fill-hover: #E6E6E6;
   --color-specialty-primary-on-fill-pressed: #CCCCCC;
-  --color-specialty-tertiary-on-fill-default: #46062B;
-  --color-specialty-tertiary-on-fill-disabled: #46062B;
-  --color-specialty-tertiary-on-fill-hover: #5E043B;
-  --color-specialty-tertiary-on-fill-pressed: #800051;
+  --color-specialty-tertiary-on-fill-default: #333333;
+  --color-specialty-tertiary-on-fill-disabled: #333333;
+  --color-specialty-tertiary-on-fill-hover: #4D4D4D;
+  --color-specialty-tertiary-on-fill-pressed: #666666;
   --color-specialty-tertiary-transparent-default: rgba(255,255,255,0);
   --color-specialty-tertiary-transparent-disabled: rgba(255,255,255,0);
   --color-specialty-tertiary-transparent-hover: #EBEBEB;
@@ -462,28 +462,28 @@
   --color-reporting-fill-highlight-purple-subtle: #EFEEFD;
 
   /* Typography System */
-  --typography-display-100-fontfamily: "Lexend Deca";
+  --typography-display-100-fontfamily: "HubSpot Sans";
   --typography-display-100-fontweight: 500;
   --typography-display-100-fontsize: 56;
   --typography-display-100-lineheight: 72;
   --typography-display-100-letterspacing: -0.3199999928474426;
   --typography-display-100-fallbackfontfamily: "Helvetica, Arial, sans-serif";
   
-  --typography-heading-50-fontfamily: "Lexend Deca";
+  --typography-heading-50-fontfamily: "HubSpot Sans";
   --typography-heading-50-fontweight: 600;
   --typography-heading-50-fontsize: 14;
   --typography-heading-50-lineheight: 18;
   --typography-heading-50-letterspacing: 0;
   --typography-heading-50-fallbackfontfamily: "Helvetica, Arial, sans-serif";
   
-  --typography-heading-300-fontfamily: "Lexend Deca";
+  --typography-heading-300-fontfamily: "HubSpot Sans";
   --typography-heading-300-fontweight: 600;
   --typography-heading-300-fontsize: 20;
   --typography-heading-300-lineheight: 24;
   --typography-heading-300-letterspacing: 0;
   --typography-heading-300-fallbackfontfamily: "Helvetica, Arial, sans-serif";
   
-  --typography-body-200-fontfamily: "Lexend Deca";
+  --typography-body-200-fontfamily: "HubSpot Sans";
   --typography-body-200-fontweight: 300;
   --typography-body-200-fontsize: 16;
   --typography-body-200-lineheight: 24;
@@ -496,6 +496,51 @@
   --typography-code-100-lineheight: 24;
   --typography-code-100-letterspacing: 0;
   --typography-code-100-fallbackfontfamily: "Consolas, Monaco, Courier New, monospace";
+
+  /* ─────────────────────────────────────────────────────────────
+   * Trellis Alpha foundational tokens (trellis-theming)
+   * Source: HubSpotEngineering/trellis-theming hubspot-modern-theme.css
+   * Variable names match upstream exactly (--t- prefix preserved)
+   * so they can be diffed against Trellis when the design system updates.
+   * ───────────────────────────────────────────────────────────── */
+
+  /* Foundational colors */
+  --t-ui-color-foundational-bg-normal: #ffffff;
+  --t-ui-color-foundational-bg-subtle: #f0f0f0;
+  --t-ui-color-foundational-bg-inverse: #333333;
+  --t-ui-color-foundational-bg-inverseSubtle: #666666;
+  --t-ui-color-foundational-fg-normal: #141414;
+  --t-ui-color-foundational-fg-subtle: #666666;
+  --t-ui-color-foundational-fg-inverse: #ffffff;
+  --t-ui-color-foundational-fg-inverseSubtle: #ffffff;
+  --t-ui-color-foundational-border-normal: #8a8a8a;
+  --t-ui-color-foundational-border-subtle: #cccccc;
+  --t-ui-color-foundational-border-transparent: rgba(20, 20, 20, 0);
+
+  /* Foundational dimensions — space */
+  --t-ui-dimension-space-0: 0px;
+  --t-ui-dimension-space-8: 8px;
+  --t-ui-dimension-space-12: 12px;
+  --t-ui-dimension-space-16: 16px;
+  --t-ui-dimension-space-24: 24px;
+  --t-ui-dimension-space-32: 32px;
+
+  /* Foundational dimensions — container padding */
+  --t-ui-dimension-padding-container-none: 0px;
+  --t-ui-dimension-padding-container-compact: 12px;
+  --t-ui-dimension-padding-container-normal: 24px;
+
+  /* Foundational dimensions — border */
+  --t-ui-dimension-border-radius-none: 0px;
+  --t-ui-dimension-border-radius-container: 16px;
+  --t-ui-dimension-border-width-none: 0px;
+  --t-ui-dimension-border-width-normal: 1px;
+  --t-ui-dimension-border-width-wide: 2px;
+
+  /* Foundational icon sizes */
+  --t-ui-icon-size-sm: 14px;
+  --t-ui-icon-size-md: 16px;
+  --t-ui-icon-size-lg: 20px;
 }
 
 /* Base styles */
@@ -508,7 +553,7 @@
   overflow: hidden;
   color: var(--color-text-core-default, #141414);
   text-overflow: ellipsis;
-  font-family: "Lexend Deca";
+  font-family: "HubSpot Sans";
   font-size: 12px;
   font-style: normal;
   font-weight: 500;
@@ -523,7 +568,7 @@ textarea::placeholder {
   color: var(--color-text-core-subtle, #666);
   font-feature-settings: 'ss01' on;
   text-overflow: ellipsis;
-  font-family: var(--typography-body-200-fontFamily, "Lexend Deca");
+  font-family: var(--typography-body-200-fontFamily, "HubSpot Sans");
   font-size: var(--typography-body-200-fontSize, 16px);
   font-style: normal;
   font-weight: var(--typography-body-200-fontWeight, 300);
@@ -532,7 +577,7 @@ textarea::placeholder {
 }
 
 body {
-  font-family: 'Lexend Deca', Helvetica, Arial, sans-serif;
+  font-family: 'HubSpot Sans', Helvetica, Arial, sans-serif;
   background-color: var(--trellis-color-white);
   color: var(--color-text-core-default);
   margin: 0;

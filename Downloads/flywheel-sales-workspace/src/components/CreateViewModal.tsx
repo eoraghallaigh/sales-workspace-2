@@ -4620,7 +4620,7 @@ const CreateViewModal = ({
                         {expiryDate ? format(expiryDate, "PPP") : null}
                       </SelectAnchor>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-[var(--color-fill-surface-default)] border border-[var(--color-border-core-subtle)] rounded-[4px] z-[100]" align="start">
+                    <PopoverContent className="w-auto p-0 bg-[var(--color-fill-surface-default)] border border-[var(--color-border-core-subtle)] z-[100]" align="start">
                       <CalendarComponent
                         mode="single"
                         selected={expiryDate}

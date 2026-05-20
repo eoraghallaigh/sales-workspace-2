@@ -23,6 +23,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ExpandableCard, ExpandableCardHeader, ExpandableCardContent } from "@/components/ui/expandable-card";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Slider } from "@/components/ui/slider";
@@ -969,6 +970,59 @@ const DesignSystem = () => {
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>
+                </CardContent>
+              </Card>
+
+              {/* Expandable Card (Trellis Alpha) */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Expandable Card</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col gap-3">
+                    <ExpandableCard defaultOpen>
+                      <ExpandableCardHeader
+                        title="Title"
+                        trailing={
+                          <button className="p-1" aria-label="More">
+                            <MoreHorizontal className="h-4 w-4 text-[#141414]" />
+                          </button>
+                        }
+                      />
+                      <ExpandableCardContent>
+                        <p className="text-[14px] leading-[20px] text-[#666666]">
+                          Body content for an expanded card. Use the chevron to collapse.
+                        </p>
+                      </ExpandableCardContent>
+                    </ExpandableCard>
+
+                    <ExpandableCard>
+                      <ExpandableCardHeader title="Title (collapsed by default)" />
+                      <ExpandableCardContent>
+                        <p className="text-[14px] leading-[20px] text-[#666666]">
+                          This card starts collapsed.
+                        </p>
+                      </ExpandableCardContent>
+                    </ExpandableCard>
+
+                    <ExpandableCard selected defaultOpen>
+                      <ExpandableCardHeader title="Selected state (blue border)" />
+                      <ExpandableCardContent>
+                        <p className="text-[14px] leading-[20px] text-[#666666]">
+                          Pass <code>selected</code> for the focused/selected card state.
+                        </p>
+                      </ExpandableCardContent>
+                    </ExpandableCard>
+
+                    <ExpandableCard disabled>
+                      <ExpandableCardHeader title="Disabled state" />
+                      <ExpandableCardContent>
+                        <p className="text-[14px] leading-[20px] text-[#666666]">
+                          Not reachable when disabled.
+                        </p>
+                      </ExpandableCardContent>
+                    </ExpandableCard>
+                  </div>
                 </CardContent>
               </Card>
 
