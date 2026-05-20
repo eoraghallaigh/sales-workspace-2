@@ -21,6 +21,7 @@ export const q2c2Iterations: IterationEntry[] = [
       "AI attribution is important (reps want to know what generated the outreach and see reasoning) but secondary to the live state of the sequence.",
       "Status badge + hover tooltip keeps the title and first step tight together vertically and matches the company-status pattern elsewhere in the workspace.",
     ],
+    prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/39",
     commitment: "outreach-strategy",
     screenshots: [
       { src: "/about/iterations/2026-05-20-sequence-card-redesign/prospecting-strategy.png", alt: "Prospecting Strategy route screenshot" },
