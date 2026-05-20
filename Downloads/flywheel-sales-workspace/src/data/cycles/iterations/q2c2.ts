@@ -5,6 +5,29 @@ import type { IterationEntry } from "../types";
 // Each entry's `id` matches the folder name under public/about/iterations/.
 export const q2c2Iterations: IterationEntry[] = [
   {
+    id: "2026-05-20-sequence-card-redesign",
+    date: "2026-05-20",
+    label: "sequence-card-redesign",
+    whatChanged: [
+      "Restructured the per-contact 5-touch sequence card: status badge moved to the top-right with a hover tooltip explaining the current step / next send / paused reason.",
+      "Primary CTA (Enroll, or Pause + Unenroll when enrolled, Unpause + End when paused) is now at the bottom-left below the steps, aligned with the step-icon column.",
+      "AI attribution demoted to a muted sparkle + 'Created by Outreach Agent · View reasoning' line beneath the CTA, replacing the bright pink Breeze badge in this surface.",
+      "Added a four-state status machine for sequences: Enrolled (blue), Paused (yellow), Replied (green), Ended (grey).",
+      "Polished interactions: instant-fade tooltip on the status badge, light blur + 'Click to edit' button on the email-edit overlay, drag state shows a shadow lift instead of fading the row.",
+      "Updated the BreezeBadge component to match the canonical Figma spec (gradient border, single-star sparkle, Trellis tokens).",
+    ],
+    why: [
+      "The bright pink Breeze badge was the loudest element on the card and pulled the eye off the vertical guide line through the steps — the status badge should be the primary visual anchor since it changes as the rep / prospect take action.",
+      "AI attribution is important (reps want to know what generated the outreach and see reasoning) but secondary to the live state of the sequence.",
+      "Status badge + hover tooltip keeps the title and first step tight together vertically and matches the company-status pattern elsewhere in the workspace.",
+    ],
+    prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/39",
+    commitment: "outreach-strategy",
+    screenshots: [
+      { src: "/about/iterations/2026-05-20-sequence-card-redesign/prospecting-strategy.png", alt: "Prospecting Strategy route screenshot" },
+    ],
+  },
+  {
     id: "2026-05-18-campaigns-iteration-entry",
     date: "2026-05-18",
     label: "campaigns-iteration-entry",
