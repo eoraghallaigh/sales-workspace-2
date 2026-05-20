@@ -93,7 +93,7 @@ const DealCard = ({ deal }: DealCardProps) => {
 
 
   return (
-    <Card className="p-8 mb-4 border border-border rounded shadow-100 flex flex-col gap-8">
+    <Card className="p-8 mb-4 border border-border rounded-[16px] shadow-100 flex flex-col gap-8">
       {/* Header - mirrors CompanyCard header */}
       <div className="flex items-start justify-between">
         <div className="flex-1 flex flex-col gap-6">

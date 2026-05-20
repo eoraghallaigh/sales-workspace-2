@@ -472,7 +472,7 @@ const EditableEmailBody = ({ subject, body, onSave }: EditableEmailBodyProps) =>
     <div
       role="button"
       tabIndex={0}
-      className="relative group cursor-pointer rounded-[var(--borderRadius-100)]"
+      className="relative group cursor-pointer rounded-[16px]"
       onClick={() => setIsEditing(true)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {

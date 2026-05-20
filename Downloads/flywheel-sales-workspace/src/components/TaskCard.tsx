@@ -77,7 +77,7 @@ const TaskCard = ({ task, onContactClick, onTaskClick, onCallClick, onEmailClick
   const showOverdueStyle = isOverdue && !task.completed;
 
   return (
-    <div className={`flex h-24 py-3 px-6 justify-center items-center gap-6 w-full rounded-lg border ${showOverdueStyle ? 'border-[var(--color-border-alert-default)]' : 'border-[var(--color-border-core-subtle)]'} bg-[var(--color-fill-surface-default)]`}>
+    <div className={`flex h-24 py-3 px-6 justify-center items-center gap-6 w-full rounded-[16px] border ${showOverdueStyle ? 'border-[var(--color-border-alert-default)]' : 'border-[var(--color-border-core-subtle)]'} bg-[var(--color-fill-surface-default)]`}>
       <div className="w-[390px]">
         <div className="flex items-center gap-2 mb-1">
           <button

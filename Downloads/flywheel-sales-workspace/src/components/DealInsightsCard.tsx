@@ -9,10 +9,10 @@ interface DealInsightsCardProps {
 const DealInsightsCard = ({ insights, variant = "default" }: DealInsightsCardProps) => {
   if (variant === "card") {
     return (
-      <div className="flex h-full flex-col border border-border rounded-lg bg-white min-w-[280px] max-w-[320px] overflow-hidden shadow-100">
+      <div className="flex h-full flex-col border border-border rounded-[16px] bg-white min-w-[280px] max-w-[320px] overflow-hidden shadow-100">
         {/* Header */}
         <div
-          className="flex items-center justify-between p-4 rounded-t-lg"
+          className="flex items-center justify-between p-4 rounded-t-[16px]"
           style={{ background: "var(--color-fill-secondary-hover)" }}
         >
           <div className="flex items-center gap-3">
@@ -40,7 +40,7 @@ const DealInsightsCard = ({ insights, variant = "default" }: DealInsightsCardPro
   }
 
   return (
-    <div className="border border-border rounded-lg bg-white p-6 flex flex-col gap-4 h-full shadow-100">
+    <div className="border border-border rounded-[16px] bg-white p-6 flex flex-col gap-4 h-full shadow-100">
       <h4 className="heading-100 text-foreground">Deal Insights</h4>
       <div className="flex flex-col gap-3">
         {insights.map((insight, i) => (

@@ -9,7 +9,7 @@ interface SuggestedActionCardProps {
 const SuggestedActionCard = ({ action }: SuggestedActionCardProps) => {
   return (
     <div className="flex flex-col min-w-[280px] max-w-[320px] gap-2">
-      <div className="flex h-full flex-col border border-border rounded-lg bg-white overflow-hidden shadow-100">
+      <div className="flex h-full flex-col border border-border rounded-[16px] bg-white overflow-hidden shadow-100">
         <div className="flex flex-1 flex-col p-4 gap-3">
           <h4 className="heading-100 text-foreground">{action.title}</h4>
           <p className="body-100 text-muted-foreground">{action.description}</p>

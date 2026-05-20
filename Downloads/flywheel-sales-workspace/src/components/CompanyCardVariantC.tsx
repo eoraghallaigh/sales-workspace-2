@@ -152,7 +152,7 @@ const CompanyCardVariantC = ({
       tabIndex={0}
       onClick={handleRowClick}
       onKeyDown={handleRowKeyDown}
-      className="group px-5 py-4 mb-3 border border-border rounded shadow-100 cursor-pointer transition-all duration-150 hover:-translate-y-0.5 hover:shadow-300"
+      className="group px-5 py-4 mb-3 border border-border rounded-[16px] shadow-100 cursor-pointer transition-all duration-150 hover:-translate-y-0.5 hover:shadow-300"
     >
       <div className="flex items-center gap-4">
         <img

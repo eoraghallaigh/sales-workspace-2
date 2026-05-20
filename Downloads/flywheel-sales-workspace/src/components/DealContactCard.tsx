@@ -44,10 +44,10 @@ const DealContactCard = ({
   onMoreDetails,
 }: DealContactCardProps) => {
   return (
-    <div className="flex h-full flex-col border border-border rounded-lg bg-white min-w-[280px] max-w-[320px] overflow-hidden shadow-100">
+    <div className="flex h-full flex-col border border-border rounded-[16px] bg-white min-w-[280px] max-w-[320px] overflow-hidden shadow-100">
       {/* Header */}
       <div
-        className="flex items-center justify-between p-4 rounded-t-lg"
+        className="flex items-center justify-between p-4 rounded-t-[16px]"
         style={{ background: "var(--color-fill-secondary-hover)" }}
       >
         <div className="flex items-center gap-3">

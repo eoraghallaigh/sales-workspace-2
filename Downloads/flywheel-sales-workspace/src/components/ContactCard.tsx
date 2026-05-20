@@ -168,7 +168,7 @@ const ContactCard = ({
   );
 
   const cardClassName = cn(
-    "group relative flex h-full flex-col border border-border rounded-lg bg-white min-w-[360px] max-w-[360px] overflow-hidden transition-all duration-300 ease-out",
+    "group relative flex h-full flex-col border border-border rounded-[16px] bg-white min-w-[360px] max-w-[360px] overflow-hidden transition-all duration-300 ease-out",
     isDragging
       ? "shadow-xl"
       : isDragHandleHovered

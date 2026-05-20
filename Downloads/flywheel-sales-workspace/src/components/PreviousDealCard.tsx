@@ -14,7 +14,7 @@ interface PreviousDealCardProps {
 
 const PreviousDealCard = ({ deal }: PreviousDealCardProps) => {
   return (
-    <div className="bg-white border border-border rounded-lg p-3 flex flex-col gap-2">
+    <div className="bg-white border border-border rounded-[16px] p-3 flex flex-col gap-2">
       <div className="flex flex-col gap-0.5">
         <p className="heading-100 text-text-interactive cursor-pointer hover:text-text-interactive-hover">
           {deal.name}
