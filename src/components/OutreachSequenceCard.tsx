@@ -5,10 +5,10 @@ import {
   Italic,
   Underline,
   Link as LinkIcon,
+  Sparkles,
   Undo2,
   Redo2,
 } from "lucide-react";
-import BreezeBadge from "@/components/BreezeBadge";
 import {
   DndContext,
   closestCenter,
@@ -32,6 +32,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import type { CallState, LinkedInState, EmailStatus, SequenceState } from "@/data/outreachStates";
 
@@ -169,8 +170,6 @@ const isTouchCompleted = (t: Touch): boolean => {
   return t.state.kind !== "not-sent";
 };
 
-const EnrolledBadge = () => <Badge variant="status-green">Enrolled</Badge>;
-
 export const getDefaultCallBullets = (companyName: string): string[] => [
   `${companyName} partnered with Orbweaver to automate data exchange for manufacturers`,
   `Automated data often leads to fragmented "Franken-stacks" — reps can't find a single source of truth`,
@@ -197,55 +196,112 @@ const ScriptModeToggle = ({
   </div>
 );
 
-const seqHeaderChip = (
-  isEnrolled: boolean,
-  enrolledLocally: boolean,
+const stripReasonPrefix = (reason: string): string =>
+  reason.replace(/^Sequence ended because /, "");
+
+type SequenceStatus = "enrolled" | "paused" | "replied" | "ended";
+type LocalOverride = SequenceStatus | "removed" | null;
+
+const classifyStatus = (
+  localOverride: LocalOverride,
   sequence: SequenceState,
-  firstName: string,
-  onEnroll: () => void,
+): SequenceStatus | null => {
+  if (localOverride === "removed") return null;
+  if (localOverride !== null) return localOverride;
+  if (sequence.kind === "not-enrolled") return null;
+  if (sequence.kind === "active") return "enrolled";
+  if (sequence.kind === "completed") return "ended";
+  if (sequence.reason.includes("connected call")) return "paused";
+  return "replied";
+};
+
+const stepTextFromActive = (sequence: SequenceState): string => {
+  if (sequence.kind !== "active") return "Step 1 of 5 · scheduled";
+  const sentCount = sequence.statuses.filter((x) => x.kind === "sent").length;
+  const next = sequence.statuses.find((x) => x.kind === "scheduled");
+  return `Step ${sentCount} of 5${
+    next && next.kind === "scheduled" ? ` · next sends ${next.sendsAt}` : ""
+  }`;
+};
+
+const renderStatusBadgeStack = (
+  status: SequenceStatus,
+  sequence: SequenceState,
+  localOverride: LocalOverride,
+) => {
+  let badge: React.ReactNode = null;
+  let text = "";
+
+  if (status === "enrolled") {
+    badge = <Badge variant="status-blue">Enrolled</Badge>;
+    text = stepTextFromActive(sequence);
+  } else if (status === "paused") {
+    badge = <Badge variant="status-yellow">Paused</Badge>;
+    if (localOverride === "paused") {
+      text =
+        sequence.kind === "active"
+          ? `Paused at ${stepTextFromActive(sequence)}`
+          : "Paused at step 1 of 5";
+    } else if (sequence.kind === "unenrolled") {
+      text = stripReasonPrefix(sequence.reason);
+    } else {
+      text = "Paused";
+    }
+  } else if (status === "replied") {
+    badge = <Badge variant="status-green">Replied</Badge>;
+    text = sequence.kind === "unenrolled" ? stripReasonPrefix(sequence.reason) : "Replied";
+  } else if (status === "ended") {
+    badge = <Badge variant="status-gray">Ended</Badge>;
+    text = "All 5 touches sent";
+  }
+
+  return (
+    <Tooltip delayDuration={0}>
+      <TooltipTrigger asChild>
+        <span className="inline-flex cursor-default" tabIndex={0}>
+          {badge}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent
+        side="bottom"
+        align="end"
+        className="zoom-in-100 data-[side=bottom]:slide-in-from-top-0 data-[side=top]:slide-in-from-bottom-0 data-[side=left]:slide-in-from-right-0 data-[side=right]:slide-in-from-left-0"
+      >
+        {text}
+      </TooltipContent>
+    </Tooltip>
+  );
+};
+
+const renderStatusCtas = (
+  status: SequenceStatus,
+  onPause: () => void,
+  onUnpause: () => void,
+  onEnd: () => void,
   onUnenroll: () => void,
 ) => {
-  if (!isEnrolled) {
+  if (status === "enrolled") {
     return (
-      <Button variant="primary" size="extra-small" onClick={onEnroll}>
-        <TrellisIcon name="email" size={12} className="mr-1 brightness-0 invert" /> Enroll {firstName}
-      </Button>
-    );
-  }
-  if (enrolledLocally) {
-    return (
-      <div className="flex items-center gap-3">
-        <EnrolledBadge />
-        <span className="detail-200 text-muted-foreground">Step 1 of 5 · scheduled</span>
-        <Button variant="secondary" size="extra-small" onClick={onUnenroll}>
+      <div className="flex items-center gap-2">
+        <Button variant="secondary" size="small" onClick={onPause}>
+          Pause
+        </Button>
+        <Button variant="secondary" size="small" onClick={onUnenroll}>
           Unenroll
         </Button>
       </div>
     );
   }
-  if (sequence.kind === "active") {
-    const sentCount = sequence.statuses.filter((x) => x.kind === "sent").length;
-    const next = sequence.statuses.find((x) => x.kind === "scheduled");
+  if (status === "paused") {
     return (
-      <div className="flex items-center gap-3">
-        <EnrolledBadge />
-        <span className="detail-200 text-muted-foreground">
-          Step {sentCount} of 5{next && next.kind === "scheduled" ? ` · next sends ${next.sendsAt}` : ""}
-        </span>
-        <Button variant="secondary" size="extra-small">
-          Unenroll
+      <div className="flex items-center gap-2">
+        <Button variant="secondary" size="small" onClick={onUnpause}>
+          Unpause
+        </Button>
+        <Button variant="secondary" size="small" onClick={onEnd}>
+          End
         </Button>
       </div>
-    );
-  }
-  if (sequence.kind === "completed") {
-    return <span className="detail-200 text-muted-foreground">Completed · all touches sent</span>;
-  }
-  if (sequence.kind === "unenrolled") {
-    return (
-      <span className="detail-200" style={{ color: "var(--color-border-accent-green-default)" }}>
-        {sequence.reason}
-      </span>
     );
   }
   return null;
@@ -416,7 +472,7 @@ const EditableEmailBody = ({ subject, body, onSave }: EditableEmailBodyProps) =>
     <div
       role="button"
       tabIndex={0}
-      className="relative group cursor-pointer rounded-[var(--borderRadius-100)] overflow-hidden"
+      className="relative group cursor-pointer rounded-[var(--borderRadius-100)]"
       onClick={() => setIsEditing(true)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -426,8 +482,10 @@ const EditableEmailBody = ({ subject, body, onSave }: EditableEmailBodyProps) =>
       }}
     >
       <p className="body-100 text-foreground leading-relaxed whitespace-pre-line">{body}</p>
-      <div className="absolute inset-0 flex items-center justify-center bg-black/65 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-        <span className="heading-100 text-white">Click to edit</span>
+      <div className="absolute -inset-4 flex items-center justify-center bg-white/40 backdrop-blur opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+        <Button variant="primary" size="small" tabIndex={-1} aria-hidden>
+          Click to edit
+        </Button>
       </div>
     </div>
   );
@@ -476,10 +534,17 @@ const SortableRow = ({
     id: touch.id,
     disabled: !draggable,
   });
-  const style = {
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.6 : 1,
+    boxShadow: isDragging
+      ? "0 12px 28px -6px rgba(20, 20, 20, 0.20), 0 4px 10px -4px rgba(20, 20, 20, 0.12)"
+      : undefined,
+    backgroundColor: isDragging
+      ? "var(--color-fill-surface-default, white)"
+      : undefined,
+    borderRadius: isDragging ? 4 : undefined,
+    zIndex: isDragging ? 10 : undefined,
   };
 
   const reply =
@@ -543,7 +608,9 @@ const SortableRow = ({
               {headingInner}
             </div>
           </CollapsibleTrigger>
-          <CollapsibleContent className="pl-7 pt-2 pb-1">
+          <CollapsibleContent
+            className={`pl-7 pt-2 ${touch.kind === "email" ? "pb-6" : "pb-1"}`}
+          >
             {touch.kind === "call" &&
               (editable ? (
                 <>
@@ -689,7 +756,9 @@ const SortableRow = ({
             {headingInner}
           </div>
         </CollapsibleTrigger>
-        <CollapsibleContent className="pt-2 pb-1">
+        <CollapsibleContent
+          className={`pt-2 ${touch.kind === "email" ? "pb-6" : "pb-1"}`}
+        >
           {touch.kind === "call" &&
             (editable ? (
               <textarea
@@ -830,12 +899,27 @@ export const OutreachSequenceCard = ({
   const firstName = contact.name.split(" ")[0];
   const pristine = isPristine(call, linkedin, sequence);
 
-  const [enrolledLocally, setEnrolledLocally] = useState(false);
+  const [localOverride, setLocalOverride] = useState<LocalOverride>(null);
   const [order, setOrder] = useState<string[]>(() => buildDefaultOrder(contact.id));
 
+  const status = classifyStatus(localOverride, sequence);
   const fromBackend = !pristine;
-  const isEnrolled = fromBackend || enrolledLocally;
+  const isEnrolled = fromBackend || localOverride !== null;
   const draggable = !isEnrolled;
+
+  const mutedAttribution = (
+    <div className="flex items-center gap-1.5">
+      <Sparkles size={12} className="text-muted-foreground" aria-hidden />
+      <span className="detail-200 text-muted-foreground">Created by Outreach Agent ·</span>
+      <button
+        type="button"
+        onClick={onViewReasoning}
+        className="detail-200 text-text-interactive hover:underline"
+      >
+        View reasoning
+      </button>
+    </div>
+  );
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
@@ -903,18 +987,9 @@ export const OutreachSequenceCard = ({
               <span className="heading-50 text-foreground">5-touch sequence</span>
             </CollapsibleTrigger>
             <div className="flex-1" />
-            <div>
-              {seqHeaderChip(
-                isEnrolled,
-                enrolledLocally,
-                sequence,
-                firstName,
-                () => setEnrolledLocally(true),
-                () => setEnrolledLocally(false),
-              )}
-            </div>
+            {status !== null && renderStatusBadgeStack(status, sequence, localOverride)}
           </div>
-          <CollapsibleContent className="pb-4">
+          <CollapsibleContent className="pb-0">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -922,7 +997,13 @@ export const OutreachSequenceCard = ({
               modifiers={[restrictToVerticalAxis, restrictToParentElement]}
             >
               <SortableContext items={order} strategy={verticalListSortingStrategy}>
-                <div className={isEnrolled ? "" : "divide-y divide-border-core-subtle"}>
+                <div
+                  className={
+                    isEnrolled
+                      ? ""
+                      : "divide-y divide-[var(--color-border-core-subtle)] border-y border-[var(--color-border-core-subtle)]"
+                  }
+                >
                   {orderedTouches.map((t, idx) => (
                     <SortableRow
                       key={t.id}
@@ -968,20 +1049,32 @@ export const OutreachSequenceCard = ({
                 </div>
               </SortableContext>
             </DndContext>
-
+            <div className="pt-4 flex flex-col items-start gap-6">
+              {status === null && (
+                <Button
+                  variant="primary"
+                  size="small"
+                  onClick={() => setLocalOverride("enrolled")}
+                >
+                  <TrellisIcon name="email" size={12} className="mr-1 brightness-0 invert" />
+                  Enroll {firstName}
+                </Button>
+              )}
+              {(status === "enrolled" || status === "paused") && (
+                <div className="pl-[26px]">
+                  {renderStatusCtas(
+                    status,
+                    () => setLocalOverride("paused"),
+                    () => setLocalOverride("enrolled"),
+                    () => setLocalOverride("ended"),
+                    () => setLocalOverride("removed"),
+                  )}
+                </div>
+              )}
+              {mutedAttribution}
+            </div>
           </CollapsibleContent>
         </Collapsible>
-        <div className="flex items-center gap-1.5 pb-3">
-          <BreezeBadge />
-          <span className="detail-200 text-muted-foreground">Created by Outreach Agent ·</span>
-          <button
-            type="button"
-            onClick={onViewReasoning}
-            className="detail-200 text-text-interactive hover:underline"
-          >
-            View reasoning
-          </button>
-        </div>
       </div>
     </div>
   );

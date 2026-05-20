@@ -557,7 +557,7 @@ const ProspectingStrategy = () => {
                             <span className="body-100 text-muted-foreground">Outreach agent is working…</span>
                           </div>
                         ) : (
-                        <div key={`content-${contact.id}`} className="px-6 py-5 bg-card animate-fade-in">
+                        <div key={`content-${contact.id}`} className="px-6 pt-5 pb-3 bg-card animate-fade-in">
                           {/* Description */}
                           <p className="body-100 text-foreground leading-relaxed mb-4">
                             {strategy.contactDescription(contact.name.split(" ")[0], currentCompany.name)}
