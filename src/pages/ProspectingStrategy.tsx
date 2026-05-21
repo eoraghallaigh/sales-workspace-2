@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
-import { Plus, Loader2, PanelLeftClose, PanelLeftOpen, FileEdit, Mail, Phone, ListTodo, Calendar, MoreHorizontal } from "lucide-react";
+import { Plus, Loader2, FileEdit, Mail, Phone, ListTodo, Calendar, MoreHorizontal } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -7,9 +7,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useCyclePath } from "@/hooks/useCyclePath";
 import { Layout } from "@/components/Layout";
+import WorkspaceHeader from "@/components/WorkspaceHeader";
+import StrategyCompaniesSubNav from "@/components/StrategyCompaniesSubNav";
+import Tag from "@/components/Tag";
+import {
+  ResearchEmptyCard,
+  SequenceSectionPrompt,
+} from "@/components/StrategyAgentPrompts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -27,7 +34,7 @@ import { TextEditPopup } from "@/components/TextEditPopup";
 import PreviousDealCard, { PreviousDeal } from "@/components/PreviousDealCard";
 import EmailCommunicator from "@/components/EmailCommunicator";
 import { OutreachSequenceCard } from "@/components/OutreachSequenceCard";
-import { TouchDots, MiniTouchDots, type TouchStatus } from "@/components/TouchDot";
+import { TouchDots, type TouchStatus } from "@/components/TouchDot";
 
 import { getCompanyStrategy } from "@/data/companyStrategies";
 import { useStrategyAssistant } from "@/contexts/StrategyAssistantContext";
@@ -63,6 +70,41 @@ const RewritingStatusMessage = () => {
 const ProspectingStrategy = () => {
   const { companyId } = useParams<{companyId: string;}>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const emptyParam = searchParams.get("empty");
+  const [hasResearch, setHasResearch] = useState(emptyParam !== "both" && emptyParam !== "research");
+  const [hasSequences, setHasSequences] = useState(emptyParam !== "both" && emptyParam !== "sequences");
+  const [isRunningResearch, setIsRunningResearch] = useState(false);
+  const [isRunningSequences, setIsRunningSequences] = useState(false);
+
+  const runResearch = useCallback(() => {
+    setIsRunningResearch(true);
+    setTimeout(() => {
+      setHasResearch(true);
+      setIsRunningResearch(false);
+    }, 2200);
+  }, []);
+
+  const runSequences = useCallback(() => {
+    setIsRunningSequences(true);
+    setTimeout(() => {
+      setHasSequences(true);
+      setIsRunningSequences(false);
+    }, 2200);
+  }, []);
+
+  const runBoth = useCallback(() => {
+    setIsRunningResearch(true);
+    setIsRunningSequences(true);
+    setTimeout(() => {
+      setHasResearch(true);
+      setIsRunningResearch(false);
+    }, 2200);
+    setTimeout(() => {
+      setHasSequences(true);
+      setIsRunningSequences(false);
+    }, 3500);
+  }, []);
   const { cyclePath } = useCyclePath();
   const [selectedContactIndex, setSelectedContactIndex] = useState(0);
   const [activeTab, setActiveTab] = useState("strategy");
@@ -249,61 +291,21 @@ const ProspectingStrategy = () => {
   return (
     <Layout>
       <div className="flex flex-col h-[calc(100vh-48px)] bg-background">
+        <WorkspaceHeader
+          backLink={{ to: cyclePath("/prospecting"), label: "Prospecting" }}
+          title="Prospecting Strategies"
+        />
 
         {/* Three-column layout */}
         <div className="flex flex-1 overflow-hidden">
           {/* Left column - Company sub-nav */}
-          <nav
-            className={`border-r border-core-subtle bg-card shrink-0 pt-6 transition-all duration-300 ${
-              isSubNavOpen ? "w-[280px] pl-8 overflow-y-auto" : "w-16 overflow-hidden"
-            }`}
-          >
-            {isNarrow && (
-              <div
-                className={`mb-6 flex ${isSubNavOpen ? "justify-end pr-4" : "justify-center"}`}
-              >
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsSubNavOpen((o) => !o)}
-                  className="h-8 w-8 p-0 border border-border"
-                  aria-label={isSubNavOpen ? "Collapse sub-nav" : "Expand sub-nav"}
-                >
-                  {isSubNavOpen ? (
-                    <PanelLeftClose className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <PanelLeftOpen className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </Button>
-              </div>
-            )}
-            {isSubNavOpen && !isNarrow && (
-              <div className="pb-8">
-                <button
-                  onClick={() => navigate(cyclePath("/prospecting"))}
-                  className="flex items-center gap-1 body-125 text-text-interactive hover:underline transition-colors">
-                  <TrellisIcon name="left" size={12} />
-                  P1 companies
-                </button>
-              </div>
-            )}
-            {isSubNavOpen && companies.map((company) =>
-            <button
-              key={company.id}
-              onClick={() => navigate(cyclePath(`/prospecting/strategy/${company.id}`))}
-              className={`w-full text-left px-3 py-3 transition-colors ${
-              company.id === currentCompany.id ?
-              "rounded-l-[var(--borderRadius-100,4px)] rounded-r-none border-l-4 border-l-[var(--color-border-core-pressed,#141414)] bg-[var(--color-fill-tertiary-disabled,#F5F5F5)]" :
-              "hover:bg-trellis-neutral-100"}`
-              }>
-
-                <div className="body-100 text-foreground">{company.name}</div>
-                <div className="mt-1">
-                  <MiniTouchDots statuses={(company.touches?.touchStatuses || []) as TouchStatus[]} />
-                </div>
-              </button>
-            )}
-          </nav>
+          <StrategyCompaniesSubNav
+            companies={companies}
+            currentCompanyId={currentCompany.id}
+            onSelect={(companyId) => navigate(cyclePath(`/prospecting/strategy/${companyId}`))}
+            isCollapsed={!isSubNavOpen}
+            onToggle={() => setIsSubNavOpen((o) => !o)}
+          />
 
           {/* Middle + Right columns wrapper */}
           <div className="flex flex-1 overflow-hidden relative max-w-[1600px]">
@@ -332,16 +334,6 @@ const ProspectingStrategy = () => {
 
           {/* Strategy content */}
           <div className={`flex-1 overflow-y-auto pl-12 pr-12 pt-12 pb-12 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
-            {isNarrow && (
-              <div className="mb-4">
-                <button
-                  onClick={() => navigate(cyclePath("/prospecting"))}
-                  className="flex items-center gap-1 body-125 text-text-interactive hover:underline transition-colors">
-                  <TrellisIcon name="left" size={12} />
-                  P1 companies
-                </button>
-              </div>
-            )}
             {activeVariantId !== "default" && (
               <div
                 role="status"
@@ -426,41 +418,56 @@ const ProspectingStrategy = () => {
               </div>
 
               <TabsContent value="strategy" className="px-6 pt-12 pb-6 mt-0">
-                {/* Business Intelligence */}
-                <Collapsible defaultOpen className="mb-12">
-                  <CollapsibleTrigger className="flex items-center gap-2 w-full group">
-                    <TrellisIcon name="downCarat" size={12} className="text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
-                    <h3 className="heading-200 text-foreground">Business Intelligence</h3>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-3">
-                    <p className="body-100 text-foreground leading-relaxed">
-                      {strategy.businessIntelligence}
-                    </p>
-                    {currentCompanyDetails &&
-                      <p className="body-100 text-foreground leading-relaxed mt-4">
-                        Currently, the company is in a growth phase. Their top revenue streams are: 1) SaaS recurring license fees for the core platform, 2) Professional services for implementation and data migration, and 3) Integration-led revenue through partnerships with existing and back-office systems.
-                      </p>
-                      }
-                  </CollapsibleContent>
-                </Collapsible>
+                {isRunningResearch ? (
+                  <div className="rounded-100 border border-core-subtle bg-card px-6 py-8 mb-12 flex items-center justify-center gap-3">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    <span className="body-100 text-muted-foreground">Researching {currentCompany.name}…</span>
+                  </div>
+                ) : !hasResearch ? (
+                  <ResearchEmptyCard
+                    companyName={currentCompany.name}
+                    isRunning={isRunningResearch}
+                    onRun={runResearch}
+                  />
+                ) : (
+                  <>
+                    {/* Business Intelligence */}
+                    <Collapsible defaultOpen className="mb-12">
+                      <CollapsibleTrigger className="flex items-center gap-2 w-full group">
+                        <TrellisIcon name="downCarat" size={12} className="text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
+                        <h3 className="heading-200 text-foreground">Business Intelligence</h3>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="mt-3">
+                        <p className="body-100 text-foreground leading-relaxed">
+                          {strategy.businessIntelligence}
+                        </p>
+                        {currentCompanyDetails &&
+                          <p className="body-100 text-foreground leading-relaxed mt-4">
+                            Currently, the company is in a growth phase. Their top revenue streams are: 1) SaaS recurring license fees for the core platform, 2) Professional services for implementation and data migration, and 3) Integration-led revenue through partnerships with existing and back-office systems.
+                          </p>
+                          }
+                      </CollapsibleContent>
+                    </Collapsible>
 
-                {/* Recent Company News & Triggers */}
-                <Collapsible defaultOpen className="mb-12">
-                  <CollapsibleTrigger className="flex items-center gap-2 w-full group">
-                    <TrellisIcon name="downCarat" size={12} className="text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
-                    <h3 className="heading-200 text-foreground">Recent Company News & Triggers</h3>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-3">
-                    <p className="heading-50 text-foreground mb-1">{strategy.recentNews.title}</p>
-                    <p className="body-100 text-foreground leading-relaxed">
-                      {strategy.recentNews.description}
-                    </p>
-                    <h4 className="heading-50 text-foreground mt-4 mb-1">Strategic Integration of Empowering Systems</h4>
-                    <p className="body-100 text-foreground leading-relaxed">
-                      {strategy.strategicIntegration}
-                    </p>
-                  </CollapsibleContent>
-                </Collapsible>
+                    {/* Recent Company News & Triggers */}
+                    <Collapsible defaultOpen className="mb-12">
+                      <CollapsibleTrigger className="flex items-center gap-2 w-full group">
+                        <TrellisIcon name="downCarat" size={12} className="text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
+                        <h3 className="heading-200 text-foreground">Recent Company News & Triggers</h3>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="mt-3">
+                        <p className="heading-50 text-foreground mb-1">{strategy.recentNews.title}</p>
+                        <p className="body-100 text-foreground leading-relaxed">
+                          {strategy.recentNews.description}
+                        </p>
+                        <h4 className="heading-50 text-foreground mt-4 mb-1">Strategic Integration of Empowering Systems</h4>
+                        <p className="body-100 text-foreground leading-relaxed">
+                          {strategy.strategicIntegration}
+                        </p>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </>
+                )}
 
                 {/* Outreach Targets */}
                 <Collapsible defaultOpen className="mb-12">
@@ -496,6 +503,14 @@ const ProspectingStrategy = () => {
                     })()}
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-4" ref={outreachContainerRef}>
+
+                  {!hasSequences && (
+                    <SequenceSectionPrompt
+                      isRunning={isRunningSequences}
+                      onRun={runSequences}
+                      researchAvailable={hasResearch}
+                    />
+                  )}
 
                   {outreachTargets.map((contact, index) => {
                         const contactDetail = contactDetails[contact.id];
@@ -555,6 +570,34 @@ const ProspectingStrategy = () => {
                           <div key={`loading-${contact.id}`} className="px-6 py-8 bg-card flex items-center justify-center gap-3 animate-fade-in">
                             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                             <span className="body-100 text-muted-foreground">Outreach agent is working…</span>
+                          </div>
+                        ) : !hasSequences ? (
+                          <div key={`signals-${contact.id}`} className="px-6 py-5 bg-card animate-fade-in">
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-2 detail-200 text-muted-foreground">
+                                <div className={`h-2.5 w-2.5 rounded-full ${((contact.recentConversions ?? 0) > 0) ? "bg-trellis-green-600" : "bg-muted-foreground"}`} />
+                                {(contact.recentConversions ?? 0) > 0
+                                  ? `${contact.recentConversions} recent conversion${(contact.recentConversions ?? 0) !== 1 ? "s" : ""}`
+                                  : "No recent conversions"}
+                              </div>
+                              <div className="flex items-center gap-2 detail-200 text-muted-foreground">
+                                <div className={`h-2.5 w-2.5 rounded-full ${contact.recentTouches > 0 ? "bg-trellis-green-600" : "bg-muted-foreground"}`} />
+                                {contact.recentTouches > 0
+                                  ? `${contact.recentTouches} recent touch${contact.recentTouches !== 1 ? "es" : ""}`
+                                  : "No recent touches"}
+                              </div>
+                              <div className="flex items-center gap-2 detail-200 text-muted-foreground">
+                                <div className={`h-2.5 w-2.5 rounded-full ${contact.enrolledInSequence ? "bg-trellis-purple-600" : "bg-muted-foreground"}`} />
+                                {contact.enrolledInSequence ? "Enrolled in a sequence" : "Not enrolled in a sequence"}
+                              </div>
+                            </div>
+                            {contact.signals.length > 0 && (
+                              <div className="flex flex-wrap items-start gap-2 mt-4">
+                                {contact.signals.map((signal, idx) => (
+                                  <Tag key={idx} variant={signal.variant}>{signal.text}</Tag>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         ) : (
                         <div key={`content-${contact.id}`} className="px-6 pt-5 pb-3 bg-card animate-fade-in">

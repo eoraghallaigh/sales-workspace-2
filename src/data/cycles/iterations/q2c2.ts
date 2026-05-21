@@ -5,6 +5,28 @@ import type { IterationEntry } from "../types";
 // Each entry's `id` matches the folder name under public/about/iterations/.
 export const q2c2Iterations: IterationEntry[] = [
   {
+    id: "2026-05-21-reduce-company-list-variants",
+    date: "2026-05-21",
+    label: "reduce-company-list-variants",
+    whatChanged: [
+      "Cut the company-list page down to two variants (Original + new card view), defaulted to the card view, and added an icon toggle in the top right to switch between them.",
+      "Standardised the Prospecting Strategy page with a workspace-level page header (back-link variant of WorkspaceHeader) and a slide-in/out companies sub-nav matching the Prospecting sub-nav pattern.",
+      "Designed empty states for when the research agent and/or sequence agent haven't run yet.",
+    ],
+    why: [
+      "Q2C2 outreach-agent discussion confirmed not every company will have pre-generated research/sequences for cost reasons, so the page needs explicit, transparent \"run the agent\" affordances.",
+      "The Prospecting Strategy page chrome needed to line up with the rest of the workspace (consistent header + sub-nav).",
+    ],
+    commitment: "outreach-strategy",
+    screenshots: [
+      { src: "/about/iterations/2026-05-21-reduce-company-list-variants/prospecting.png", alt: "Prospecting route screenshot" },
+      { src: "/about/iterations/2026-05-21-reduce-company-list-variants/prospecting-strategy.png", alt: "Prospecting strategy route screenshot" },
+      { src: "/about/iterations/2026-05-21-reduce-company-list-variants/prospecting-strategy-empty-both.png", alt: "Prospecting strategy empty (both agents) screenshot" },
+      { src: "/about/iterations/2026-05-21-reduce-company-list-variants/prospecting-strategy-empty-research.png", alt: "Prospecting strategy empty (research only) screenshot" },
+      { src: "/about/iterations/2026-05-21-reduce-company-list-variants/prospecting-strategy-empty-sequences.png", alt: "Prospecting strategy empty (sequences only) screenshot" },
+    ],
+  },
+  {
     id: "2026-05-20-sequence-card-redesign",
     date: "2026-05-20",
     label: "sequence-card-redesign",

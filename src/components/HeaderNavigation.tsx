@@ -187,8 +187,6 @@ export const HeaderNavigation = ({
 
 const variantOptions: { label: string; value: CardVariant }[] = [
   { label: "Variant C (default)", value: "C" },
-  { label: "Variant A", value: "A" },
-  { label: "Variant B", value: "B" },
   { label: "Original UI", value: "current" },
 ];
 

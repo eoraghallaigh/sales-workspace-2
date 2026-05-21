@@ -1,12 +1,12 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
-export type CardVariant = "current" | "A" | "B" | "C";
+export type CardVariant = "current" | "C";
 
 const STORAGE_KEY = "prospecting-card-variant";
 const DEFAULT_VARIANT: CardVariant = "C";
 
 const isVariant = (v: unknown): v is CardVariant =>
-  v === "current" || v === "A" || v === "B" || v === "C";
+  v === "current" || v === "C";
 
 const VariantContext = createContext<{
   variant: CardVariant;
