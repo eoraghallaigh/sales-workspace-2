@@ -19,8 +19,6 @@ import { TableHeaderCell } from "@/components/ui/table-header-cell";
 import { TableDataCell } from "@/components/ui/table-data-cell";
 import { Info, ChevronDown, ListFilter, X, ExternalLink, FileEdit, Mail, Phone, ListTodo, Calendar, MoreHorizontal, Copy, Search, ArrowUpDown, ChevronRight, Check } from "lucide-react";
 import CompanyCard from "@/components/CompanyCard";
-import CompanyCardVariantA from "@/components/CompanyCardVariantA";
-import CompanyCardVariantB from "@/components/CompanyCardVariantB";
 import CompanyCardVariantC from "@/components/CompanyCardVariantC";
 import { companyStrategies, defaultStrategy } from "@/data/companyStrategies";
 import Tag from "@/components/Tag";
@@ -38,7 +36,7 @@ import { TrellisIcon } from "@/components/ui/trellis-icon";
 import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { Company } from "@/components/CompanyCard";
 import { calculateCompanyStatus } from "@/utils/companyStatusUtils";
-import { useVariant } from "@/contexts/VariantContext";
+import { useVariant, type CardVariant } from "@/contexts/VariantContext";
 const Prospecting = () => {
   const { campaignId } = useParams();
   const navigate = useNavigate();
@@ -650,6 +648,8 @@ const Prospecting = () => {
                     <ListFilter className="h-4 w-4" />
                     Advanced Filters
                   </Button>
+                  {/* View toggle: new (Variant C) vs. original */}
+                  <ViewToggle />
                 </div>
               </div>}
 
@@ -695,36 +695,12 @@ const Prospecting = () => {
                       );
                     }
 
-                    if (cardVariant === "A") {
-                      return (
-                        <div key={company.id} {...(companyIndex === 0 ? { "data-tour": "first-company-card" } : {})}>
-                          <CompanyCardVariantA company={company} strategyHint={strategyHint} rank={companyIndex + 1} onCompanyClick={() => handleCompanyClick(company.id)} completedTasks={completedTasks} />
-                        </div>
-                      );
-                    }
-
-                    if (cardVariant === "B") {
-                      return (
-                        <div key={company.id} {...(companyIndex === 0 ? { "data-tour": "first-company-card" } : {})}>
-                          <CompanyCardVariantB company={company} strategyHint={strategyHint} rank={companyIndex + 1} onCompanyClick={() => handleCompanyClick(company.id)} completedTasks={completedTasks} />
-                        </div>
-                      );
-                    }
-
                     return (
                       <div key={company.id} {...(companyIndex === 0 ? { "data-tour": "first-company-card" } : {})}>
                         <CompanyCardVariantC company={company} strategyHint={strategyHint} rank={companyIndex + 1} onCompanyClick={() => handleCompanyClick(company.id)} completedTasks={completedTasks} />
                       </div>
                     );
                   });
-
-                  if (cardVariant === "A") {
-                    return (
-                      <div className="border border-core-subtle rounded-[4px] overflow-hidden divide-y divide-core-subtle">
-                        {rows}
-                      </div>
-                    );
-                  }
 
                   return rows;
                 })()
@@ -1766,4 +1742,43 @@ const Prospecting = () => {
       </div>
       </Layout>;
 };
+const viewToggleOptions: { value: CardVariant; icon: string; label: string }[] = [
+  { value: "C", icon: "listView", label: "List view" },
+  { value: "current", icon: "documents", label: "Card view" },
+];
+
+const ViewToggle = () => {
+  const { variant, setVariant } = useVariant();
+  return (
+    <div className="flex items-start" role="group" aria-label="Switch list view">
+      {viewToggleOptions.map((opt, i) => {
+        const isActive = variant === opt.value;
+        const isFirst = i === 0;
+        return (
+          <Tooltip key={opt.value}>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                aria-pressed={isActive}
+                aria-label={opt.label}
+                onClick={() => setVariant(opt.value)}
+                className={`relative flex items-center justify-center p-2.5 border border-core-subtle transition-colors ${
+                  isFirst ? "rounded-l-[4px] -mr-px" : "rounded-r-[4px]"
+                } ${
+                  isActive
+                    ? "bg-fill-surface-recessed z-[1] text-foreground"
+                    : "bg-card text-muted-foreground hover:bg-fill-surface-recessed"
+                }`}
+              >
+                <TrellisIcon name={opt.icon} size={16} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>{opt.label}</TooltipContent>
+          </Tooltip>
+        );
+      })}
+    </div>
+  );
+};
+
 export default Prospecting;

@@ -47,15 +47,15 @@ const WorkspaceHeader = ({
   if (backLink) {
     return (
       <div className="sticky top-0 z-30 bg-card border-b border-core-subtle" onWheel={(e) => e.stopPropagation()}>
-        <div className="pl-12 pr-6 pt-6 pb-6">
+        <div className="pl-12 pr-6 pt-6 pb-4">
           <Link
             to={backLink.to}
-            className="inline-flex items-center gap-1 body-100 text-muted-foreground hover:text-foreground mb-3"
+            className="inline-flex items-center gap-1 heading-25 text-text-interactive hover:underline"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3 w-3" />
             <span>{backLink.label}</span>
           </Link>
-          {title && <h1 className="heading-300">{title}</h1>}
+          {title && <h1 className="heading-300 mt-3">{title}</h1>}
           {subtitle && <div className="mt-2">{subtitle}</div>}
         </div>
       </div>

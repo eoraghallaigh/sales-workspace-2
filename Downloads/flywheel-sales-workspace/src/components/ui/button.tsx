@@ -21,6 +21,8 @@ const buttonVariants = cva(
         primary: "bg-[var(--color-fill-primary-default)] text-[var(--color-text-primary-default)] hover:bg-[var(--color-fill-primary-hover)] border border-[var(--color-border-primary-default)]",
         "secondary-alt": "bg-[var(--color-fill-secondary-default)] text-[var(--color-text-core-default)] border border-[var(--color-border-secondary-default)] hover:bg-[var(--color-fill-secondary-hover)]",
         transparent: "bg-transparent text-[var(--trellis-color-magenta-900)] hover:text-[var(--trellis-color-magenta-1000)]",
+        ai: "bg-[var(--trellis-color-magenta-900)] text-white hover:bg-[var(--trellis-color-magenta-1000)] !rounded-full heading-50",
+        "ai-secondary": "bg-card text-[var(--trellis-color-magenta-900)] border border-[var(--trellis-color-magenta-900)] hover:bg-[var(--trellis-color-magenta-200,#FBEAF1)] hover:text-[var(--trellis-color-magenta-1000)] hover:border-[var(--trellis-color-magenta-1000)] !rounded-full heading-50",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -80,6 +82,38 @@ const buttonVariants = cva(
         variant: "secondary-alt",
         size: "extra-small",
         class: "px-[12px] gap-[4px]"
+      },
+      // AI variants
+      {
+        variant: "ai",
+        size: "medium",
+        class: "px-[24px] gap-[8px] heading-50"
+      },
+      {
+        variant: "ai",
+        size: "small",
+        class: "px-[16px] gap-[8px]"
+      },
+      {
+        variant: "ai",
+        size: "extra-small",
+        class: "px-[10px] gap-[4px] heading-50"
+      },
+      // AI Secondary variants (mirror AI sizing)
+      {
+        variant: "ai-secondary",
+        size: "medium",
+        class: "px-[24px] gap-[8px] heading-50"
+      },
+      {
+        variant: "ai-secondary",
+        size: "small",
+        class: "px-[16px] gap-[8px]"
+      },
+      {
+        variant: "ai-secondary",
+        size: "extra-small",
+        class: "px-[10px] gap-[4px] heading-50"
       },
       // Transparent variants
       {
