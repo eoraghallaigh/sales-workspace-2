@@ -17,6 +17,7 @@ export const q2c2Iterations: IterationEntry[] = [
       "Q2C2 outreach-agent discussion confirmed not every company will have pre-generated research/sequences for cost reasons, so the page needs explicit, transparent \"run the agent\" affordances.",
       "The Prospecting Strategy page chrome needed to line up with the rest of the workspace (consistent header + sub-nav).",
     ],
+    prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/40",
     commitment: "outreach-strategy",
     screenshots: [
       { src: "/about/iterations/2026-05-21-reduce-company-list-variants/prospecting.png", alt: "Prospecting route screenshot" },
