@@ -92,6 +92,8 @@ export interface Company {
     deadline: string;
   };
   recommendedContacts: RecommendedContact[];
+  priority?: "P1" | "P2" | "P3" | "P4";
+  hasGeneratedStrategy?: boolean;
 }
 interface CompanyCardProps {
   company: Company;
