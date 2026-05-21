@@ -1,0 +1,133 @@
+import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TrellisIcon } from "@/components/ui/trellis-icon";
+import { AiStarIcon, AiStarIconGradient } from "@/components/ui/ai-star-icon";
+
+interface StrategyEmptyBannerProps {
+  companyName: string;
+  isRunning: boolean;
+  onGenerateBoth: () => void;
+  onRunResearchOnly: () => void;
+}
+
+export const StrategyEmptyBanner = ({
+  companyName,
+  isRunning,
+  onGenerateBoth,
+  onRunResearchOnly,
+}: StrategyEmptyBannerProps) => (
+  <div className="flex items-start gap-4 rounded-100 border border-core-subtle bg-card px-6 py-5 mb-8">
+    <div className="shrink-0 mt-0.5">
+      <TrellisIcon name="artificialIntelligence" size={20} />
+    </div>
+    <div className="flex-1 min-w-0">
+      <h3 className="heading-200 text-foreground">
+        {companyName} hasn't been prepped yet
+      </h3>
+      <p className="body-100 text-muted-foreground mt-1">
+        Run the prospecting agents to generate business intelligence, recent
+        triggers, and personalized email sequences for each outreach target.
+      </p>
+      <div className="flex items-center gap-4 mt-4">
+        <Button
+          variant="default"
+          size="medium"
+          onClick={onGenerateBoth}
+          disabled={isRunning}
+        >
+          {isRunning ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              Generating strategy…
+            </>
+          ) : (
+            "Generate strategy"
+          )}
+        </Button>
+        <button
+          type="button"
+          onClick={onRunResearchOnly}
+          disabled={isRunning}
+          className="body-100 text-text-interactive hover:underline disabled:opacity-50"
+        >
+          Run research only
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+interface ResearchEmptyCardProps {
+  companyName: string;
+  isRunning: boolean;
+  onRun: () => void;
+}
+
+export const ResearchEmptyCard = ({
+  companyName,
+  isRunning,
+  onRun,
+}: ResearchEmptyCardProps) => (
+  <div className="rounded-100 border border-dashed border-core-subtle bg-card px-6 py-8 text-center mb-12">
+    <div className="flex justify-center mb-3">
+      <AiStarIconGradient size={24} />
+    </div>
+    <h3 className="heading-200 text-foreground">
+      Company research hasn't run yet
+    </h3>
+    <p className="body-100 text-muted-foreground mt-2 max-w-md mx-auto">
+      Generate business intelligence, recent news and triggers, and per-contact
+      context for {companyName}.
+    </p>
+    <div className="mt-5 flex justify-center">
+      <Button
+        variant="ai"
+        size="small"
+        onClick={onRun}
+        disabled={isRunning}
+      >
+        {isRunning ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <AiStarIcon size={14} />
+        )}
+        {isRunning ? "Running research agent…" : "Run research agent"}
+      </Button>
+    </div>
+  </div>
+);
+
+interface SequenceSectionPromptProps {
+  isRunning: boolean;
+  onRun: () => void;
+  researchAvailable: boolean;
+}
+
+export const SequenceSectionPrompt = ({
+  isRunning,
+  onRun,
+  researchAvailable,
+}: SequenceSectionPromptProps) => (
+  <div className="flex items-center justify-between gap-4 rounded-100 border border-dashed border-core-subtle bg-card px-4 py-3 mb-4">
+    <div className="flex items-center gap-3 min-w-0">
+      <AiStarIconGradient size={20} />
+      <p className="body-100 text-foreground">
+        Sequences haven't been drafted for these targets yet.
+      </p>
+    </div>
+    <Button
+      variant={researchAvailable ? "ai" : "ai-secondary"}
+      size="small"
+      onClick={onRun}
+      disabled={isRunning}
+      className="shrink-0"
+    >
+      {isRunning ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <AiStarIcon size={14} />
+      )}
+      {isRunning ? "Drafting sequences…" : "Run sequence agent"}
+    </Button>
+  </div>
+);
