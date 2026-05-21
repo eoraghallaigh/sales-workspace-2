@@ -213,7 +213,7 @@ const config: Config = {
         },
 
         /* ────────────────────────────────
-         * shadcn / Lovable palette aliases
+         * shadcn palette aliases
          * ──────────────────────────────── */
         foreground:                'var(--color-text-core-default)',
         'muted-foreground':        'var(--color-text-core-subtle)',

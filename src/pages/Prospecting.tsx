@@ -128,6 +128,14 @@ const Prospecting = () => {
 
   // Calculate dynamic company statuses but maintain frozen sort order
   // Filter to only show Unworked QL and Unworked P1 companies
+  const navItemToPriority: Record<string, "P1" | "P2" | "P3" | "P4"> = {
+    "p1-now": "P1",
+    "p2-next": "P2",
+    "p3-later": "P3",
+    "p4-last": "P4",
+  };
+  const activePriority = navItemToPriority[activeNavItem];
+
   const companiesWithCalculatedStatus = useMemo(() => {
     // Calculate current status for each company (for display purposes)
     const companiesWithStatus = prospectingCompanies.map(company => ({
@@ -141,8 +149,12 @@ const Prospecting = () => {
       .filter((c): c is Company => c !== undefined);
 
     // Filter to show New, Unworked P1, In Progress, and Over SLA companies
-    return sortedCompanies.filter(c => c.status === "New" || c.status === "Unworked P1" || c.status === "In Progress" || c.status === "Over SLA");
-  }, [prospectingCompanies, completedTasks, initialSortOrder]);
+    const workable = sortedCompanies.filter(c => c.status === "New" || c.status === "Unworked P1" || c.status === "In Progress" || c.status === "Over SLA");
+
+    // Filter by current priority bucket (P1 default for companies that don't have one set)
+    if (!activePriority) return workable;
+    return workable.filter(c => (c.priority ?? "P1") === activePriority);
+  }, [prospectingCompanies, completedTasks, initialSortOrder, activePriority]);
   const incrementCompanyTouch = (taskId: string) => {
     setProspectingCompanies(prevCompanies => prevCompanies.map(company => {
       const hasTask = company.tasks.some(task => task.id === taskId);
@@ -546,7 +558,7 @@ const Prospecting = () => {
               {/* Header */}
               {!expandedPanelCompanyId && <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="heading-300">{activeCampaign ? activeCampaign.label : 'P1 Prospects'}</h2>
+                  <h2 className="heading-300">{activeCampaign ? activeCampaign.label : `${activePriority ?? 'P1'} Prospects`}</h2>
                   <p className="body-100 text-muted-foreground">{companiesWithCalculatedStatus.length} leads</p>
                 </div>
                 
