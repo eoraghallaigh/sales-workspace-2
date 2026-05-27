@@ -19,6 +19,7 @@ export const q2c2Iterations: IterationEntry[] = [
       "Reps need a single comprehensive view of every prospect and every customer in their capacity, not just the priority-bucketed slices, so they can survey their book and spot opportunities outside the current bucket.",
       "Splitting Net New (prospects) from Install Base (customers) in the sub-nav mirrors how reps think about their two distinct motions.",
     ],
+    prUrl: "https://git.hubteam.com/eoraghallaigh/flywheel-sales-workspace/pull/42",
     commitment: "full-prospect-book",
     screenshots: [
       { src: "/about/iterations/2026-05-27-add-customer-prospect-book-views/full-prospect-book.png", alt: "Full Prospect Book route screenshot" },
