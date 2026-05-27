@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { useNavigate, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { useCyclePath } from "@/hooks/useCyclePath";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,11 +22,14 @@ const ProspectingSubNav = ({
   const { cyclePath, cycleSlug } = useCyclePath();
   const { campaignId } = useParams();
   const { campaigns } = useCampaigns();
+  const [searchParams] = useSearchParams();
+  const viewParam = searchParams.get("view");
   const isPowerHourRoute = location.pathname.startsWith(`/${cycleSlug}/power-hour`);
-  const defaultItem = campaignId || (isPowerHourRoute ? "" : "p1-now");
+  const defaultItem = campaignId || viewParam || (isPowerHourRoute ? "" : "p1-now");
   const campaignIds = campaigns.map(c => c.id);
   const [activeItem, setActiveItemState] = useState(defaultItem);
-  const [isPriorityOpen, setIsPriorityOpen] = useState(!campaignId);
+  const [isNetNewOpen, setIsNetNewOpen] = useState(!campaignId);
+  const [isInstallBaseOpen, setIsInstallBaseOpen] = useState(!campaignId);
   const [isOtherOpen, setIsOtherOpen] = useState(!!campaignId);
   const setActiveItem = (id: string) => {
     setActiveItemState(id);
@@ -38,7 +41,10 @@ const ProspectingSubNav = ({
     }
   };
 
-  const priorityItems = [{
+  const netNewItems = [{
+    id: "full-prospect-book",
+    label: "Full Prospect Book"
+  }, {
     id: "p1-now",
     label: "P1 - Now"
   }, {
@@ -50,9 +56,11 @@ const ProspectingSubNav = ({
   }, {
     id: "p4-last",
     label: "P4 - Last"
-  }, {
-    id: "install-base",
-    label: "Install Base"
+  }];
+
+  const installBaseItems = [{
+    id: "full-customer-book",
+    label: "Full Customer Book"
   }];
   return (
     <>
@@ -75,14 +83,27 @@ const ProspectingSubNav = ({
               <span className="body-100 text-foreground">QLs</span>
             </Button>
 
-            {/* Priority prospects Collapsible */}
-            <Collapsible open={isPriorityOpen} onOpenChange={setIsPriorityOpen}>
+            {/* Net New Collapsible */}
+            <Collapsible open={isNetNewOpen} onOpenChange={setIsNetNewOpen}>
               <CollapsibleTrigger className="w-[214px] flex items-center justify-between px-3 py-2 rounded-100 hover:bg-trellis-neutral-100 transition-colors mb-1">
-                <span className="body-100 text-foreground">Priority prospects</span>
-                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isPriorityOpen ? '' : '-rotate-90'}`} />
+                <span className="body-100 text-foreground">Net New</span>
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isNetNewOpen ? '' : '-rotate-90'}`} />
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-1 mt-1">
-                {priorityItems.map((item) => <Button key={item.id} variant="ghost" onClick={() => setActiveItem(item.id)} className={`w-[214px] flex items-center justify-start pl-6 pr-3 py-2 rounded-100 transition-colors relative h-auto ${activeItem === item.id ? "bg-trellis-neutral-200 hover:bg-trellis-neutral-200 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-foreground before:rounded-r" : "hover:bg-trellis-neutral-100"}`}>
+                {netNewItems.map((item) => <Button key={item.id} variant="ghost" onClick={() => setActiveItem(item.id)} className={`w-[214px] flex items-center justify-start pl-6 pr-3 py-2 rounded-100 transition-colors relative h-auto ${activeItem === item.id ? "bg-trellis-neutral-200 hover:bg-trellis-neutral-200 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-foreground before:rounded-r" : "hover:bg-trellis-neutral-100"}`}>
+                    <span className="body-100 text-foreground">{item.label}</span>
+                  </Button>)}
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Install Base Collapsible */}
+            <Collapsible open={isInstallBaseOpen} onOpenChange={setIsInstallBaseOpen}>
+              <CollapsibleTrigger className="w-[214px] flex items-center justify-between px-3 py-2 rounded-100 hover:bg-trellis-neutral-100 transition-colors mb-1 mt-1">
+                <span className="body-100 text-foreground">Install Base</span>
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isInstallBaseOpen ? '' : '-rotate-90'}`} />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-1 mt-1">
+                {installBaseItems.map((item) => <Button key={item.id} variant="ghost" onClick={() => setActiveItem(item.id)} className={`w-[214px] flex items-center justify-start pl-6 pr-3 py-2 rounded-100 transition-colors relative h-auto ${activeItem === item.id ? "bg-trellis-neutral-200 hover:bg-trellis-neutral-200 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-foreground before:rounded-r" : "hover:bg-trellis-neutral-100"}`}>
                     <span className="body-100 text-foreground">{item.label}</span>
                   </Button>)}
               </CollapsibleContent>

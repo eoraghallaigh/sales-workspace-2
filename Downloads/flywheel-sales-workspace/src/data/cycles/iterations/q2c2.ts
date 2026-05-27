@@ -5,6 +5,28 @@ import type { IterationEntry } from "../types";
 // Each entry's `id` matches the folder name under public/about/iterations/.
 export const q2c2Iterations: IterationEntry[] = [
   {
+    id: "2026-05-27-add-customer-prospect-book-views",
+    date: "2026-05-27",
+    label: "add-customer-prospect-book-views",
+    whatChanged: [
+      "Added a new Install Base section to the prospecting sub-nav with Full Customer Book underneath.",
+      "Renamed the existing Priority Prospects section to Net New and added Full Prospect Book as the first item.",
+      "Built the Full Customer Book table view with a frozen Customer column and expandable rows that reveal nested contacts inline.",
+      "Built the Full Prospect Book table view with the same structure tuned for net-new prospects (Company / Domain / Action Guidance / Intent Signals / Priority).",
+      "Left-aligned the prospecting views (P1, the two new book views, and Power Hour) so the content sits flush against the sub-nav instead of centering inside the 1440px cap.",
+    ],
+    why: [
+      "Reps need a single comprehensive view of every prospect and every customer in their capacity, not just the priority-bucketed slices, so they can survey their book and spot opportunities outside the current bucket.",
+      "Splitting Net New (prospects) from Install Base (customers) in the sub-nav mirrors how reps think about their two distinct motions.",
+    ],
+    commitment: "full-prospect-book",
+    screenshots: [
+      { src: "/about/iterations/2026-05-27-add-customer-prospect-book-views/full-prospect-book.png", alt: "Full Prospect Book route screenshot" },
+      { src: "/about/iterations/2026-05-27-add-customer-prospect-book-views/full-customer-book.png", alt: "Full Customer Book route screenshot" },
+      { src: "/about/iterations/2026-05-27-add-customer-prospect-book-views/prospecting.png", alt: "Prospecting route screenshot" },
+    ],
+  },
+  {
     id: "2026-05-21-reduce-company-list-variants",
     date: "2026-05-21",
     label: "reduce-company-list-variants",
