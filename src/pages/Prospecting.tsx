@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useCyclePath } from "@/hooks/useCyclePath";
 import { Layout } from "@/components/Layout";
 import CompanyTakeoverView from "@/components/CompanyTakeoverView";
@@ -20,6 +20,8 @@ import { TableDataCell } from "@/components/ui/table-data-cell";
 import { Info, ChevronDown, ListFilter, X, ExternalLink, FileEdit, Mail, Phone, ListTodo, Calendar, MoreHorizontal, Copy, Search, ArrowUpDown, ChevronRight, Check } from "lucide-react";
 import CompanyCard from "@/components/CompanyCard";
 import CompanyCardVariantC from "@/components/CompanyCardVariantC";
+import FullCustomerBook from "@/components/FullCustomerBook";
+import FullProspectBook from "@/components/FullProspectBook";
 import { companyStrategies, defaultStrategy } from "@/data/companyStrategies";
 import Tag from "@/components/Tag";
 import CollapsibleSection from "@/components/CollapsibleSection";
@@ -67,7 +69,9 @@ const Prospecting = () => {
   const [selectedWorkedStatuses, setSelectedWorkedStatuses] = useState<Set<string>>(new Set());
   const [isCallPrepPanelOpen, setIsCallPrepPanelOpen] = useState(false);
   const [callPrepContactId, setCallPrepContactId] = useState<string | null>(null);
-  const [activeNavItem, setActiveNavItem] = useState<string>(campaignId || "p1-now");
+  const [searchParams] = useSearchParams();
+  const viewParam = searchParams.get("view");
+  const [activeNavItem, setActiveNavItem] = useState<string>(campaignId || viewParam || "p1-now");
   const { variant: cardVariant } = useVariant();
   const { campaigns } = useCampaigns();
   useEffect(() => {
@@ -75,6 +79,11 @@ const Prospecting = () => {
       setActiveNavItem(campaignId);
     }
   }, [campaignId]);
+  useEffect(() => {
+    if (viewParam) {
+      setActiveNavItem(viewParam);
+    }
+  }, [viewParam]);
   const activeCampaign = campaigns.find(c => c.id === activeNavItem) || null;
   const toggleWorkedStatus = (status: string) => {
     setSelectedWorkedStatuses(prev => {
@@ -475,8 +484,20 @@ const Prospecting = () => {
 
           {/* Main Content Area - Only scrolling element */}
           <div className={`${expandedPanelCompanyId ? 'w-[240px] flex-shrink-0' : 'flex-1'} overflow-y-auto overscroll-contain transition-all duration-300 ${!expandedPanelCompanyId && (isPanelOpen || isContactPanelOpen || isTaskPanelOpen) ? 'mr-[569px]' : 'mr-0'}`}>
-            {/* Top Metrics - hidden when expanded panel is active */}
-            <div className={`${expandedPanelCompanyId ? 'px-0 py-0' : 'max-w-[1440px] mx-auto px-6 py-6'}`}>
+            {/* Full Customer Book / Full Prospect Book views replace the default cards layout */}
+            {!expandedPanelCompanyId && activeNavItem === "full-customer-book" && (
+              <div className="max-w-[1440px] px-6 py-6">
+                <FullCustomerBook />
+              </div>
+            )}
+            {!expandedPanelCompanyId && activeNavItem === "full-prospect-book" && (
+              <div className="max-w-[1440px] px-6 py-6">
+                <FullProspectBook />
+              </div>
+            )}
+            {/* Top Metrics - hidden when expanded panel is active or when a Full Book view is shown */}
+            {activeNavItem !== "full-customer-book" && activeNavItem !== "full-prospect-book" && (
+            <div className={`${expandedPanelCompanyId ? 'px-0 py-0' : 'max-w-[1440px] px-6 py-6'}`}>
               {!expandedPanelCompanyId && <div className="grid grid-cols-4 gap-4 mb-6">
                 <Card className="flex flex-col items-center px-6 py-4 bg-card border border-border rounded shadow-100 flex-1">
                   <div className="flex items-center gap-2 mb-4">
@@ -719,6 +740,7 @@ const Prospecting = () => {
               )}
              </div>
             </div>
+            )}
            </div>
 
            {/* Side Panel - hidden when expanded panel is active */}

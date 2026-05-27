@@ -42,6 +42,21 @@ export const q2c2: Cycle = {
       metrics: [],
     },
     {
+      id: "full-prospect-book",
+      title: "Full Prospect Book",
+      summary:
+        "Give reps a single view of all the prospects in their capacity.",
+      problem:
+        "Today, reps see prospects sliced into priority buckets (P1–P4) and have no comprehensive surface that lets them see, search, and filter every prospect in their capacity at once. Without that single pane, it's hard for reps to spot opportunities outside the current bucket or sanity-check their book.",
+      designGoals: [
+        "Provide a dense, scannable table view of every prospect in the rep's book.",
+        "Keep the company name frozen in the first column so context is preserved when scrolling horizontally across rich attributes.",
+        "Let reps expand a row to see nested contacts inline, without leaving the table.",
+      ],
+      feedback: [],
+      metrics: [],
+    },
+    {
       id: "campaigns",
       title: "Campaigns",
       summary:
