@@ -397,7 +397,7 @@ const PowerHourReview = () => {
 
           {/* Main Content Area */}
           <div className="flex-1 overflow-y-auto overscroll-contain">
-            <div className="max-w-[1440px] mx-auto px-6 py-6">
+            <div className="max-w-[1440px] px-6 py-6">
               {/* Metrics */}
               <div className="grid grid-cols-4 gap-4 mb-6">
                 <Card className="flex flex-col items-center px-6 py-4 bg-card border border-border rounded shadow-100 flex-1">
