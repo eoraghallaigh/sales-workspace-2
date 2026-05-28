@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { TourProvider } from "@/contexts/TourContext";
 import { VariantProvider } from "@/contexts/VariantContext";
 import { StrategyAssistantProvider } from "@/contexts/StrategyAssistantContext";
-import { CampaignsProvider } from "@/contexts/CampaignsContext";
+import { PlaysProvider } from "@/contexts/PlaysContext";
 import GuidedTour from "@/components/GuidedTour";
 import SalesWorkspace from "./pages/SalesWorkspace";
 import Summary from "./pages/Summary";
@@ -24,8 +24,8 @@ import OutreachStates from "./pages/OutreachStates";
 import TeamHome from "./pages/TeamHome";
 import CyclePage from "./pages/CyclePage";
 import MotionSandbox from "./pages/MotionSandbox";
-import Campaigns from "./pages/Campaigns";
-import CampaignBuilder from "./pages/CampaignBuilder";
+import Plays from "./pages/Plays";
+import PlayBuilder from "./pages/PlayBuilder";
 
 const queryClient = new QueryClient();
 
@@ -38,7 +38,7 @@ const App = () => (
         <TourProvider>
           <VariantProvider>
           <StrategyAssistantProvider>
-          <CampaignsProvider>
+          <PlaysProvider>
           <Routes>
             <Route path="/" element={<TeamHome />} />
             <Route path="/motion-sandbox" element={<MotionSandbox />} />
@@ -46,10 +46,10 @@ const App = () => (
             <Route path="/:cycleSlug/summary" element={<Summary />} />
             <Route path="/:cycleSlug/design-system" element={<DesignSystem />} />
             <Route path="/:cycleSlug/prospecting" element={<Prospecting />} />
-            <Route path="/:cycleSlug/prospecting/campaign/:campaignId" element={<Prospecting />} />
-            <Route path="/:cycleSlug/campaigns" element={<Campaigns />} />
-            <Route path="/:cycleSlug/campaigns/new" element={<CampaignBuilder />} />
-            <Route path="/:cycleSlug/campaigns/:campaignId/edit" element={<CampaignBuilder />} />
+            <Route path="/:cycleSlug/prospecting/play/:playId" element={<Prospecting />} />
+            <Route path="/:cycleSlug/plays" element={<Plays />} />
+            <Route path="/:cycleSlug/plays/new" element={<PlayBuilder />} />
+            <Route path="/:cycleSlug/plays/:playId/edit" element={<PlayBuilder />} />
             <Route path="/:cycleSlug/prospecting/strategy/:companyId" element={<ProspectingStrategy />} />
             <Route path="/:cycleSlug/power-hour" element={<PowerHour />} />
             <Route path="/:cycleSlug/power-hour/review" element={<PowerHourReview />} />
@@ -62,7 +62,7 @@ const App = () => (
             <Route path="/:cycleSlug/outreach-states" element={<OutreachStates />} />
           </Routes>
           <GuidedTour />
-          </CampaignsProvider>
+          </PlaysProvider>
           </StrategyAssistantProvider>
           </VariantProvider>
         </TourProvider>

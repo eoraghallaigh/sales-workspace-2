@@ -57,15 +57,15 @@ export const q2c2: Cycle = {
       metrics: [],
     },
     {
-      id: "campaigns",
-      title: "Campaigns",
+      id: "plays",
+      title: "Plays",
       summary:
         "Give marketing a home for building and managing prospecting plays that reps work in the workspace.",
       problem:
-        "Campaigns today are hardcoded — there's no way for marketing to create, draft, schedule, or edit a campaign. The 'create campaign' flow lived inside a modal that couldn't grow to accommodate drafts, scheduling, sharing, lifecycle states, or a list view across all campaigns. We need a dedicated surface for marketing to manage campaigns end-to-end.",
+        "Plays today are hardcoded — there's no way for marketing to create, draft, schedule, or edit a play. The 'create play' flow lived inside a modal that couldn't grow to accommodate drafts, scheduling, sharing, lifecycle states, or a list view across all plays. We need a dedicated surface for marketing to manage plays end-to-end.",
       designGoals: [
         "Keep the focused creation work inside the existing agentic modal — that part is bounded and works.",
-        "Add a Campaigns sub-section of the workspace that lists every campaign (draft, scheduled, live, ended) in a filterable table, so marketing has somewhere to survey, find drafts, and pick what to edit.",
+        "Add a Plays sub-section of the workspace that lists every play (draft, scheduled, live, ended) in a filterable table, so marketing has somewhere to survey, find drafts, and pick what to edit.",
         "Design the data shape so growth dimensions (drafts, scheduling, ownership, sharing, history, lifecycle actions) can layer in without further structural rework.",
       ],
       feedback: [],

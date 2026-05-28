@@ -10,7 +10,7 @@ export const LeftNavigation = () => {
   ];
   const branchItems: Array<{ name: any; to?: string }> = [
     { name: "crm", to: cyclePath("/summary") },
-    { name: "campaigns" },
+    { name: "plays" },
     { name: "documents" },
     { name: "salesTemplates" },
     { name: "shoppingCart" },

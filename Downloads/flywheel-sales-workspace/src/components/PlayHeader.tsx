@@ -3,10 +3,10 @@ import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, FileText, Swords, MessageSquareText, Video, File, Calendar, User, Target } from "lucide-react";
 import { useState } from "react";
-import { Campaign, EnablementMaterial } from "@/data/campaignData";
+import { Play, EnablementMaterial } from "@/data/playData";
 
-interface CampaignHeaderProps {
-  campaign: Campaign;
+interface PlayHeaderProps {
+  play: Play;
 }
 
 const materialIcon = (type: EnablementMaterial["type"]) => {
@@ -24,22 +24,22 @@ const formatDate = (dateStr: string) => {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 };
 
-const CampaignHeader = ({ campaign }: CampaignHeaderProps) => {
+const PlayHeader = ({ play }: PlayHeaderProps) => {
   const [isEnablementOpen, setIsEnablementOpen] = useState(true);
-  const workedPercent = Math.round((campaign.metrics.worked / campaign.metrics.totalCompanies) * 100);
-  const meetingsPercent = Math.round((campaign.metrics.meetings / campaign.metrics.target) * 100);
+  const workedPercent = Math.round((play.metrics.worked / play.metrics.totalCompanies) * 100);
+  const meetingsPercent = Math.round((play.metrics.meetings / play.metrics.target) * 100);
 
   // Calculate days remaining
-  const endDate = new Date(campaign.endDate);
+  const endDate = new Date(play.endDate);
   const today = new Date();
   const daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
 
   return (
     <Card className="bg-card border border-border rounded shadow-100 p-5 mb-4">
-      {/* Campaign title & meta */}
+      {/* Play title & meta */}
       <div className="mb-4">
-        <h3 className="heading-300 text-foreground mb-1">{campaign.label}</h3>
-        <p className="body-100 text-muted-foreground leading-relaxed">{campaign.description}</p>
+        <h3 className="heading-300 text-foreground mb-1">{play.label}</h3>
+        <p className="body-100 text-muted-foreground leading-relaxed">{play.description}</p>
       </div>
 
       {/* Meta row */}
@@ -47,7 +47,7 @@ const CampaignHeader = ({ campaign }: CampaignHeaderProps) => {
         <div className="flex items-center gap-1.5">
           <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="detail-100 text-muted-foreground">
-            {formatDate(campaign.startDate)} – {formatDate(campaign.endDate)}
+            {formatDate(play.startDate)} – {formatDate(play.endDate)}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -55,11 +55,11 @@ const CampaignHeader = ({ campaign }: CampaignHeaderProps) => {
         </div>
         <div className="flex items-center gap-1.5">
           <User className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="detail-100 text-muted-foreground">{campaign.createdBy}</span>
+          <span className="detail-100 text-muted-foreground">{play.createdBy}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <Target className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="detail-100 text-muted-foreground">{campaign.completionCriteria}</span>
+          <span className="detail-100 text-muted-foreground">{play.completionCriteria}</span>
         </div>
       </div>
 
@@ -68,7 +68,7 @@ const CampaignHeader = ({ campaign }: CampaignHeaderProps) => {
         <div className="p-3 rounded border border-border bg-background">
           <div className="flex items-center justify-between mb-2">
             <span className="heading-50 text-foreground">Companies worked</span>
-            <span className="heading-100 text-foreground">{campaign.metrics.worked}/{campaign.metrics.totalCompanies}</span>
+            <span className="heading-100 text-foreground">{play.metrics.worked}/{play.metrics.totalCompanies}</span>
           </div>
           <Progress value={workedPercent} className="h-2" />
           <span className="detail-100 text-muted-foreground mt-1 block">{workedPercent}% complete</span>
@@ -76,7 +76,7 @@ const CampaignHeader = ({ campaign }: CampaignHeaderProps) => {
         <div className="p-3 rounded border border-border bg-background">
           <div className="flex items-center justify-between mb-2">
             <span className="heading-50 text-foreground">Meetings booked</span>
-            <span className="heading-100 text-foreground">{campaign.metrics.meetings}/{campaign.metrics.target}</span>
+            <span className="heading-100 text-foreground">{play.metrics.meetings}/{play.metrics.target}</span>
           </div>
           <Progress value={meetingsPercent} className="h-2" />
           <span className="detail-100 text-muted-foreground mt-1 block">{meetingsPercent}% of target</span>
@@ -88,11 +88,11 @@ const CampaignHeader = ({ campaign }: CampaignHeaderProps) => {
         <CollapsibleTrigger className="flex items-center gap-2 w-full py-1">
           <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isEnablementOpen ? '' : '-rotate-90'}`} />
           <span className="heading-50 text-foreground">Enablement materials</span>
-          <span className="detail-100 text-muted-foreground">({campaign.enablementMaterials.length})</span>
+          <span className="detail-100 text-muted-foreground">({play.enablementMaterials.length})</span>
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-2">
           <div className="space-y-1">
-            {campaign.enablementMaterials.map(material => (
+            {play.enablementMaterials.map(material => (
               <button
                 key={material.id}
                 className="flex items-start gap-3 w-full text-left px-3 py-2.5 rounded hover:bg-accent/50 transition-colors group"
@@ -111,4 +111,4 @@ const CampaignHeader = ({ campaign }: CampaignHeaderProps) => {
   );
 };
 
-export default CampaignHeader;
+export default PlayHeader;
