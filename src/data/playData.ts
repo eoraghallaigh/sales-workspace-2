@@ -5,16 +5,16 @@ export interface EnablementMaterial {
   description: string;
 }
 
-export interface CampaignFilter {
+export interface PlayFilter {
   id: string;
   filterName: string;
   condition: string;
   displayValue: string;
 }
 
-export type CampaignStatus = "draft" | "scheduled" | "live" | "ended" | "archived";
+export type PlayStatus = "draft" | "scheduled" | "live" | "ended" | "archived";
 
-export interface Campaign {
+export interface Play {
   id: string;
   label: string;
   description: string;
@@ -29,15 +29,15 @@ export interface Campaign {
     meetings: number;
     target: number;
   };
-  status: CampaignStatus;
+  status: PlayStatus;
   owner: string;
   geo?: string[];
   marketSegment?: string[];
   teams?: string[];
-  filters?: CampaignFilter[];
+  filters?: PlayFilter[];
 }
 
-export const campaigns: Campaign[] = [
+export const plays: Play[] = [
   {
     id: "salesforce-switchers",
     label: "Salesforce Switchers",
@@ -86,7 +86,7 @@ export const campaigns: Campaign[] = [
   {
     id: "q3-aeo-push",
     label: "Q3 AEO Push",
-    description: "Accelerate pipeline for the AEO product line ahead of Q3 targets. Prioritize companies with 500+ employees that have shown intent signals around AI-powered analytics. Leadership wants 15 meetings booked by end of campaign.",
+    description: "Accelerate pipeline for the AEO product line ahead of Q3 targets. Prioritize companies with 500+ employees that have shown intent signals around AI-powered analytics. Leadership wants 15 meetings booked by end of play.",
     startDate: "2026-03-01",
     endDate: "2026-05-31",
     createdBy: "Marcus Johnson (Dir. Sales)",

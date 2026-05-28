@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, PanelLeftClose, ArrowRight } from "lucide-react";
-import { useCampaigns } from "@/contexts/CampaignsContext";
+import { usePlays } from "@/contexts/PlaysContext";
 
 interface ProspectingSubNavProps {
   onCollapse?: () => void;
@@ -20,22 +20,22 @@ const ProspectingSubNav = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { cyclePath, cycleSlug } = useCyclePath();
-  const { campaignId } = useParams();
-  const { campaigns } = useCampaigns();
+  const { playId } = useParams();
+  const { plays } = usePlays();
   const [searchParams] = useSearchParams();
   const viewParam = searchParams.get("view");
   const isPowerHourRoute = location.pathname.startsWith(`/${cycleSlug}/power-hour`);
-  const defaultItem = campaignId || viewParam || (isPowerHourRoute ? "" : "p1-now");
-  const campaignIds = campaigns.map(c => c.id);
+  const defaultItem = playId || viewParam || (isPowerHourRoute ? "" : "p1-now");
+  const playIds = plays.map(c => c.id);
   const [activeItem, setActiveItemState] = useState(defaultItem);
-  const [isNetNewOpen, setIsNetNewOpen] = useState(!campaignId);
-  const [isInstallBaseOpen, setIsInstallBaseOpen] = useState(!campaignId);
-  const [isOtherOpen, setIsOtherOpen] = useState(!!campaignId);
+  const [isNetNewOpen, setIsNetNewOpen] = useState(!playId);
+  const [isInstallBaseOpen, setIsInstallBaseOpen] = useState(!playId);
+  const [isOtherOpen, setIsOtherOpen] = useState(!!playId);
   const setActiveItem = (id: string) => {
     setActiveItemState(id);
     onActiveItemChange?.(id);
-    if (campaignIds.includes(id)) {
-      navigate(cyclePath(`/prospecting/campaign/${id}`));
+    if (playIds.includes(id)) {
+      navigate(cyclePath(`/prospecting/play/${id}`));
     } else {
       navigate(cyclePath("/prospecting"));
     }
@@ -120,22 +120,22 @@ const ProspectingSubNav = ({
             {/* Separator */}
             <div className="my-4 border-t border-border" />
 
-            {/* Campaigns Collapsible */}
+            {/* Plays Collapsible */}
             <Collapsible open={isOtherOpen} onOpenChange={setIsOtherOpen}>
               <CollapsibleTrigger className="w-[214px] flex items-center justify-between px-3 py-2 rounded-100 hover:bg-trellis-neutral-100 transition-colors mb-1">
-                <span className="body-100 text-foreground">Campaigns</span>
+                <span className="body-100 text-foreground">Plays</span>
                 <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isOtherOpen ? '' : '-rotate-90'}`} />
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-1 mt-1">
-                {campaigns.map((item) => <Button key={item.id} variant="ghost" onClick={() => setActiveItem(item.id)} className={`w-[214px] flex items-center justify-start pl-6 pr-3 py-2 rounded-100 transition-colors relative h-auto ${activeItem === item.id ? "bg-trellis-neutral-200 hover:bg-trellis-neutral-200 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-foreground before:rounded-r" : "hover:bg-trellis-neutral-100"}`}>
+                {plays.map((item) => <Button key={item.id} variant="ghost" onClick={() => setActiveItem(item.id)} className={`w-[214px] flex items-center justify-start pl-6 pr-3 py-2 rounded-100 transition-colors relative h-auto ${activeItem === item.id ? "bg-trellis-neutral-200 hover:bg-trellis-neutral-200 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-foreground before:rounded-r" : "hover:bg-trellis-neutral-100"}`}>
                     <span className="body-100 text-foreground">{item.label}</span>
                   </Button>)}
                 <Button
                   variant="ghost"
-                  onClick={() => navigate(cyclePath("/campaigns"))}
+                  onClick={() => navigate(cyclePath("/plays"))}
                   className="w-[214px] flex items-center justify-start pl-6 pr-3 py-2 rounded-100 transition-colors relative h-auto text-muted-foreground hover:bg-trellis-neutral-100"
                 >
-                  <span className="body-100">View all campaigns</span>
+                  <span className="body-100">View all plays</span>
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </CollapsibleContent>

@@ -20,13 +20,13 @@ import { FormControl } from "@/components/ui/form-control";
 import Tag from "@/components/Tag";
 import { prospectingCompanies } from "@/data/prospectingCompanies";
 import { repPersonas, defaultViewerLabel, RepPersona } from "@/data/repPersonas";
-import { Campaign, CampaignFilter, CampaignStatus, EnablementMaterial } from "@/data/campaignData";
+import { Play, PlayFilter, PlayStatus, EnablementMaterial } from "@/data/playData";
 
 interface CreateViewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave?: (campaign: Campaign) => void;
-  initialCampaign?: Campaign;
+  onSave?: (play: Play) => void;
+  initialPlay?: Play;
 }
 
 interface ChatMessage {
@@ -2528,12 +2528,12 @@ const SCRIPTED_INTENTS: ScriptedIntent[] = [
       "Identifying competitive renewal signals…",
       "Filtering by segment and geo…",
       "Sampling matching companies…",
-      "Drafting campaign details…",
+      "Drafting play details…",
     ],
     filterSeeds: [
       { filterId: "account-group-territory", condition: "is any of", value: "Americas", listValues: ["Americas"], listOptions: ["APAC", "EMEA", "Americas", "LATAM", "ANZ"] },
     ],
-    reply: "I've drafted a Salesforce Switchers campaign for US mid-market. I added a territory filter and pre-filled the name and description — review the manual filters on the right to fine-tune.",
+    reply: "I've drafted a Salesforce Switchers play for US mid-market. I added a territory filter and pre-filled the name and description — review the manual filters on the right to fine-tune.",
   },
   {
     trigger: (t) => /aeo|analytics|ai.*push/i.test(t),
@@ -2544,28 +2544,28 @@ const SCRIPTED_INTENTS: ScriptedIntent[] = [
       "Filtering by employee count and industry…",
       "Cross-referencing intent + fit scores…",
       "Sampling matching companies…",
-      "Drafting campaign details…",
+      "Drafting play details…",
     ],
     filterSeeds: [
       { filterId: "annual-revenue", condition: "is greater than", value: "50000000" },
     ],
-    reply: "I've drafted a Q3 AEO Push campaign. I added a revenue filter for larger accounts — you may want to add an intent-signal filter manually as well.",
+    reply: "I've drafted a Q3 AEO Push play. I added a revenue filter for larger accounts — you may want to add an intent-signal filter manually as well.",
   },
   {
     trigger: () => true,
-    name: "New prospecting campaign",
+    name: "New prospecting play",
     description: "Companies matching the criteria you described. Refine the filters on the right or keep chatting to narrow further.",
     statusMessages: [
       "Reading your prompt…",
       "Identifying target segment…",
       "Filtering company data…",
       "Sampling matching companies…",
-      "Drafting campaign details…",
+      "Drafting play details…",
     ],
     filterSeeds: [
       { filterId: "account-group-territory", condition: "is any of", value: "Americas", listValues: ["Americas"], listOptions: ["APAC", "EMEA", "Americas", "LATAM", "ANZ"] },
     ],
-    reply: "I've drafted a campaign based on your prompt. I added a starter territory filter and pre-filled the name and description — review the filters on the right and tell me how you'd like to refine it.",
+    reply: "I've drafted a play based on your prompt. I added a starter territory filter and pre-filled the name and description — review the filters on the right and tell me how you'd like to refine it.",
   },
 ];
 
@@ -2573,7 +2573,7 @@ const CreateViewModal = ({
   isOpen,
   onClose,
   onSave,
-  initialCampaign
+  initialPlay
 }: CreateViewModalProps) => {
   const [currentStep, setCurrentStep] = useState<Step>("settings");
   const [filterGroups, setFilterGroups] = useState<FilterGroup[]>([{
@@ -2583,8 +2583,8 @@ const CreateViewModal = ({
     id: "group-2",
     filters: []
   }]);
-  const [viewName, setViewName] = useState("Campaign name");
-  const [viewDescription, setViewDescription] = useState("Campaign description");
+  const [viewName, setViewName] = useState("Play name");
+  const [viewDescription, setViewDescription] = useState("Play description");
   const [editingFilter, setEditingFilter] = useState<{
     groupId: string;
     filterId: string;
@@ -2692,31 +2692,31 @@ const CreateViewModal = ({
   // Settings step state
   const [expiryDate, setExpiryDate] = useState<Date | undefined>(undefined);
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
-  const [campaignBasis, setCampaignBasis] = useState<"companies" | "portals" | "contacts">("companies");
+  const [playBasis, setPlayBasis] = useState<"companies" | "portals" | "contacts">("companies");
   const [completionAction, setCompletionAction] = useState<string>("add-to-sequence");
   const [completionCount, setCompletionCount] = useState<number>(1);
   const [completionPer, setCompletionPer] = useState<"company" | "contact">("company");
-  const [campaignStatus, setCampaignStatus] = useState<CampaignStatus>("draft");
+  const [playStatus, setPlayStatus] = useState<PlayStatus>("draft");
 
   useEffect(() => {
     if (!isOpen) return;
-    if (initialCampaign) {
-      setViewName(initialCampaign.label);
-      setViewDescription(initialCampaign.description);
-      setExpiryDate(initialCampaign.endDate ? new Date(initialCampaign.endDate) : undefined);
-      setEnablementMaterials(initialCampaign.enablementMaterials);
-      setSelectedTeams(initialCampaign.teams ?? []);
-      setCampaignStatus(initialCampaign.status);
+    if (initialPlay) {
+      setViewName(initialPlay.label);
+      setViewDescription(initialPlay.description);
+      setExpiryDate(initialPlay.endDate ? new Date(initialPlay.endDate) : undefined);
+      setEnablementMaterials(initialPlay.enablementMaterials);
+      setSelectedTeams(initialPlay.teams ?? []);
+      setPlayStatus(initialPlay.status);
       setFilterGroups([{ id: "group-1", filters: [] }, { id: "group-2", filters: [] }]);
     } else {
-      setViewName("Campaign name");
-      setViewDescription("Campaign description");
+      setViewName("Play name");
+      setViewDescription("Play description");
       setExpiryDate(undefined);
       setEnablementMaterials([]);
       setSelectedTeams([]);
-      setCampaignStatus("draft");
+      setPlayStatus("draft");
     }
-  }, [isOpen, initialCampaign]);
+  }, [isOpen, initialPlay]);
 
   // Hierarchical sales org for access control
   interface OrgNode {
@@ -3096,7 +3096,7 @@ const CreateViewModal = ({
       id: `em-new-${Date.now()}`,
       title: newMaterialTitle.trim(),
       type: newMaterialType,
-      description: newMaterialUrl.trim() || "Added during campaign creation",
+      description: newMaterialUrl.trim() || "Added during play creation",
     };
     setEnablementMaterials(prev => [...prev, material]);
     setNewMaterialTitle("");
@@ -3107,43 +3107,43 @@ const CreateViewModal = ({
     setEnablementMaterials(prev => prev.filter(m => m.id !== id));
   };
 
-  // Build a Campaign object from current state
-  const buildCampaign = useCallback((): Campaign => {
+  // Build a Play object from current state
+  const buildPlay = useCallback((): Play => {
     const allActiveFilters = filterGroups.flatMap(g => g.filters);
-    const editedFilters: CampaignFilter[] = allActiveFilters.map(f => ({
+    const editedFilters: PlayFilter[] = allActiveFilters.map(f => ({
       id: f.id,
       filterName: f.filterName,
       condition: f.condition,
       displayValue: f.listValues && f.listValues.length > 0 ? f.listValues.join(", ") : f.value,
     }));
-    const newId = (viewName || "new-campaign")
+    const newId = (viewName || "new-play")
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "") + `-${Date.now().toString(36).slice(-4)}`;
-    const startDate = initialCampaign?.startDate ?? new Date().toISOString().slice(0, 10);
-    const endDate = (expiryDate ?? (initialCampaign ? new Date(initialCampaign.endDate) : new Date(Date.now() + 1000 * 60 * 60 * 24 * 60))).toISOString().slice(0, 10);
-    // In edit mode, preserve filters the user didn't change (modal can't yet reverse-map CampaignFilter → ActiveFilter)
+    const startDate = initialPlay?.startDate ?? new Date().toISOString().slice(0, 10);
+    const endDate = (expiryDate ?? (initialPlay ? new Date(initialPlay.endDate) : new Date(Date.now() + 1000 * 60 * 60 * 24 * 60))).toISOString().slice(0, 10);
+    // In edit mode, preserve filters the user didn't change (modal can't yet reverse-map PlayFilter → ActiveFilter)
     const filters = editedFilters.length > 0
       ? editedFilters
-      : initialCampaign?.filters;
+      : initialPlay?.filters;
     return {
-      id: initialCampaign?.id ?? newId,
-      label: viewName || "New campaign",
+      id: initialPlay?.id ?? newId,
+      label: viewName || "New play",
       description: viewDescription || "",
       startDate,
       endDate,
-      createdBy: initialCampaign?.createdBy ?? defaultViewerLabel,
+      createdBy: initialPlay?.createdBy ?? defaultViewerLabel,
       completionCriteria: `${completionCount} ${completionAction.replace(/-/g, " ")} per ${completionPer}`,
       enablementMaterials,
-      metrics: initialCampaign?.metrics ?? { totalCompanies: previewCompanies.length, worked: 0, meetings: 0, target: previewCompanies.length },
-      status: campaignStatus,
-      owner: initialCampaign?.owner ?? defaultViewerLabel,
-      geo: initialCampaign?.geo,
-      marketSegment: initialCampaign?.marketSegment,
+      metrics: initialPlay?.metrics ?? { totalCompanies: previewCompanies.length, worked: 0, meetings: 0, target: previewCompanies.length },
+      status: playStatus,
+      owner: initialPlay?.owner ?? defaultViewerLabel,
+      geo: initialPlay?.geo,
+      marketSegment: initialPlay?.marketSegment,
       teams: selectedTeams.length > 0 ? selectedTeams : undefined,
       filters,
     };
-  }, [filterGroups, viewName, viewDescription, expiryDate, completionAction, completionCount, completionPer, enablementMaterials, previewCompanies.length, selectedTeams, campaignStatus, initialCampaign]);
+  }, [filterGroups, viewName, viewDescription, expiryDate, completionAction, completionCount, completionPer, enablementMaterials, previewCompanies.length, selectedTeams, playStatus, initialPlay]);
   const handleAddFilterToGroup = (filter: FilterItem, groupId: string) => {
     const newFilter: ActiveFilter = {
       id: `${filter.id}-${Date.now()}`,
@@ -3960,7 +3960,7 @@ const CreateViewModal = ({
         <div className="absolute inset-x-0 top-0 bottom-0 flex items-center justify-center pointer-events-none">
           <div className="bg-card border border-[var(--color-border-container-default)] rounded-[4px] px-6 py-4 shadow-sm max-w-md text-center">
             <p className="body-100 text-[var(--color-text-core-default)]">
-              Your campaign preview will appear here once you start describing it.
+              Your play preview will appear here once you start describing it.
             </p>
           </div>
         </div>
@@ -4020,7 +4020,7 @@ const CreateViewModal = ({
     if (currentStep === "settings") setCurrentStep("filters");
     else if (currentStep === "filters") setCurrentStep("columns");
     else {
-      if (onSave) onSave(buildCampaign());
+      if (onSave) onSave(buildPlay());
       onClose();
     }
   };
@@ -4031,7 +4031,7 @@ const CreateViewModal = ({
         onClick={handleWizardContinue}
         className="w-full h-10 rounded-[4px] bg-[var(--color-fill-primary-default)] hover:bg-[var(--color-fill-primary-hover)] text-[var(--color-text-primary-default)]"
       >
-        {currentStep === "columns" ? "Save campaign" : "Continue"}
+        {currentStep === "columns" ? "Save play" : "Continue"}
       </Button>
       <button
         type="button"
@@ -4079,10 +4079,10 @@ const CreateViewModal = ({
                         marginBottom: 0,
                       }}
                     >
-                      Welcome to the campaign creation agent
+                      Welcome to the play creation agent
                     </h1>
                     <p className="body-100 text-core-default">
-                      Tell me what kind of campaign you want and I'll build the settings, filters, and columns for you.
+                      Tell me what kind of play you want and I'll build the settings, filters, and columns for you.
                     </p>
                   </motion.div>
 
@@ -4091,7 +4091,7 @@ const CreateViewModal = ({
                       value={filterPromptText}
                       onChange={setFilterPromptText}
                       onSubmit={handleAgentTurn}
-                      placeholder="Describe the type of campaign you want…"
+                      placeholder="Describe the type of play you want…"
                       disabled={agentBusy}
                       rows={4}
                     />
@@ -4116,7 +4116,7 @@ const CreateViewModal = ({
                         onClick={() => { setView("wizard"); setCurrentStep("settings"); }}
                         disabled={agentBusy}
                       >
-                        Create campaign manually
+                        Create play manually
                       </Button>
                     </div>
                   </motion.div>
@@ -4142,7 +4142,7 @@ const CreateViewModal = ({
                   transition={{ duration: 0.3, delay: 0.1 }}
                 >
                   <Sparkles className="h-4 w-4 text-[var(--color-fill-brand-default)]" />
-                  <h3 className="heading-200 text-[var(--color-text-core-default)]">Campaign agent</h3>
+                  <h3 className="heading-200 text-[var(--color-text-core-default)]">Play agent</h3>
                 </motion.div>
                 <div ref={chatScrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
                   <AnimatePresence initial={false}>
@@ -4184,7 +4184,7 @@ const CreateViewModal = ({
                     value={filterPromptText}
                     onChange={setFilterPromptText}
                     onSubmit={handleAgentTurn}
-                    placeholder="Refine the campaign…"
+                    placeholder="Refine the play…"
                     disabled={agentBusy}
                     rows={3}
                   />
@@ -4558,7 +4558,7 @@ const CreateViewModal = ({
               <div className="p-6 space-y-6 divide-y divide-[var(--color-border-container-default)] [&>div:not(:first-child)]:pt-6">
                 {/* Based on Section - FIRST */}
                 <FormControl label="Based on">
-                  <RadioGroup value={campaignBasis} onValueChange={(v) => setCampaignBasis(v as "companies" | "portals" | "contacts")} className="space-y-1">
+                  <RadioGroup value={playBasis} onValueChange={(v) => setPlayBasis(v as "companies" | "portals" | "contacts")} className="space-y-1">
                     <div className="flex items-center gap-2">
                       <RadioGroupItem value="companies" id="basis-companies" />
                       <Label htmlFor="basis-companies" className="body-200 text-[var(--color-text-core-default)] cursor-pointer">Companies</Label>
@@ -4758,9 +4758,9 @@ const CreateViewModal = ({
             renderSkeletonPreview()
           ) : (
             <div className="py-6 pr-12">
-              {campaignBasis === "contacts"
+              {playBasis === "contacts"
                 ? renderContactsPreview()
-                : campaignBasis === "portals"
+                : playBasis === "portals"
                 ? renderPortalsPreview()
                 : (
                   <>
