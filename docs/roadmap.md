@@ -20,7 +20,7 @@ A rolling view of what we're shipping, what's next, and what's on the backburner
 
 > *Ideas we believe in but haven't scoped. Good place to propose new features — Claude should check here before suggesting things are "new".*
 
-- **Campaigns** — descoped from Q2C2 on 2026-05-18; targeting Q3C1 at earliest pending working-group output. See [docs/campaigns-direction.md](campaigns-direction.md).
+- **Plays** — descoped from Q2C2 on 2026-05-18; targeting Q3C1 at earliest pending working-group output. See [docs/plays-direction.md](plays-direction.md).
 
 ## Recently shipped
 
