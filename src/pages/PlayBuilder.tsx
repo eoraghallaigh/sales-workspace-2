@@ -3,36 +3,36 @@ import { Layout } from "@/components/Layout";
 import WorkspaceHeader from "@/components/WorkspaceHeader";
 import CreateViewModal from "@/components/CreateViewModal";
 import { useCyclePath } from "@/hooks/useCyclePath";
-import { useCampaigns } from "@/contexts/CampaignsContext";
-import { Campaign } from "@/data/campaignData";
+import { usePlays } from "@/contexts/PlaysContext";
+import { Play } from "@/data/playData";
 
-const CampaignBuilder = () => {
+const PlayBuilder = () => {
   const navigate = useNavigate();
   const { cyclePath } = useCyclePath();
-  const { campaignId } = useParams();
-  const { campaigns, addCampaign, updateCampaign } = useCampaigns();
+  const { playId } = useParams();
+  const { plays, addPlay, updatePlay } = usePlays();
 
-  const editing = campaignId ? campaigns.find((c) => c.id === campaignId) ?? null : null;
+  const editing = playId ? plays.find((c) => c.id === playId) ?? null : null;
   const isEditMode = !!editing;
 
-  const handleSave = (campaign: Campaign) => {
+  const handleSave = (play: Play) => {
     if (editing) {
-      updateCampaign(editing.id, campaign);
+      updatePlay(editing.id, play);
     } else {
-      addCampaign(campaign);
+      addPlay(play);
     }
   };
 
   const handleClose = () => {
-    navigate(cyclePath("/campaigns"));
+    navigate(cyclePath("/plays"));
   };
 
   return (
     <Layout>
       <div className="flex flex-col h-[calc(100vh-3rem)] overflow-hidden bg-muted/30">
         <WorkspaceHeader
-          backLink={{ to: cyclePath("/campaigns"), label: "Campaigns" }}
-          title={isEditMode ? "Edit campaign" : "Create campaign"}
+          backLink={{ to: cyclePath("/plays"), label: "Plays" }}
+          title={isEditMode ? "Edit play" : "Create play"}
         />
 
         <div className="flex-1 min-h-0 overflow-hidden">
@@ -40,7 +40,7 @@ const CampaignBuilder = () => {
             isOpen
             onClose={handleClose}
             onSave={handleSave}
-            initialCampaign={editing ?? undefined}
+            initialPlay={editing ?? undefined}
           />
         </div>
       </div>
@@ -48,4 +48,4 @@ const CampaignBuilder = () => {
   );
 };
 
-export default CampaignBuilder;
+export default PlayBuilder;

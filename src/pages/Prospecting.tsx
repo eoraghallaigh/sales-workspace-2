@@ -6,8 +6,8 @@ import CompanyTakeoverView from "@/components/CompanyTakeoverView";
 import CompanyExpandedPanel from "@/components/CompanyExpandedPanel";
 import WorkspaceHeader from "@/components/WorkspaceHeader";
 import ProspectingSubNav from "@/components/ProspectingSubNav";
-import CampaignHeader from "@/components/CampaignHeader";
-import { useCampaigns } from "@/contexts/CampaignsContext";
+import PlayHeader from "@/components/PlayHeader";
+import { usePlays } from "@/contexts/PlaysContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -40,7 +40,7 @@ import { Company } from "@/components/CompanyCard";
 import { calculateCompanyStatus } from "@/utils/companyStatusUtils";
 import { useVariant, type CardVariant } from "@/contexts/VariantContext";
 const Prospecting = () => {
-  const { campaignId } = useParams();
+  const { playId } = useParams();
   const navigate = useNavigate();
   const { cyclePath } = useCyclePath();
   const [takeoverCompanyId, setTakeoverCompanyId] = useState<string | null>(null);
@@ -71,20 +71,20 @@ const Prospecting = () => {
   const [callPrepContactId, setCallPrepContactId] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const viewParam = searchParams.get("view");
-  const [activeNavItem, setActiveNavItem] = useState<string>(campaignId || viewParam || "p1-now");
+  const [activeNavItem, setActiveNavItem] = useState<string>(playId || viewParam || "p1-now");
   const { variant: cardVariant } = useVariant();
-  const { campaigns } = useCampaigns();
+  const { plays } = usePlays();
   useEffect(() => {
-    if (campaignId) {
-      setActiveNavItem(campaignId);
+    if (playId) {
+      setActiveNavItem(playId);
     }
-  }, [campaignId]);
+  }, [playId]);
   useEffect(() => {
     if (viewParam) {
       setActiveNavItem(viewParam);
     }
   }, [viewParam]);
-  const activeCampaign = campaigns.find(c => c.id === activeNavItem) || null;
+  const activePlay = plays.find(c => c.id === activeNavItem) || null;
   const toggleWorkedStatus = (status: string) => {
     setSelectedWorkedStatuses(prev => {
       const next = new Set(prev);
@@ -569,9 +569,9 @@ const Prospecting = () => {
                 </Card>
               </div>}
 
-              {/* Campaign Header - shown when a campaign is active */}
-              {!expandedPanelCompanyId && activeCampaign && (
-                <CampaignHeader campaign={activeCampaign} />
+              {/* Play Header - shown when a play is active */}
+              {!expandedPanelCompanyId && activePlay && (
+                <PlayHeader play={activePlay} />
               )}
 
               {/* Company Cards Section */}
@@ -579,7 +579,7 @@ const Prospecting = () => {
               {/* Header */}
               {!expandedPanelCompanyId && <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="heading-300">{activeCampaign ? activeCampaign.label : `${activePriority ?? 'P1'} Prospects`}</h2>
+                  <h2 className="heading-300">{activePlay ? activePlay.label : `${activePriority ?? 'P1'} Prospects`}</h2>
                   <p className="body-100 text-muted-foreground">{companiesWithCalculatedStatus.length} leads</p>
                 </div>
                 

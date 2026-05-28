@@ -21,7 +21,7 @@ const ICON_FILE_MAP: Record<string, string> = {
   callingMissed: "CallingMissed",
   callingVoicemail: "CallingVoicemail",
   callTranscript: "CallTranscript",
-  campaigns: "Campaigns",
+  plays: "Campaigns",
   cap: "Cap",
   checkCircle: "CheckCircle",
   circleFilled: "CircleFilled",

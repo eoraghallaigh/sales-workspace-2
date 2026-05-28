@@ -12,10 +12,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import { useCyclePath } from "@/hooks/useCyclePath";
-import { useCampaigns } from "@/contexts/CampaignsContext";
-import { Campaign, CampaignStatus } from "@/data/campaignData";
+import { usePlays } from "@/contexts/PlaysContext";
+import { Play, PlayStatus } from "@/data/playData";
 
-const STATUS_OPTIONS: { value: CampaignStatus; label: string }[] = [
+const STATUS_OPTIONS: { value: PlayStatus; label: string }[] = [
   { value: "draft", label: "Draft" },
   { value: "scheduled", label: "Scheduled" },
   { value: "live", label: "Live" },
@@ -26,7 +26,7 @@ const STATUS_OPTIONS: { value: CampaignStatus; label: string }[] = [
 const SEGMENT_OPTIONS = ["SMB", "Mid-Market", "Enterprise"];
 const GEO_OPTIONS = ["US", "EMEA", "APAC", "France"];
 
-const STATUS_PILL_CLASS: Record<CampaignStatus, string> = {
+const STATUS_PILL_CLASS: Record<PlayStatus, string> = {
   draft: "bg-trellis-neutral-100 text-muted-foreground",
   scheduled: "bg-blue-100 text-blue-800",
   live: "bg-green-100 text-green-800",
@@ -34,7 +34,7 @@ const STATUS_PILL_CLASS: Record<CampaignStatus, string> = {
   archived: "bg-trellis-neutral-100 text-muted-foreground",
 };
 
-const STATUS_PILL_LABEL: Record<CampaignStatus, string> = {
+const STATUS_PILL_LABEL: Record<PlayStatus, string> = {
   draft: "Draft",
   scheduled: "Scheduled",
   live: "Live",
@@ -102,10 +102,10 @@ const MultiSelectDropdown = ({ label, options, selected, onToggle, onClear, widt
   </DropdownMenu>
 );
 
-const Campaigns = () => {
+const Plays = () => {
   const navigate = useNavigate();
   const { cyclePath } = useCyclePath();
-  const { campaigns } = useCampaigns();
+  const { plays } = usePlays();
 
   const [selectedStatuses, setSelectedStatuses] = useState<Set<string>>(new Set());
   const [selectedSegments, setSelectedSegments] = useState<Set<string>>(new Set());
@@ -113,12 +113,12 @@ const Campaigns = () => {
   const [selectedOwners, setSelectedOwners] = useState<Set<string>>(new Set());
 
   const ownerOptions = useMemo(
-    () => Array.from(new Set(campaigns.map((c) => c.owner))).sort(),
-    [campaigns]
+    () => Array.from(new Set(plays.map((c) => c.owner))).sort(),
+    [plays]
   );
 
   const filtered = useMemo(() => {
-    return campaigns.filter((c) => {
+    return plays.filter((c) => {
       if (selectedStatuses.size > 0 && !selectedStatuses.has(c.status)) return false;
       if (selectedSegments.size > 0) {
         const overlap = (c.marketSegment ?? []).some((s) => selectedSegments.has(s));
@@ -131,7 +131,7 @@ const Campaigns = () => {
       if (selectedOwners.size > 0 && !selectedOwners.has(c.owner)) return false;
       return true;
     });
-  }, [campaigns, selectedStatuses, selectedSegments, selectedGeos, selectedOwners]);
+  }, [plays, selectedStatuses, selectedSegments, selectedGeos, selectedOwners]);
 
   const toggle = (setter: React.Dispatch<React.SetStateAction<Set<string>>>) => (value: string) => {
     setter((prev) => {
@@ -143,12 +143,12 @@ const Campaigns = () => {
   };
   const clear = (setter: React.Dispatch<React.SetStateAction<Set<string>>>) => () => setter(new Set());
 
-  const handleRowClick = (campaign: Campaign) => {
-    navigate(cyclePath(`/campaigns/${campaign.id}/edit`));
+  const handleRowClick = (play: Play) => {
+    navigate(cyclePath(`/plays/${play.id}/edit`));
   };
 
   const handleCreateClick = () => {
-    navigate(cyclePath("/campaigns/new"));
+    navigate(cyclePath("/plays/new"));
   };
 
   const anyFilterActive =
@@ -166,7 +166,7 @@ const Campaigns = () => {
       <div className="flex flex-col h-screen overflow-hidden">
         <WorkspaceHeader
           backLink={{ to: cyclePath("/prospecting"), label: "Prospecting" }}
-          title="Campaigns"
+          title="Plays"
         />
 
         <div className="flex-1 overflow-y-auto bg-muted/30">
@@ -177,7 +177,7 @@ const Campaigns = () => {
                 <MultiSelectDropdown
                   label="Status"
                   options={STATUS_OPTIONS.map((s) => s.label)}
-                  selected={new Set(Array.from(selectedStatuses).map((s) => STATUS_PILL_LABEL[s as CampaignStatus]))}
+                  selected={new Set(Array.from(selectedStatuses).map((s) => STATUS_PILL_LABEL[s as PlayStatus]))}
                   onToggle={(label) => {
                     const value = STATUS_OPTIONS.find((s) => s.label === label)?.value;
                     if (value) toggle(setSelectedStatuses)(value);
@@ -207,7 +207,7 @@ const Campaigns = () => {
                   width="w-56"
                 />
               </div>
-              <Button onClick={handleCreateClick}>Create campaign</Button>
+              <Button onClick={handleCreateClick}>Create play</Button>
             </div>
 
             {/* Table */}
@@ -227,7 +227,7 @@ const Campaigns = () => {
                   {filtered.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="px-4 py-12 text-center">
-                        <p className="body-100 text-muted-foreground mb-3">No campaigns match these filters</p>
+                        <p className="body-100 text-muted-foreground mb-3">No plays match these filters</p>
                         {anyFilterActive && (
                           <Button variant="ghost" size="medium" onClick={clearAllFilters}>
                             Clear filters
@@ -236,33 +236,33 @@ const Campaigns = () => {
                       </td>
                     </tr>
                   ) : (
-                    filtered.map((campaign) => (
+                    filtered.map((play) => (
                       <tr
-                        key={campaign.id}
-                        onClick={() => handleRowClick(campaign)}
+                        key={play.id}
+                        onClick={() => handleRowClick(play)}
                         className="border-b border-core-subtle last:border-b-0 hover:bg-trellis-neutral-100 cursor-pointer transition-colors"
                       >
                         <td className="px-4 py-4">
-                          <span className="body-100 font-medium text-foreground">{campaign.label}</span>
+                          <span className="body-100 font-medium text-foreground">{play.label}</span>
                         </td>
-                        <td className="px-4 py-4 text-muted-foreground">{campaign.owner}</td>
+                        <td className="px-4 py-4 text-muted-foreground">{play.owner}</td>
                         <td className="px-4 py-4">
                           <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded-full body-75 ${STATUS_PILL_CLASS[campaign.status]}`}
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full body-75 ${STATUS_PILL_CLASS[play.status]}`}
                           >
-                            {STATUS_PILL_LABEL[campaign.status]}
+                            {STATUS_PILL_LABEL[play.status]}
                           </span>
                         </td>
                         <td className="px-4 py-4 text-muted-foreground">
-                          {campaign.marketSegment && campaign.marketSegment.length > 0
-                            ? campaign.marketSegment.join(", ")
+                          {play.marketSegment && play.marketSegment.length > 0
+                            ? play.marketSegment.join(", ")
                             : "—"}
                         </td>
                         <td className="px-4 py-4 text-muted-foreground">
-                          {campaign.geo && campaign.geo.length > 0 ? campaign.geo.join(", ") : "—"}
+                          {play.geo && play.geo.length > 0 ? play.geo.join(", ") : "—"}
                         </td>
                         <td className="px-4 py-4 text-muted-foreground">
-                          {formatDateRange(campaign.startDate, campaign.endDate)}
+                          {formatDateRange(play.startDate, play.endDate)}
                         </td>
                       </tr>
                     ))
@@ -278,4 +278,4 @@ const Campaigns = () => {
   );
 };
 
-export default Campaigns;
+export default Plays;
