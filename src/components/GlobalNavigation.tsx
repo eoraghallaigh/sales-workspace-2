@@ -26,23 +26,35 @@ export const GlobalNavigation = () => {
   const [isChatPanelOpen, setIsChatPanelOpen] = useState(false);
   const [chatSelectedText, setChatSelectedText] = useState<string | undefined>(undefined);
   const [chatContext, setChatContext] = useState<string | undefined>(undefined);
+  const [chatMode, setChatMode] = useState<"research" | undefined>(undefined);
+  const [chatResearchCompanyId, setChatResearchCompanyId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const handleOpenAssistantChat = (event: CustomEvent) => {
-      console.log('Received openAssistantChat event:', event.detail);
-      const { message, context, selectedText } = event.detail;
-      
+      const { message, context, selectedText, mode, companyId } = event.detail;
+
+      // Research mode: open the assistant with the full company research loaded.
+      if (mode === "research") {
+        setChatSelectedText(undefined);
+        setChatContext(undefined);
+        setChatMode("research");
+        setChatResearchCompanyId(companyId);
+        setIsChatPanelOpen(true);
+        handleChatPanelToggle(true);
+        return;
+      }
+
       // Extract selected text from the message if present
-      const textMatch = message.match(/Why was this text included in the AI-generated content: "(.+)"\?/);
+      const textMatch = message?.match(/Why was this text included in the AI-generated content: "(.+)"\?/);
       const extractedText = textMatch ? textMatch[1] : selectedText;
-      
+
       // Open chat panel with selected text
+      setChatMode(undefined);
+      setChatResearchCompanyId(undefined);
       setIsChatPanelOpen(true);
       setChatSelectedText(extractedText);
       setChatContext(context);
       handleChatPanelToggle(true);
-      
-      console.log('Opening assistant chat with selectedText:', extractedText);
     };
 
     console.log('Adding event listener for openAssistantChat');
@@ -60,10 +72,12 @@ export const GlobalNavigation = () => {
 
   const handleChatPanelToggle = (isOpen: boolean) => {
     setIsChatPanelOpen(isOpen);
-    // Clear selected text when closing
+    // Clear transient chat state when closing
     if (!isOpen) {
       setChatSelectedText(undefined);
       setChatContext(undefined);
+      setChatMode(undefined);
+      setChatResearchCompanyId(undefined);
     }
     // Dispatch custom event for Layout to listen to
     window.dispatchEvent(new CustomEvent('chatPanelToggle', { detail: { isOpen } }));
@@ -102,11 +116,13 @@ export const GlobalNavigation = () => {
       <LeftNavigation />
 
       {/* Chat Panel */}
-      <ChatPanel 
-        isOpen={isChatPanelOpen} 
+      <ChatPanel
+        isOpen={isChatPanelOpen}
         onClose={() => handleChatPanelToggle(false)}
         selectedText={chatSelectedText}
         context={chatContext}
+        mode={chatMode}
+        researchCompanyId={chatResearchCompanyId}
       />
     </>
   );
