@@ -18,6 +18,7 @@ export const q2c2Iterations: IterationEntry[] = [
       "The real company-research agent output is far longer than the original placeholder; reps need a scannable summary first, with full detail one click away.",
       "Wanted to compare the condensed TL;DR pattern against a full-inline-research version before deciding which treatment to take forward.",
     ],
+    prUrl: "https://github.com/eoraghallaigh_hubspot/flywheel-sales-workspace/pull/1",
     commitment: "outreach-strategy",
     screenshots: [
       { src: "/about/iterations/2026-05-29-insert-company-research-content/prospecting-strategy.png", alt: "Prospecting strategy TL;DR research card screenshot" },
