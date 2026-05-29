@@ -1406,9 +1406,9 @@ const rawProspectingCompanies: Company[] = [
   },
   {
     id: "3",
-    name: "Innovate Solutions",
-    website: "innovatesolutions.com",
-    industry: "Marketing Technology",
+    name: "Advanced Satellite Communications",
+    website: "advancedsat.com",
+    industry: "Commercial Technology Systems Integrator",
     pvsScore: "Medium",
     conversionTrigger: "Downloaded Whitepaper",
     status: "New",
