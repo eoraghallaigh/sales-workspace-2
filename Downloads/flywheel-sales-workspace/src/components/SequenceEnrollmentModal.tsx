@@ -6,7 +6,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 
@@ -44,7 +43,6 @@ export interface SequenceEnrollmentContact {
 interface SequenceEnrollmentModalProps {
   open: boolean;
   contacts: SequenceEnrollmentContact[];
-  initialContactId?: string | null;
   companyLogo?: string;
   onOpenChange: (open: boolean) => void;
   onEnroll: (
@@ -57,41 +55,16 @@ interface SequenceEnrollmentModalProps {
 const SequenceEnrollmentModal = ({
   open,
   contacts,
-  initialContactId,
   companyLogo,
   onOpenChange,
   onEnroll,
 }: SequenceEnrollmentModalProps) => {
-  const [selectedContactIds, setSelectedContactIds] = useState<Set<string>>(
-    new Set(),
-  );
   const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (!open) return;
     setSearch("");
-    setSelectedContactIds(
-      new Set(initialContactId ? [initialContactId] : []),
-    );
-  }, [open, initialContactId]);
-
-  const toggleContact = (contactId: string, checked: boolean) => {
-    setSelectedContactIds((prev) => {
-      const next = new Set(prev);
-      if (checked) next.add(contactId);
-      else next.delete(contactId);
-      return next;
-    });
-  };
-
-  const allSelected =
-    contacts.length > 0 && selectedContactIds.size === contacts.length;
-
-  const toggleAll = (checked: boolean) => {
-    setSelectedContactIds(
-      checked ? new Set(contacts.map((c) => c.id)) : new Set(),
-    );
-  };
+  }, [open]);
 
   const filteredSequences = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -103,77 +76,50 @@ const SequenceEnrollmentModal = ({
     );
   }, [search]);
 
-  const canEnroll = selectedContactIds.size > 0;
+  const canEnroll = contacts.length > 0;
 
   const handleSelectSequence = (sequence: Sequence) => {
     if (!canEnroll) return;
-    onEnroll(sequence.id, sequence.name, Array.from(selectedContactIds));
+    onEnroll(sequence.id, sequence.name, contacts.map((c) => c.id));
     onOpenChange(false);
   };
 
+  const enrollSummary =
+    contacts.length === 1
+      ? contacts[0].name
+      : `${contacts.length} contacts`;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[960px] p-0 gap-0 overflow-hidden bg-white">
+      <DialogContent className="sm:max-w-[720px] p-0 gap-0 overflow-hidden bg-white">
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <DialogTitle>Select sequence</DialogTitle>
         </div>
 
-        <div className="flex h-[600px]">
-          <div className="w-1/4 border-r border-border flex flex-col min-h-0">
-            <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-              <Checkbox
-                id="select-all-contacts"
-                checked={allSelected}
-                onCheckedChange={(v) => toggleAll(v === true)}
-              />
-              <label
-                htmlFor="select-all-contacts"
-                className="heading-50 text-foreground cursor-pointer"
-              >
-                Contacts ({selectedContactIds.size}/{contacts.length})
-              </label>
+        <div className="flex flex-col h-[600px]">
+          <div className="px-6 py-4 flex items-center gap-3 border-b border-border">
+            <div className="flex -space-x-2">
+              {contacts.slice(0, 5).map((contact) => (
+                <Avatar
+                  key={contact.id}
+                  className="h-7 w-7 flex-shrink-0 border-2 border-white"
+                >
+                  <AvatarImage
+                    src={companyLogo || companyLogoPlaceholder}
+                    alt={`${contact.name} avatar`}
+                  />
+                  <AvatarFallback className={contact.avatarColor}>
+                    {contact.initials}
+                  </AvatarFallback>
+                </Avatar>
+              ))}
             </div>
-            <div className="flex-1 overflow-y-auto">
-              {contacts.map((contact) => {
-                const checked = selectedContactIds.has(contact.id);
-                const inputId = `sequence-enroll-contact-${contact.id}`;
-                return (
-                  <label
-                    key={contact.id}
-                    htmlFor={inputId}
-                    className="flex items-center gap-2 px-4 py-2 hover:bg-accent/10 transition-colors cursor-pointer"
-                  >
-                    <Checkbox
-                      id={inputId}
-                      checked={checked}
-                      onCheckedChange={(v) =>
-                        toggleContact(contact.id, v === true)
-                      }
-                    />
-                    <Avatar className="h-7 w-7 flex-shrink-0 border border-white">
-                      <AvatarImage
-                        src={companyLogo || companyLogoPlaceholder}
-                        alt={`${contact.name} avatar`}
-                      />
-                      <AvatarFallback className={contact.avatarColor}>
-                        {contact.initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <div className="body-100 text-foreground truncate">
-                        {contact.name}
-                      </div>
-                      <div className="detail-200 text-muted-foreground truncate">
-                        {contact.role}
-                      </div>
-                    </div>
-                  </label>
-                );
-              })}
+            <div className="body-100 text-foreground">
+              Enrolling <span className="font-semibold">{enrollSummary}</span>
             </div>
           </div>
 
-          <div className="w-3/4 flex flex-col min-h-0">
+          <div className="flex flex-col min-h-0 flex-1">
             <div className="px-6 py-4 flex items-center gap-4 border-b border-border">
               <div className="relative flex-1 max-w-[320px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -190,11 +136,6 @@ const SequenceEnrollmentModal = ({
             </div>
 
             <div className="flex-1 overflow-y-auto">
-              {!canEnroll && (
-                <div className="px-6 py-3 body-100 text-muted-foreground bg-accent/10 border-b border-border">
-                  Select at least one contact to enrol.
-                </div>
-              )}
               <table className="w-full">
                 <thead className="bg-muted sticky top-0 z-10">
                   <tr>
