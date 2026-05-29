@@ -20,6 +20,7 @@ export const q2c1Iterations: IterationEntry[] = [
       "Match how production actually works: contact selection and sequence enrollment are two separate steps, so contacts are picked first and their IDs handed to the enroll flow.",
       "Make reordering feel more direct by grabbing the whole card.",
     ],
+    prUrl: "https://github.com/eoraghallaigh_hubspot/flywheel-sales-workspace/pull/2",
     commitment: "bob-view-optimisations",
     screenshots: [
       {
