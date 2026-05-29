@@ -5,6 +5,34 @@ import type { IterationEntry } from "../types";
 // Each entry's `id` matches the folder name under public/about/iterations/.
 export const q2c1Iterations: IterationEntry[] = [
   {
+    id: "2026-05-29-contact-reordering-and-enrollment",
+    date: "2026-05-29",
+    label: "contact-reordering-and-enrollment",
+    whatChanged: [
+      "Hovering a contact card now reveals a selection checkbox where the drag handle used to be; ticking one puts every card into multi-select mode.",
+      "Selected cards get a 2px teal border, and an \"Enrol (N) / Hide (N) / Clear\" action row appears beneath the contacts.",
+      "Enrol opens the sequence modal pre-scoped to the selected contacts — the in-modal contact-selection panel is gone, leaving just sequence selection.",
+      "Hide bulk-removes all selected contacts at once.",
+      "Contacts now reorder by dragging anywhere on the card, instead of via a dedicated grip handle.",
+    ],
+    why: [
+      "Let reps act on several contacts at once (enrol/hide in bulk) rather than one card at a time.",
+      "Match how production actually works: contact selection and sequence enrollment are two separate steps, so contacts are picked first and their IDs handed to the enroll flow.",
+      "Make reordering feel more direct by grabbing the whole card.",
+    ],
+    commitment: "bob-view-optimisations",
+    screenshots: [
+      {
+        src: "/about/iterations/2026-05-29-contact-reordering-and-enrollment/prospecting-selection.png",
+        alt: "prospecting-selection screenshot",
+      },
+      {
+        src: "/about/iterations/2026-05-29-contact-reordering-and-enrollment/enroll-modal.png",
+        alt: "enroll-modal screenshot",
+      },
+    ],
+  },
+  {
     id: "2026-04-22-disable-call-no-phone",
     date: "2026-04-22",
     label: "disable-call-no-phone",

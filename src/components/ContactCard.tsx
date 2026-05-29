@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { GripVertical } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,13 +16,6 @@ interface QLData {
   requestType: string;
   requestDate: string;
   deadline: string;
-}
-
-export interface DragHandleProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  attributes: Record<string, any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  listeners: Record<string, any> | undefined;
 }
 
 interface ContactCardProps {
@@ -45,7 +37,10 @@ interface ContactCardProps {
   };
   companyLogo?: string;
   isDragging?: boolean;
-  dragHandleProps?: DragHandleProps;
+  enableSelection?: boolean;
+  selectionMode?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: (contactId: string, checked: boolean) => void;
   onContactClick?: (contactId: string) => void;
   onCallClick?: (contactId: string) => void;
   onEmailClick?: (contactId: string) => void;
@@ -68,7 +63,10 @@ const ContactCard = ({
   contact,
   companyLogo,
   isDragging = false,
-  dragHandleProps,
+  enableSelection = false,
+  selectionMode = false,
+  isSelected = false,
+  onToggleSelect,
   onContactClick,
   onCallClick,
   onEmailClick,
@@ -86,7 +84,6 @@ const ContactCard = ({
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [selectedReasons, setSelectedReasons] = useState<Set<string>>(new Set());
-  const [isDragHandleHovered, setIsDragHandleHovered] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   const progressRef = useRef(0);
   const submittedReasonsRef = useRef<string[]>([]);
@@ -167,13 +164,13 @@ const ContactCard = ({
     Math.ceil((DISMISS_DURATION_MS * (1 - progress)) / 1000),
   );
 
+  const showCheckbox = enableSelection && !isDismissing;
+  const checkboxRevealed = selectionMode || isSelected;
+
   const cardClassName = cn(
-    "group relative flex h-full flex-col border border-border rounded-lg bg-white min-w-[360px] max-w-[360px] overflow-hidden transition-all duration-300 ease-out",
-    isDragging
-      ? "shadow-xl"
-      : isDragHandleHovered
-        ? "-translate-y-1 shadow-lg"
-        : "shadow-100",
+    "group relative flex h-full flex-col rounded-lg bg-white min-w-[360px] max-w-[360px] overflow-hidden transition-all duration-300 ease-out",
+    isSelected ? "border-2 border-text-interactive" : "border border-border",
+    isDragging ? "shadow-xl -translate-y-1" : "shadow-100",
     isRemoving ? "opacity-0" : "",
   );
 
@@ -182,7 +179,11 @@ const ContactCard = ({
       <Avatar
         className={cn(
           "absolute inset-0 h-8 w-8 border-2 border-white transition-opacity",
-          dragHandleProps && !isDismissing ? "group-hover:opacity-0" : "",
+          showCheckbox
+            ? checkboxRevealed
+              ? "opacity-0"
+              : "group-hover:opacity-0"
+            : "",
         )}
       >
         <AvatarImage
@@ -193,18 +194,25 @@ const ContactCard = ({
           {contact.initials}
         </AvatarFallback>
       </Avatar>
-      {dragHandleProps && !isDismissing && (
-        <button
-          type="button"
-          className="absolute inset-0 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 cursor-grab active:cursor-grabbing focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring"
-          aria-label={`Reorder ${contact.name}`}
-          onMouseEnter={() => setIsDragHandleHovered(true)}
-          onMouseLeave={() => setIsDragHandleHovered(false)}
-          {...dragHandleProps.attributes}
-          {...dragHandleProps.listeners}
+      {showCheckbox && (
+        <div
+          className={cn(
+            "absolute inset-0 flex h-8 w-8 items-center justify-center transition-opacity",
+            checkboxRevealed
+              ? "opacity-100"
+              : "opacity-0 group-hover:opacity-100 focus-within:opacity-100",
+          )}
+          onPointerDown={(e) => e.stopPropagation()}
         >
-          <GripVertical className="h-8 w-8" />
-        </button>
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={(value) =>
+              onToggleSelect?.(contact.id, value === true)
+            }
+            aria-label={`Select ${contact.name}`}
+            className="h-5 w-5 bg-white"
+          />
+        </div>
       )}
     </div>
   );
