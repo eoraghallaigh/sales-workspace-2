@@ -19,6 +19,7 @@ export const q2c1Iterations: IterationEntry[] = [
       "The remove checkbox was redundant once \"Hide\" is the action you already picked.",
       "A single shared modal keeps the hide experience consistent across the workspace.",
     ],
+    prUrl: "https://github.com/eoraghallaigh_hubspot/flywheel-sales-workspace/pull/3",
     commitment: "bob-view-optimisations",
     screenshots: [
       {
