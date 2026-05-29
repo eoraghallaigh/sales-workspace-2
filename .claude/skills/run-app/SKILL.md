@@ -52,4 +52,4 @@ Symptoms of forgetting `--registry`: long hang followed by `ENOTFOUND npm.hubtea
   ```
 - **Type/lint checking**: `npm run lint` works. There is no `bend` running and there won't be — don't suggest `bend hs-eslint` or `mcp__devex-mcp-server__bend_package_ts_get_errors` for this project.
 - **Production build**: `npm run build` outputs `dist/`. Asset paths are baked at build time via `VITE_BASE_PATH` (defaults to `/` when unset). The Netlify deploy expects `/`.
-- **Deploy**: Netlify watches `github.com/eoraghallaigh/sales-workspace-2` `main`. Publishing a fresh deploy after a `/ship` requires a separate `git push github origin/master:main` — `/ship` itself only updates the internal `git.hubteam.com` remote.
+- **Deploy**: Netlify watches `github.com/eoraghallaigh/sales-workspace-2` `main` (the `github` remote). `/ship` handles this — after merging to `origin/master` it mirrors the tip to the `github` remote's default branch, which triggers the Netlify rebuild. The canonical remote for this repo is `origin` (`github.com/eoraghallaigh_hubspot/flywheel-sales-workspace`); this workspace does not push to `git.hubteam.com`.

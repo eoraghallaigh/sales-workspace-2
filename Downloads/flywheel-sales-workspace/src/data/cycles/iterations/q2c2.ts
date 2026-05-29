@@ -5,6 +5,27 @@ import type { IterationEntry } from "../types";
 // Each entry's `id` matches the folder name under public/about/iterations/.
 export const q2c2Iterations: IterationEntry[] = [
   {
+    id: "2026-05-29-insert-company-research-content",
+    date: "2026-05-29",
+    label: "insert-company-research-content",
+    whatChanged: [
+      "Company research on the strategy page now leads with a condensed \"TL;DR\" card (up to 5 bullets) instead of full prose.",
+      "A secondary AI \"Read full research\" button opens the Breeze assistant with the full dossier loaded for follow-up questions.",
+      "The 2nd P1 company, renamed \"Advanced Satellite Communications,\" shows the complete unabridged research inline (no AI button) as a contrast to the TL;DR treatment.",
+      "Research content for all 20 P1 companies rewritten into structured, variable-headed sections.",
+    ],
+    why: [
+      "The real company-research agent output is far longer than the original placeholder; reps need a scannable summary first, with full detail one click away.",
+      "Wanted to compare the condensed TL;DR pattern against a full-inline-research version before deciding which treatment to take forward.",
+    ],
+    prUrl: "https://github.com/eoraghallaigh_hubspot/flywheel-sales-workspace/pull/1",
+    commitment: "outreach-strategy",
+    screenshots: [
+      { src: "/about/iterations/2026-05-29-insert-company-research-content/prospecting-strategy.png", alt: "Prospecting strategy TL;DR research card screenshot" },
+      { src: "/about/iterations/2026-05-29-insert-company-research-content/prospecting-strategy-full-research.png", alt: "Prospecting strategy full inline research screenshot" },
+    ],
+  },
+  {
     id: "2026-05-27-add-customer-prospect-book-views",
     date: "2026-05-27",
     label: "add-customer-prospect-book-views",

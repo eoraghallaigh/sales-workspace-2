@@ -6,13 +6,48 @@ import { Button } from "@/components/ui/button";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import { AITextarea } from "@/components/ui/ai-textarea";
 import { useStrategyAssistant } from "@/contexts/StrategyAssistantContext";
+import { ResearchSectionBody } from "@/components/ResearchSectionBody";
+import { getCompanyStrategy } from "@/data/companyStrategies";
+import { prospectingCompanies } from "@/data/prospectingCompanies";
 
 interface ChatPanelProps {
   isOpen: boolean;
   onClose: () => void;
   selectedText?: string;
   context?: string;
+  mode?: "research";
+  researchCompanyId?: string;
 }
+
+const RESEARCH_PROMPTS = [
+  "What's the best opening line given this?",
+  "Summarize the risks in one line",
+  "Who should I multi-thread to?",
+];
+
+const ResearchContent = ({ companyId }: { companyId: string }) => {
+  const company = prospectingCompanies.find((c) => c.id === companyId);
+  const strategy = getCompanyStrategy(companyId).default;
+  return (
+    <div className="space-y-5">
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <TrellisIcon name="artificialIntelligence" size={14} />
+          <h3 className="heading-100 text-foreground">
+            Company research{company ? ` — ${company.name}` : ""}
+          </h3>
+        </div>
+        <p className="body-100 text-muted-foreground">{strategy.summary}</p>
+      </div>
+      {strategy.sections.map((section, idx) => (
+        <div key={`${section.heading}-${idx}`} className="space-y-2">
+          <h4 className="heading-50 text-foreground">{section.heading}</h4>
+          <ResearchSectionBody body={section.body} />
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const ExplanationContent = ({ selectedText }: { selectedText: string }) => (
   <div className="space-y-4">
@@ -87,24 +122,26 @@ const TypingIndicator = () => (
   </div>
 );
 
-export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => {
+export const ChatPanel = ({ isOpen, onClose, selectedText, mode, researchCompanyId }: ChatPanelProps) => {
   const [inputValue, setInputValue] = useState("");
   const [isInputFocused, setIsInputFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
-  const { messages, isAssistantBusy, requestRewrite } = useStrategyAssistant();
+  const { messages, isAssistantBusy, requestRewrite, askResearch } = useStrategyAssistant();
 
   const strategyCompanyId = useMemo(() => {
     const m = location.pathname.match(STRATEGY_PATH_RE);
     return m ? m[1] : null;
   }, [location.pathname]);
 
+  const isResearchMode = mode === "research";
+  const activeCompanyId = researchCompanyId ?? strategyCompanyId;
   const onStrategyPage = strategyCompanyId !== null;
   const hasConversation = messages.length > 0;
 
   const canSend =
-    inputValue.trim().length > 0 && onStrategyPage && !isAssistantBusy;
+    inputValue.trim().length > 0 && !!activeCompanyId && !isAssistantBusy;
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -113,14 +150,19 @@ export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => 
   }, [messages.length, isAssistantBusy]);
 
   const submit = (text: string) => {
-    if (!strategyCompanyId) return;
+    if (!activeCompanyId) return;
     if (!text.trim()) return;
     if (isAssistantBusy) return;
-    requestRewrite(strategyCompanyId, text);
+    if (isResearchMode) {
+      askResearch(activeCompanyId, text);
+    } else {
+      requestRewrite(activeCompanyId, text);
+    }
     setInputValue("");
   };
 
   const showConversation = !selectedText && (hasConversation || isAssistantBusy);
+  const showResearch = !selectedText && isResearchMode && !!activeCompanyId && !showConversation;
 
   return (
     <AnimatePresence>
@@ -171,6 +213,12 @@ export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => 
         </div>
       )}
 
+      {showResearch && activeCompanyId && (
+        <div className="flex-1 overflow-y-auto px-5 pt-6 pb-4">
+          <ResearchContent companyId={activeCompanyId} />
+        </div>
+      )}
+
       {showConversation && (
         <div className="flex-1 overflow-y-auto px-5 pt-6 pb-4">
           <div className="flex flex-col gap-3">
@@ -192,10 +240,10 @@ export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => 
         </div>
       )}
 
-      <div className={`px-5 space-y-4 ${selectedText || showConversation ? "pt-2 pb-2" : "my-auto"}`}>
-        {!selectedText && !showConversation && <div className="px-1"><EmptyState /></div>}
+      <div className={`px-5 space-y-4 ${selectedText || showConversation || showResearch ? "pt-2 pb-2" : "my-auto"}`}>
+        {!selectedText && !showConversation && !showResearch && <div className="px-1"><EmptyState /></div>}
 
-        {!selectedText && !onStrategyPage && (
+        {!selectedText && !showResearch && !onStrategyPage && (
           <p className="detail-100 text-muted-foreground text-center px-2">
             Open a company's prospecting strategy and I can rewrite it for you.
           </p>
@@ -203,7 +251,7 @@ export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => 
 
         <div className="relative">
         <AnimatePresence>
-          {!selectedText && onStrategyPage && !hasConversation && isInputFocused && (
+          {!selectedText && !isResearchMode && onStrategyPage && !hasConversation && isInputFocused && (
             <motion.div
               key="suggested-prompts"
               initial={{ y: 24, opacity: 0 }}
@@ -226,6 +274,29 @@ export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => 
               ))}
             </motion.div>
           )}
+          {showResearch && isInputFocused && (
+            <motion.div
+              key="research-prompts"
+              initial={{ y: 24, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 24, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 360, damping: 32, mass: 0.7 }}
+              className="absolute left-0 right-0 bottom-full mb-2 z-0 flex flex-col gap-2 pointer-events-auto"
+            >
+              <p className="detail-100 text-muted-foreground px-1">Ask me to go deeper:</p>
+              {RESEARCH_PROMPTS.map((prompt) => (
+                <button
+                  key={prompt}
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => submit(prompt)}
+                  className="text-left rounded-full border border-border bg-card px-3 py-2 body-100 text-foreground hover:bg-muted transition-colors shadow-sm"
+                >
+                  {prompt}
+                </button>
+              ))}
+            </motion.div>
+          )}
         </AnimatePresence>
         <AITextarea
           ref={textareaRef}
@@ -234,12 +305,18 @@ export const ChatPanel = ({ isOpen, onClose, selectedText }: ChatPanelProps) => 
           onSubmit={submit}
           onFocus={() => setIsInputFocused(true)}
           onBlur={() => setIsInputFocused(false)}
-          placeholder={onStrategyPage ? "Ask me to rewrite the strategy…" : "Type @ to mention a record"}
+          placeholder={
+            isResearchMode
+              ? "Ask a question about this research…"
+              : onStrategyPage
+                ? "Ask me to rewrite the strategy…"
+                : "Type @ to mention a record"
+          }
           canSend={canSend}
         />
         </div>
 
-        {!showConversation && !selectedText && (
+        {!showConversation && !showResearch && !selectedText && (
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
             <button type="button" className="text-[12px] font-normal text-foreground hover:text-primary transition-colors">
               Summarize

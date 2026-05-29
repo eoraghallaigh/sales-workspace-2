@@ -22,6 +22,7 @@ interface StrategyAssistantContextValue {
   isRewriting: Record<string, boolean>;
   isAssistantBusy: boolean;
   requestRewrite: (companyId: string, userText: string) => void;
+  askResearch: (companyId: string, userText: string) => void;
   revertVariant: (companyId: string) => void;
   resetConversation: () => void;
 }
@@ -104,6 +105,29 @@ export const StrategyAssistantProvider = ({ children }: { children: ReactNode })
     [pushMessage],
   );
 
+  // Research Q&A: answer a "go deeper" question against the loaded company research.
+  // This is a read/explain interaction, distinct from requestRewrite (which regenerates
+  // the strategy). The prototype returns a plausible, on-topic acknowledgement.
+  const askResearch = useCallback(
+    (_companyId: string, userText: string) => {
+      const trimmed = userText.trim();
+      if (!trimmed) return;
+
+      pushMessage("user", trimmed);
+      setIsAssistantBusy(true);
+
+      const t = window.setTimeout(() => {
+        pushMessage(
+          "assistant",
+          "Here's what I can pull together from the research and the CRM record. I've pieced this from public signals (hiring, funding, leadership moves, press) and the account's activity history — want me to go deeper on any one thread, or turn this into a call brief or outreach draft?",
+        );
+        setIsAssistantBusy(false);
+      }, ASSISTANT_TYPING_DELAY_MS + 900);
+      timeoutsRef.current.push(t);
+    },
+    [pushMessage],
+  );
+
   const revertVariant = useCallback(
     (companyId: string) => {
       setActiveVariantByCompany((prev) => {
@@ -130,6 +154,7 @@ export const StrategyAssistantProvider = ({ children }: { children: ReactNode })
       isRewriting,
       isAssistantBusy,
       requestRewrite,
+      askResearch,
       revertVariant,
       resetConversation,
     }),
@@ -139,6 +164,7 @@ export const StrategyAssistantProvider = ({ children }: { children: ReactNode })
       isRewriting,
       isAssistantBusy,
       requestRewrite,
+      askResearch,
       revertVariant,
       resetConversation,
     ],
