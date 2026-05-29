@@ -1,11 +1,8 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { Plus, Loader2, FileEdit, Mail, Phone, ListTodo, Calendar, MoreHorizontal } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import ContactFeedbackModal from "@/components/ContactFeedbackModal";
 
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useCyclePath } from "@/hooks/useCyclePath";
@@ -119,9 +116,6 @@ const ProspectingStrategy = () => {
   const [loadingContactIds, setLoadingContactIds] = useState<Set<string>>(new Set());
   const [removedContactIds, setRemovedContactIds] = useState<Set<string>>(new Set());
   const [feedbackContactId, setFeedbackContactId] = useState<string | null>(null);
-  const [feedbackReason, setFeedbackReason] = useState<string>("no-longer-works");
-  const [feedbackOtherText, setFeedbackOtherText] = useState("");
-  const [feedbackRemove, setFeedbackRemove] = useState(false);
   const [emailReplyTo, setEmailReplyTo] = useState<{ name: string; email: string; subject: string } | null>(null);
   const [contactDrawerId, setContactDrawerId] = useState<string | null>(null);
   const [reasoningContactId, setReasoningContactId] = useState<string | null>(null);
@@ -260,13 +254,10 @@ const ProspectingStrategy = () => {
 
   const openFeedback = (contactId: string) => {
     setFeedbackContactId(contactId);
-    setFeedbackReason("no-longer-works");
-    setFeedbackOtherText("");
-    setFeedbackRemove(false);
   };
 
   const submitFeedback = () => {
-    if (feedbackRemove && feedbackContactId) {
+    if (feedbackContactId) {
       setRemovedContactIds(prev => new Set(prev).add(feedbackContactId));
     }
     setFeedbackContactId(null);
@@ -1327,49 +1318,12 @@ const ProspectingStrategy = () => {
       </AnimatePresence>
 
       {/* Feedback Dialog */}
-      <Dialog open={feedbackContactId !== null} onOpenChange={(open) => { if (!open) setFeedbackContactId(null); }}>
-        <DialogContent className="sm:max-w-[425px] bg-fill-surface">
-          <DialogHeader>
-            <DialogTitle className="heading-200">Contact Feedback</DialogTitle>
-          </DialogHeader>
-          <div className="py-4 space-y-4">
-            <RadioGroup value={feedbackReason} onValueChange={setFeedbackReason}>
-              {[
-                { value: "no-longer-works", label: "Contact doesn't work at the company anymore" },
-                { value: "not-decision-maker", label: "Contact is not a decision maker" },
-                { value: "data-wrong", label: "Contact data is wrong" },
-                { value: "other", label: "Other (please specify)" },
-              ].map((option) => (
-                <div key={option.value} className="flex items-center space-x-2">
-                  <RadioGroupItem value={option.value} id={option.value} />
-                  <label htmlFor={option.value} className="body-100 cursor-pointer">{option.label}</label>
-                </div>
-              ))}
-            </RadioGroup>
-            {feedbackReason === "other" && (
-              <Textarea
-                placeholder="Please describe the issue…"
-                value={feedbackOtherText}
-                onChange={(e) => setFeedbackOtherText(e.target.value)}
-                className="body-100"
-                rows={3}
-              />
-            )}
-            <div className="flex items-center space-x-2 pt-2 border-t border-core-subtle">
-              <Checkbox
-                id="remove-contact"
-                checked={feedbackRemove}
-                onCheckedChange={(checked) => setFeedbackRemove(checked === true)}
-              />
-              <label htmlFor="remove-contact" className="body-100 cursor-pointer">Remove this contact from the outreach targets</label>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="secondary" onClick={() => setFeedbackContactId(null)}>Cancel</Button>
-            <Button variant="primary" onClick={submitFeedback}>Submit Feedback</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ContactFeedbackModal
+        open={feedbackContactId !== null}
+        contactCount={1}
+        onOpenChange={(open) => { if (!open) setFeedbackContactId(null); }}
+        onSubmit={submitFeedback}
+      />
 
       <EmailCommunicator
         isOpen={emailReplyTo !== null}
