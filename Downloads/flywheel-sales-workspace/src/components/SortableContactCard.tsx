@@ -6,6 +6,9 @@ import type { RecommendedContact } from "@/components/CompanyCard";
 interface SortableContactCardProps {
   contact: RecommendedContact;
   companyLogo?: string;
+  selectionMode?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: (contactId: string, checked: boolean) => void;
   onContactClick?: (contactId: string) => void;
   onCallClick?: (contactId: string) => void;
   onEmailClick?: (contactId: string) => void;
@@ -17,6 +20,9 @@ interface SortableContactCardProps {
 const SortableContactCard = ({
   contact,
   companyLogo,
+  selectionMode,
+  isSelected,
+  onToggleSelect,
   onContactClick,
   onCallClick,
   onEmailClick,
@@ -48,13 +54,20 @@ const SortableContactCard = ({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex-shrink-0 flex touch-none"
+      className={`flex-shrink-0 flex touch-none ${
+        isDragging ? "cursor-grabbing" : "cursor-grab"
+      }`}
+      {...attributes}
+      {...listeners}
     >
       <ContactCard
         contact={contact}
         companyLogo={companyLogo}
         isDragging={isDragging}
-        dragHandleProps={{ attributes, listeners }}
+        enableSelection
+        selectionMode={selectionMode}
+        isSelected={isSelected}
+        onToggleSelect={onToggleSelect}
         onContactClick={onContactClick}
         onCallClick={onCallClick}
         onEmailClick={onEmailClick}

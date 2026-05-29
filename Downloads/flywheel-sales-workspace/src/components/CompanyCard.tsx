@@ -116,7 +116,12 @@ const CompanyCard = ({
 }: CompanyCardProps) => {
   const [isDismissModalOpen, setIsDismissModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [enrollContactId, setEnrollContactId] = useState<string | null>(null);
+  const [enrollContactIds, setEnrollContactIds] = useState<string[] | null>(
+    null,
+  );
+  const [selectedContactIds, setSelectedContactIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   const {
     contacts,
@@ -126,17 +131,30 @@ const CompanyCard = ({
     recordFeedback,
   } = useCompanyContacts(company.recommendedContacts);
 
-  const enrollModalContacts = useMemo(
-    () =>
-      contacts.map((c) => ({
+  const selectionMode = selectedContactIds.size > 0;
+
+  const toggleContactSelection = (contactId: string, checked: boolean) => {
+    setSelectedContactIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(contactId);
+      else next.delete(contactId);
+      return next;
+    });
+  };
+
+  const enrollModalContacts = useMemo(() => {
+    if (!enrollContactIds) return [];
+    const idSet = new Set(enrollContactIds);
+    return contacts
+      .filter((c) => idSet.has(c.id))
+      .map((c) => ({
         id: c.id,
         name: c.name,
         role: c.role,
         initials: c.initials,
         avatarColor: c.avatarColor,
-      })),
-    [contacts],
-  );
+      }));
+  }, [contacts, enrollContactIds]);
 
   const availableToAdd = useMemo(() => {
     const recommendedIds = new Set(contacts.map((c) => c.id));
@@ -179,7 +197,24 @@ const CompanyCard = ({
     }
     const removed = remove(contactId);
     if (!removed) return;
+    setSelectedContactIds((prev) => {
+      if (!prev.has(contactId)) return prev;
+      const next = new Set(prev);
+      next.delete(contactId);
+      return next;
+    });
     toast.success(`Removed ${removed.contact.name}`);
+  };
+
+  const handleHideSelected = () => {
+    const ids = Array.from(selectedContactIds);
+    const existing = ids.filter((id) => contacts.some((c) => c.id === id));
+    if (existing.length === 0) return;
+    existing.forEach((id) => remove(id));
+    toast.success(
+      `Removed ${existing.length} contact${existing.length !== 1 ? "s" : ""}`,
+    );
+    setSelectedContactIds(new Set());
   };
 
   const handleEnrollInSequence = (
@@ -195,7 +230,8 @@ const CompanyCard = ({
           `${count} contact`
         : `${count} contacts`;
     toast.success(`Enrolled ${label} in ${sequenceName}`);
-    setEnrollContactId(null);
+    setEnrollContactIds(null);
+    setSelectedContactIds(new Set());
     void sequenceId;
   };
 
@@ -307,10 +343,13 @@ const CompanyCard = ({
                   key={contact.id}
                   contact={contact}
                   companyLogo={company.logo}
+                  selectionMode={selectionMode}
+                  isSelected={selectedContactIds.has(contact.id)}
+                  onToggleSelect={toggleContactSelection}
                   onContactClick={onContactClick}
                   onCallClick={(contactId) => onCallClick?.(contactId, "")}
                   onEmailClick={(contactId) => onEmailClick?.(contactId, "")}
-                  onEnrollClick={(contactId) => setEnrollContactId(contactId)}
+                  onEnrollClick={(contactId) => setEnrollContactIds([contactId])}
                   onConfirmDismiss={handleConfirmDismiss}
                 />
               ))}
@@ -319,8 +358,40 @@ const CompanyCard = ({
           </SortableContext>
         </DndContext>
 
+        {selectionMode && (
+          <div className="flex items-center gap-3 mt-4">
+            <Button
+              variant="primary"
+              size="small"
+              onClick={() => setEnrollContactIds(Array.from(selectedContactIds))}
+            >
+              Enrol ({selectedContactIds.size})
+              <TrellisIcon
+                name="sequences"
+                size={14}
+                className="ml-1 brightness-0 invert"
+              />
+            </Button>
+            <Button
+              variant="secondary"
+              size="small"
+              onClick={handleHideSelected}
+            >
+              Hide ({selectedContactIds.size})
+              <TrellisIcon name="hide" size={14} className="ml-1" />
+            </Button>
+            <Button
+              variant="link"
+              className="body-100 text-foreground h-auto p-0"
+              onClick={() => setSelectedContactIds(new Set())}
+            >
+              Clear
+            </Button>
+          </div>
+        )}
+
         <div className="flex items-center justify-between mt-4">
-          <Button variant="link" className="body-100 text-muted-foreground h-auto p-0">
+          <Button variant="link" className="body-100 text-foreground h-auto p-0">
             View all contacts
           </Button>
 
@@ -389,12 +460,11 @@ const CompanyCard = ({
       />
 
       <SequenceEnrollmentModal
-        open={enrollContactId !== null}
+        open={enrollContactIds !== null}
         contacts={enrollModalContacts}
-        initialContactId={enrollContactId}
         companyLogo={company.logo}
         onOpenChange={(open) => {
-          if (!open) setEnrollContactId(null);
+          if (!open) setEnrollContactIds(null);
         }}
         onEnroll={handleEnrollInSequence}
       />
