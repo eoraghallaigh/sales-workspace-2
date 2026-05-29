@@ -23,6 +23,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
+import { AiStarIcon } from "@/components/ui/ai-star-icon";
+import { ResearchSectionBody } from "@/components/ResearchSectionBody";
 import { prospectingCompanies } from "@/data/prospectingCompanies";
 import { companyDetails } from "@/data/companyDetails";
 import { contactDetails } from "@/data/contactDetails";
@@ -64,6 +66,15 @@ const RewritingStatusMessage = () => {
   }, []);
   return (
     <span className="body-125 text-foreground">{REWRITE_STATUS_MESSAGES[index]}</span>
+  );
+};
+
+// Open the Breeze assistant with the full company research loaded.
+const openFullResearch = (companyId: string, companyName: string) => {
+  window.dispatchEvent(
+    new CustomEvent("openAssistantChat", {
+      detail: { mode: "research", companyId, companyName },
+    }),
   );
 };
 
@@ -448,44 +459,45 @@ const ProspectingStrategy = () => {
                     isRunning={isRunningResearch}
                     onRun={runResearch}
                   />
-                ) : (
+                ) : strategy.showFullResearch ? (
                   <>
-                    {/* Business Intelligence */}
-                    <Collapsible defaultOpen className="mb-12">
-                      <CollapsibleTrigger className="flex items-center gap-2 w-full group">
-                        <TrellisIcon name="downCarat" size={12} className="text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
-                        <h3 className="heading-200 text-foreground">Business Intelligence</h3>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="mt-3">
-                        <p className="body-100 text-foreground leading-relaxed">
-                          {strategy.businessIntelligence}
-                        </p>
-                        {currentCompanyDetails &&
-                          <p className="body-100 text-foreground leading-relaxed mt-4">
-                            Currently, the company is in a growth phase. Their top revenue streams are: 1) SaaS recurring license fees for the core platform, 2) Professional services for implementation and data migration, and 3) Integration-led revenue through partnerships with existing and back-office systems.
-                          </p>
-                          }
-                      </CollapsibleContent>
-                    </Collapsible>
-
-                    {/* Recent Company News & Triggers */}
-                    <Collapsible defaultOpen className="mb-12">
-                      <CollapsibleTrigger className="flex items-center gap-2 w-full group">
-                        <TrellisIcon name="downCarat" size={12} className="text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
-                        <h3 className="heading-200 text-foreground">Recent Company News & Triggers</h3>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="mt-3">
-                        <p className="heading-50 text-foreground mb-1">{strategy.recentNews.title}</p>
-                        <p className="body-100 text-foreground leading-relaxed">
-                          {strategy.recentNews.description}
-                        </p>
-                        <h4 className="heading-50 text-foreground mt-4 mb-1">Strategic Integration of Empowering Systems</h4>
-                        <p className="body-100 text-foreground leading-relaxed">
-                          {strategy.strategicIntegration}
-                        </p>
-                      </CollapsibleContent>
-                    </Collapsible>
+                    {strategy.sections.map((section, idx) => (
+                      <Collapsible key={`${section.heading}-${idx}`} defaultOpen className="mb-12">
+                        <CollapsibleTrigger className="flex items-center gap-2 w-full group">
+                          <TrellisIcon name="downCarat" size={12} className="text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
+                          <h3 className="heading-200 text-foreground">{section.heading}</h3>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="mt-3">
+                          <ResearchSectionBody body={section.body} />
+                        </CollapsibleContent>
+                      </Collapsible>
+                    ))}
                   </>
+                ) : (
+                  <Collapsible defaultOpen className="mb-12">
+                    <CollapsibleTrigger className="flex items-center gap-2 w-full group">
+                      <TrellisIcon name="downCarat" size={12} className="text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
+                      <h3 className="heading-200 text-foreground">TL;DR</h3>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-3">
+                      <ul className="list-disc pl-5 flex flex-col gap-2.5">
+                        {strategy.summaryBullets.slice(0, 5).map((bullet, idx) => (
+                          <li key={idx} className="body-100 text-foreground leading-relaxed">
+                            {bullet}
+                          </li>
+                        ))}
+                      </ul>
+                      <Button
+                        variant="ai-secondary"
+                        size="small"
+                        className="mt-4"
+                        onClick={() => openFullResearch(currentCompany.id, currentCompany.name)}
+                      >
+                        <AiStarIcon size={14} />
+                        Read full research
+                      </Button>
+                    </CollapsibleContent>
+                  </Collapsible>
                 )}
 
                 {/* Outreach Targets */}

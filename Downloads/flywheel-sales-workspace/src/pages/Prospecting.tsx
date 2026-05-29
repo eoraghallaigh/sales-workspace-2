@@ -708,7 +708,7 @@ const Prospecting = () => {
                 (() => {
                   const rows = companiesWithCalculatedStatus.map((company, companyIndex) => {
                     const strategy = companyStrategies[company.id] || defaultStrategy;
-                    const strategyHint = strategy.businessIntelligence;
+                    const strategyHint = strategy.default.summary;
 
                     if (cardVariant === "current") {
                       return (
