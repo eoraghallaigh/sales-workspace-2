@@ -41,6 +41,9 @@ import AddContactTile from "@/components/AddContactTile";
 import AddContactsModal from "@/components/AddContactsModal";
 import PvsTooltip from "@/components/PvsTooltip";
 import SequenceEnrollmentModal from "@/components/SequenceEnrollmentModal";
+import ContactFeedbackModal, {
+  type ContactFeedbackPayload,
+} from "@/components/ContactFeedbackModal";
 import { useCompanyContacts } from "@/hooks/useCompanyContacts";
 import { getAdditionalContactsForCompany } from "@/data/allContacts";
 
@@ -122,6 +125,7 @@ const CompanyCard = ({
   const [selectedContactIds, setSelectedContactIds] = useState<Set<string>>(
     new Set(),
   );
+  const [isHideModalOpen, setIsHideModalOpen] = useState(false);
 
   const {
     contacts,
@@ -207,14 +211,34 @@ const CompanyCard = ({
   };
 
   const handleHideSelected = () => {
+    if (selectedContactIds.size === 0) return;
+    setIsHideModalOpen(true);
+  };
+
+  const handleConfirmHide = (payload: ContactFeedbackPayload) => {
     const ids = Array.from(selectedContactIds);
     const existing = ids.filter((id) => contacts.some((c) => c.id === id));
-    if (existing.length === 0) return;
-    existing.forEach((id) => remove(id));
-    toast.success(
-      `Removed ${existing.length} contact${existing.length !== 1 ? "s" : ""}`,
-    );
+    if (existing.length > 0) {
+      existing.forEach((id) => {
+        const target = contacts.find((c) => c.id === id);
+        if (target) {
+          recordFeedback({
+            contactId: target.id,
+            contactName: target.name,
+            reason: payload.reason,
+            note: payload.note,
+            removed: true,
+            submittedAt: new Date().toISOString(),
+          });
+        }
+        remove(id);
+      });
+      toast.success(
+        `Removed ${existing.length} contact${existing.length !== 1 ? "s" : ""}`,
+      );
+    }
     setSelectedContactIds(new Set());
+    setIsHideModalOpen(false);
   };
 
   const handleEnrollInSequence = (
@@ -467,6 +491,13 @@ const CompanyCard = ({
           if (!open) setEnrollContactIds(null);
         }}
         onEnroll={handleEnrollInSequence}
+      />
+
+      <ContactFeedbackModal
+        open={isHideModalOpen}
+        contactCount={selectedContactIds.size}
+        onOpenChange={setIsHideModalOpen}
+        onSubmit={handleConfirmHide}
       />
     </Card>
   );

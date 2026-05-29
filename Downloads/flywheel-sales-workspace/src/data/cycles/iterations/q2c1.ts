@@ -5,6 +5,34 @@ import type { IterationEntry } from "../types";
 // Each entry's `id` matches the folder name under public/about/iterations/.
 export const q2c1Iterations: IterationEntry[] = [
   {
+    id: "2026-05-29-contact-reordering-and-enrollment-2",
+    date: "2026-05-29",
+    label: "contact-reordering-and-enrollment",
+    whatChanged: [
+      "Bulk Hide on the company-card multi-select now opens a \"Contact Feedback\" modal — the same one used when hiding a contact on the strategy page — instead of removing immediately.",
+      "The modal's copy adapts to the selection: \"These contacts…\" for several, \"This contact…\" for one.",
+      "Removed the \"Remove this contact from the outreach targets\" checkbox; submitting feedback now always hides the selected contact(s).",
+      "Strategy page and company-card hide now share one modal component.",
+    ],
+    why: [
+      "Capture a reason when reps hide contacts in bulk, not just one at a time.",
+      "The remove checkbox was redundant once \"Hide\" is the action you already picked.",
+      "A single shared modal keeps the hide experience consistent across the workspace.",
+    ],
+    prUrl: "https://github.com/eoraghallaigh_hubspot/flywheel-sales-workspace/pull/3",
+    commitment: "bob-view-optimisations",
+    screenshots: [
+      {
+        src: "/about/iterations/2026-05-29-contact-reordering-and-enrollment-2/bulk-hide-modal.png",
+        alt: "bulk-hide-modal screenshot",
+      },
+      {
+        src: "/about/iterations/2026-05-29-contact-reordering-and-enrollment-2/strategy-hide-modal.png",
+        alt: "strategy-hide-modal screenshot",
+      },
+    ],
+  },
+  {
     id: "2026-05-29-contact-reordering-and-enrollment",
     date: "2026-05-29",
     label: "contact-reordering-and-enrollment",
