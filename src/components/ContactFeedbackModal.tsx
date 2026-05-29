@@ -5,121 +5,106 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 
 export interface ContactFeedbackPayload {
   reason: string;
   note?: string;
-  removed: boolean;
 }
 
 interface ContactFeedbackModalProps {
   open: boolean;
-  contactName: string;
+  contactCount: number;
   onOpenChange: (open: boolean) => void;
   onSubmit: (payload: ContactFeedbackPayload) => void;
 }
 
-const REASONS: Array<{ value: string; label: string }> = [
-  { value: "no-longer-at-company", label: "No longer at the company" },
-  { value: "wrong-role", label: "Wrong role / not a decision-maker" },
-  { value: "bounced-unsubscribed", label: "Bounced or unsubscribed email" },
-  { value: "duplicate", label: "Duplicate contact" },
-  { value: "bad-data", label: "Bad contact data (phone / email)" },
-  { value: "other", label: "Other" },
-];
-
 const ContactFeedbackModal = ({
   open,
-  contactName,
+  contactCount,
   onOpenChange,
   onSubmit,
 }: ContactFeedbackModalProps) => {
-  const [reason, setReason] = useState<string>(REASONS[0].value);
-  const [note, setNote] = useState<string>("");
-  const [shouldRemove, setShouldRemove] = useState<boolean>(true);
+  const [reason, setReason] = useState("no-longer-works");
+  const [otherText, setOtherText] = useState("");
 
   useEffect(() => {
     if (!open) return;
-    setReason(REASONS[0].value);
-    setNote("");
-    setShouldRemove(true);
+    setReason("no-longer-works");
+    setOtherText("");
   }, [open]);
+
+  const isMultiple = contactCount > 1;
+
+  const reasons = [
+    {
+      value: "no-longer-works",
+      label: isMultiple
+        ? "These contacts don't work at the company anymore"
+        : "This contact doesn't work at the company anymore",
+    },
+    {
+      value: "not-decision-maker",
+      label: isMultiple
+        ? "These contacts are not decision makers"
+        : "This contact is not a decision maker",
+    },
+    {
+      value: "data-wrong",
+      label: isMultiple
+        ? "These contacts' data is wrong"
+        : "This contact's data is wrong",
+    },
+    { value: "other", label: "Other (please specify)" },
+  ];
 
   const handleSubmit = () => {
     onSubmit({
       reason,
-      note: note.trim() ? note.trim() : undefined,
-      removed: shouldRemove,
+      note: otherText.trim() ? otherText.trim() : undefined,
     });
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[425px] bg-fill-surface">
         <DialogHeader>
-          <DialogTitle>Why isn't {contactName} a good fit?</DialogTitle>
-          <DialogDescription>
-            Your feedback helps improve the contacts we recommend.
-          </DialogDescription>
+          <DialogTitle className="heading-200">Contact Feedback</DialogTitle>
         </DialogHeader>
-
-        <div className="flex flex-col gap-5 py-2">
-          <RadioGroup value={reason} onValueChange={setReason} className="gap-3">
-            {REASONS.map((option) => (
-              <div key={option.value} className="flex items-center gap-3">
-                <RadioGroupItem value={option.value} id={`reason-${option.value}`} />
-                <Label
-                  htmlFor={`reason-${option.value}`}
-                  className="body-100 cursor-pointer font-normal"
+        <div className="py-4 space-y-4">
+          <RadioGroup value={reason} onValueChange={setReason}>
+            {reasons.map((option) => (
+              <div key={option.value} className="flex items-center space-x-2">
+                <RadioGroupItem value={option.value} id={`feedback-${option.value}`} />
+                <label
+                  htmlFor={`feedback-${option.value}`}
+                  className="body-100 cursor-pointer"
                 >
                   {option.label}
-                </Label>
+                </label>
               </div>
             ))}
           </RadioGroup>
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="feedback-note" className="body-100">
-              Add a note (optional)
-            </Label>
+          {reason === "other" && (
             <Textarea
-              id="feedback-note"
-              placeholder="What would help us recommend better contacts?"
-              value={note}
-              onChange={(event) => setNote(event.target.value)}
+              placeholder="Please describe the issue…"
+              value={otherText}
+              onChange={(e) => setOtherText(e.target.value)}
+              className="body-100"
               rows={3}
             />
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Checkbox
-              id="remove-contact"
-              checked={shouldRemove}
-              onCheckedChange={(value) => setShouldRemove(value === true)}
-            />
-            <Label
-              htmlFor="remove-contact"
-              className="body-100 cursor-pointer font-normal"
-            >
-              Remove {contactName} from recommended contacts
-            </Label>
-          </div>
+          )}
         </div>
-
-        <DialogFooter className="sm:justify-end gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter>
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button variant="primary" onClick={handleSubmit}>
-            Submit feedback
+            Submit Feedback
           </Button>
         </DialogFooter>
       </DialogContent>
