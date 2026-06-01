@@ -1,3 +1,5 @@
+import aeoMicrositePreview from "@/assets/microsite-aeo-preview.png";
+
 export interface EnablementMaterial {
   id: string;
   title: string;
@@ -23,11 +25,18 @@ export interface Play {
   createdBy: string;
   completionCriteria: string;
   enablementMaterials: EnablementMaterial[];
+  micrositeUrl?: string;
+  micrositeTitle?: string;
+  micrositeDescription?: string;
+  micrositePreview?: string;
   metrics: {
     totalCompanies: number;
     worked: number;
     meetings: number;
     target: number;
+    contactsEngaged: number;
+    contactsInPlay: number;
+    pipelineCreated: number;
   };
   status: PlayStatus;
   owner: string;
@@ -72,11 +81,17 @@ export const plays: Play[] = [
         description: "3-min customer testimonial from DataNova's CRO"
       }
     ],
+    micrositeUrl: "https://salesforce-switchers.lovable.app",
+    micrositeTitle: "Salesforce Switchers Playbook",
+    micrositeDescription: "Messaging, positioning, and resources to win Salesforce displacement deals.",
     metrics: {
       totalCompanies: 16,
       worked: 10,
       meetings: 4,
-      target: 16
+      target: 16,
+      contactsEngaged: 38,
+      contactsInPlay: 120,
+      pipelineCreated: 240000
     },
     status: "live",
     owner: "Sarah Chen",
@@ -105,11 +120,18 @@ export const plays: Play[] = [
         description: "Walk prospects through ROI scenarios during discovery"
       }
     ],
+    micrositeUrl: "https://aeogtmplay.lovable.app/",
+    micrositeTitle: "AEO GTM Playbook",
+    micrositeDescription: "Messaging, positioning, and resources to help you capitalize on AEO demand.",
+    micrositePreview: aeoMicrositePreview,
     metrics: {
       totalCompanies: 48,
       worked: 8,
       meetings: 2,
-      target: 15
+      target: 15,
+      contactsEngaged: 21,
+      contactsInPlay: 340,
+      pipelineCreated: 95000
     },
     status: "live",
     owner: "Marcus Johnson",
@@ -144,11 +166,17 @@ export const plays: Play[] = [
         description: "How FinServ Corp expanded from Marketing Hub to full platform"
       }
     ],
+    micrositeUrl: "https://multi-hub-expansion.lovable.app",
+    micrositeTitle: "Multi-Hub Expansion Playbook",
+    micrositeDescription: "Messaging, positioning, and resources to drive multi-hub expansion in the install base.",
     metrics: {
       totalCompanies: 22,
       worked: 15,
       meetings: 7,
-      target: 12
+      target: 12,
+      contactsEngaged: 54,
+      contactsInPlay: 160,
+      pipelineCreated: 610000
     },
     status: "live",
     owner: "Sarah Chen",
@@ -177,11 +205,17 @@ export const plays: Play[] = [
         description: "3 proven re-engagement email templates with personalization tips"
       }
     ],
+    micrositeUrl: "https://smb-winback.lovable.app",
+    micrositeTitle: "SMB Winback Playbook",
+    micrositeDescription: "Messaging, positioning, and resources to re-engage churned SMB accounts.",
     metrics: {
       totalCompanies: 56,
       worked: 31,
       meetings: 9,
-      target: 20
+      target: 20,
+      contactsEngaged: 72,
+      contactsInPlay: 410,
+      pipelineCreated: 180000
     },
     status: "live",
     owner: "Lisa Park",
@@ -189,3 +223,28 @@ export const plays: Play[] = [
     marketSegment: ["SMB"]
   }
 ];
+
+export const companyPlayMembership: Record<string, string[]> = {
+  "1": ["salesforce-switchers"],
+  "2": ["salesforce-switchers", "q3-aeo-push"],
+  "4": ["q3-aeo-push"],
+  "5": ["salesforce-switchers"],
+  "6": ["enterprise-expansion"],
+  "8": ["q3-aeo-push"],
+  "10": ["enterprise-expansion"],
+  "12": ["q3-aeo-push"],
+  "13": ["enterprise-expansion", "salesforce-switchers"],
+  "14": ["enterprise-expansion"],
+  "16": ["smb-winback"],
+  "21": ["smb-winback"],
+  "22": ["salesforce-switchers"],
+  "23": ["smb-winback"],
+};
+
+export const getPlayIdsForCompany = (companyId: string): string[] =>
+  companyPlayMembership[companyId] ?? [];
+
+export const getPlaysForCompany = (companyId: string, allPlays: Play[]): Play[] =>
+  getPlayIdsForCompany(companyId)
+    .map((id) => allPlays.find((p) => p.id === id))
+    .filter((p): p is Play => Boolean(p));

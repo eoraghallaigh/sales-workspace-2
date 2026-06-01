@@ -1,5 +1,5 @@
 import { Fragment, useState } from "react";
-import { Card } from "@/components/ui/card";
+import { DataWell } from "@/components/ui/data-well";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -12,15 +12,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   ChevronDown,
   ChevronRight,
   ExternalLink,
-  Info,
   ListFilter,
   Search,
 } from "lucide-react";
@@ -180,23 +174,23 @@ const FullProspectBook = () => {
     <div className="flex flex-col gap-6">
       {/* Top Metrics */}
       <div className="grid grid-cols-4 gap-4">
-        <MetricCard
-          label="TOTAL BOOK SIZE"
+        <DataWell
+          label="Total book size"
           value="312"
           tooltip="Total prospects in the net new book"
         />
-        <MetricCard
-          label="TOTAL BOOK WORKED"
+        <DataWell
+          label="Total book worked"
           value="52%"
           tooltip="Share of the prospect book that has been worked"
         />
-        <MetricCard
-          label="NET NEW DEALS CREATED"
+        <DataWell
+          label="Net new deals created"
           value="18"
           tooltip="Net new deals created"
         />
-        <MetricCard
-          label="% PROSPECTS WITH INTENT"
+        <DataWell
+          label="% prospects with intent"
           value="34%"
           tooltip="Share of prospects with active intent signals"
         />
@@ -354,30 +348,6 @@ const FullProspectBook = () => {
   );
 };
 
-const MetricCard = ({
-  label,
-  value,
-  tooltip,
-}: {
-  label: string;
-  value: string;
-  tooltip: string;
-}) => (
-  <Card className="flex flex-col items-center px-6 py-4 bg-card border border-border rounded shadow-100">
-    <div className="flex items-center gap-2 mb-4">
-      <span className="heading-25 text-foreground">{label}</span>
-      <Tooltip>
-        <TooltipTrigger>
-          <Info className="h-4 w-4 text-muted-foreground" />
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{tooltip}</p>
-        </TooltipContent>
-      </Tooltip>
-    </div>
-    <div className="heading-500 font-normal text-foreground">{value}</div>
-  </Card>
-);
 
 const FilterPill = ({
   label,

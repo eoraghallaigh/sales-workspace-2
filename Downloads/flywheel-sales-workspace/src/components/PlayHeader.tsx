@@ -1,12 +1,13 @@
 import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, FileText, Swords, MessageSquareText, Video, File, Calendar, User, Target } from "lucide-react";
+import { ChevronDown, FileText, Swords, MessageSquareText, Video, File, Calendar, ExternalLink, Megaphone } from "lucide-react";
 import { useState } from "react";
 import { Play, EnablementMaterial } from "@/data/playData";
+import { usePlayHeaderStyle } from "@/contexts/PlayHeaderStyleContext";
 
 interface PlayHeaderProps {
   play: Play;
+  defaultOpen?: boolean;
 }
 
 const materialIcon = (type: EnablementMaterial["type"]) => {
@@ -24,87 +25,132 @@ const formatDate = (dateStr: string) => {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 };
 
-const PlayHeader = ({ play }: PlayHeaderProps) => {
-  const [isEnablementOpen, setIsEnablementOpen] = useState(true);
-  const workedPercent = Math.round((play.metrics.worked / play.metrics.totalCompanies) * 100);
-  const meetingsPercent = Math.round((play.metrics.meetings / play.metrics.target) * 100);
+const PlayHeader = ({ play, defaultOpen = true }: PlayHeaderProps) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const { style } = usePlayHeaderStyle();
 
-  // Calculate days remaining
   const endDate = new Date(play.endDate);
   const today = new Date();
   const daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
 
+  const enablementSection = (
+    <>
+      <div className="flex items-center gap-2 mb-3">
+        <span className="heading-50 text-foreground">Enablement materials</span>
+        <span className="detail-100 text-muted-foreground">({play.enablementMaterials.length})</span>
+      </div>
+      <div className="grid grid-cols-2 gap-6">
+        {play.micrositeUrl && (
+          <a
+            href={play.micrositeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex flex-col rounded-200 border border-core-subtle overflow-hidden hover:shadow-200 hover:border-text-interactive transition-all"
+          >
+            {play.micrositePreview ? (
+              <div className="h-40 overflow-hidden border-b border-core-subtle">
+                <img
+                  src={play.micrositePreview}
+                  alt={`${play.micrositeTitle ?? "Campaign microsite"} preview`}
+                  className="w-full object-cover object-top"
+                />
+              </div>
+            ) : (
+              <div className="h-40 flex flex-col items-center justify-center gap-1.5 border-b border-core-subtle bg-[#0B3B34] px-4 text-center">
+                <span className="heading-200 text-white">{play.micrositeTitle ?? play.label}</span>
+                <span className="detail-100 text-white/70">Campaign microsite</span>
+              </div>
+            )}
+            <div className="flex items-start gap-2 p-3">
+              <ExternalLink className="h-4 w-4 text-text-interactive flex-shrink-0 mt-0.5 group-hover:text-text-interactive-hover transition-colors" />
+              <div className="min-w-0 flex-1">
+                <span className="link-100 text-text-interactive group-hover:text-text-interactive-hover transition-colors block">
+                  {play.micrositeTitle ?? "Campaign microsite"}
+                </span>
+                <span className="detail-100 text-muted-foreground block">
+                  {play.micrositeDescription ?? "Marketing-built Lovable site with the latest enablement materials."}
+                </span>
+              </div>
+            </div>
+          </a>
+        )}
+
+        <div className="flex flex-col gap-4">
+          {play.enablementMaterials.map(material => (
+            <button
+              key={material.id}
+              className="flex items-start gap-2.5 w-full text-left px-2 py-2 rounded hover:bg-accent/50 transition-colors group"
+            >
+              <span className="flex-shrink-0 mt-1">{materialIcon(material.type)}</span>
+              <div className="min-w-0 flex-1">
+                <span className="link-100 text-text-interactive group-hover:text-text-interactive-hover transition-colors block">
+                  {material.title}
+                </span>
+                <span className="detail-100 text-muted-foreground block">{material.description}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+
+  if (style === "banner") {
+    return (
+      <Card className="relative overflow-hidden border border-[#F6CDBC] rounded shadow-200 mb-8 p-0">
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <div className="bg-[linear-gradient(135deg,#C93700_0%,#FF4800_50%,#FB31A7_100%)] px-5 py-4">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <Megaphone className="h-3.5 w-3.5 text-white" />
+              <span className="heading-25 uppercase tracking-wide text-white/90">Play</span>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <CollapsibleTrigger className="flex items-center gap-2 group text-left">
+                <ChevronDown className={`h-5 w-5 text-white flex-shrink-0 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
+                <h3 className="heading-300 text-white">{play.label}</h3>
+              </CollapsibleTrigger>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Calendar className="h-3.5 w-3.5 text-white/80" />
+                <span className="detail-100 text-white/90">
+                  {formatDate(play.startDate)} – {formatDate(play.endDate)}
+                </span>
+                <span className="detail-100 text-white/90">·</span>
+                <span className="detail-100 text-white/90">{daysRemaining} days remaining</span>
+              </div>
+            </div>
+          </div>
+          <CollapsibleContent>
+            <div className="p-5">
+              <p className="body-100 text-foreground leading-relaxed mb-4">{play.description}</p>
+              {enablementSection}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="bg-card border border-border rounded shadow-100 p-5 mb-4">
-      {/* Play title & meta */}
-      <div className="mb-4">
-        <h3 className="heading-300 text-foreground mb-1">{play.label}</h3>
-        <p className="body-100 text-muted-foreground leading-relaxed">{play.description}</p>
-      </div>
-
-      {/* Meta row */}
-      <div className="flex flex-wrap gap-x-6 gap-y-2 mb-4">
-        <div className="flex items-center gap-1.5">
-          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="detail-100 text-muted-foreground">
-            {formatDate(play.startDate)} – {formatDate(play.endDate)}
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="detail-100 text-muted-foreground">{daysRemaining} days remaining</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <User className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="detail-100 text-muted-foreground">{play.createdBy}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Target className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="detail-100 text-muted-foreground">{play.completionCriteria}</span>
-        </div>
-      </div>
-
-      {/* Progress metrics */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="p-3 rounded border border-border bg-background">
-          <div className="flex items-center justify-between mb-2">
-            <span className="heading-50 text-foreground">Companies worked</span>
-            <span className="heading-100 text-foreground">{play.metrics.worked}/{play.metrics.totalCompanies}</span>
+    <Card className="relative overflow-hidden bg-gradient-to-b from-[#FFF4EF] to-card border border-[#F6CDBC] rounded shadow-200 px-10 py-10 mb-8">
+      <div className="absolute inset-x-0 top-0 h-1 trellis-gradient-hero" />
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <div className="flex items-center justify-between gap-4">
+          <CollapsibleTrigger className="flex items-center gap-2 group text-left">
+            <ChevronDown className={`h-5 w-5 text-muted-foreground flex-shrink-0 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
+            <h3 className="heading-300 text-foreground">{play.label}</h3>
+          </CollapsibleTrigger>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="detail-100 text-muted-foreground">
+              {formatDate(play.startDate)} – {formatDate(play.endDate)}
+            </span>
+            <span className="detail-100 text-muted-foreground">·</span>
+            <span className="detail-100 text-muted-foreground">{daysRemaining} days remaining</span>
           </div>
-          <Progress value={workedPercent} className="h-2" />
-          <span className="detail-100 text-muted-foreground mt-1 block">{workedPercent}% complete</span>
         </div>
-        <div className="p-3 rounded border border-border bg-background">
-          <div className="flex items-center justify-between mb-2">
-            <span className="heading-50 text-foreground">Meetings booked</span>
-            <span className="heading-100 text-foreground">{play.metrics.meetings}/{play.metrics.target}</span>
-          </div>
-          <Progress value={meetingsPercent} className="h-2" />
-          <span className="detail-100 text-muted-foreground mt-1 block">{meetingsPercent}% of target</span>
-        </div>
-      </div>
-
-      {/* Enablement materials */}
-      <Collapsible open={isEnablementOpen} onOpenChange={setIsEnablementOpen}>
-        <CollapsibleTrigger className="flex items-center gap-2 w-full py-1">
-          <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isEnablementOpen ? '' : '-rotate-90'}`} />
-          <span className="heading-50 text-foreground">Enablement materials</span>
-          <span className="detail-100 text-muted-foreground">({play.enablementMaterials.length})</span>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="mt-2">
-          <div className="space-y-1">
-            {play.enablementMaterials.map(material => (
-              <button
-                key={material.id}
-                className="flex items-start gap-3 w-full text-left px-3 py-2.5 rounded hover:bg-accent/50 transition-colors group"
-              >
-                {materialIcon(material.type)}
-                <div className="min-w-0 flex-1">
-                  <span className="body-100 text-foreground group-hover:underline block">{material.title}</span>
-                  <span className="detail-100 text-muted-foreground block">{material.description}</span>
-                </div>
-              </button>
-            ))}
-          </div>
+        <CollapsibleContent>
+          <p className="body-100 text-foreground leading-relaxed mt-3 mb-6">{play.description}</p>
+          {enablementSection}
         </CollapsibleContent>
       </Collapsible>
     </Card>

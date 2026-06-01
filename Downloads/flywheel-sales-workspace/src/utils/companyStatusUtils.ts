@@ -37,3 +37,15 @@ export function calculateCompanyStatus(
   // If has some touches but not all 5, it's In Progress
   return "In Progress";
 }
+
+// In a play, the only statuses are Unworked, In Progress and Worked.
+export function getPlayStatusBadge(status: Company["status"]): {
+  label: string;
+  variant: "status-blue" | "status-yellow" | "status-green";
+} {
+  if (status === "Worked") return { label: "Worked", variant: "status-green" };
+  if (status === "In Progress" || status === "Over SLA") {
+    return { label: "In Progress", variant: "status-yellow" };
+  }
+  return { label: "Unworked", variant: "status-blue" };
+}

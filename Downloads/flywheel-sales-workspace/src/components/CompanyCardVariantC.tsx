@@ -26,9 +26,11 @@ import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { Company } from "@/components/CompanyCard";
 import SnoozeModal from "@/components/SnoozeModal";
 import { getOutreachState } from "@/data/outreachStates";
+import { getPlayStatusBadge } from "@/utils/companyStatusUtils";
 import { TrellisIcon, type TrellisIconName } from "@/components/ui/trellis-icon";
 import { MiniTouchDots, type TouchStatus } from "@/components/TouchDot";
 import PvsTooltip from "@/components/PvsTooltip";
+import CompanyPlayTags from "@/components/CompanyPlayTags";
 
 interface CompanyCardVariantCProps {
   company: Company;
@@ -36,6 +38,7 @@ interface CompanyCardVariantCProps {
   rank?: number;
   onCompanyClick?: () => void;
   completedTasks?: Set<string>;
+  currentPlayId?: string;
 }
 
 const getFallbackWhyNow = (company: Company): string => {
@@ -122,11 +125,14 @@ const getStatusBadge = (
 const CompanyCardVariantC = ({
   company,
   onCompanyClick,
+  currentPlayId,
 }: CompanyCardVariantCProps) => {
   const [isDismissModalOpen, setIsDismissModalOpen] = useState(false);
   const [isSnoozeModalOpen, setIsSnoozeModalOpen] = useState(false);
 
-  const statusBadge = getStatusBadge(company.status);
+  const statusBadge = currentPlayId
+    ? getPlayStatusBadge(company.status)
+    : getStatusBadge(company.status);
 
   const touchStatuses = [...(company.touches.touchStatuses || [])];
   while (touchStatuses.length < 5) touchStatuses.push("empty");
@@ -161,23 +167,28 @@ const CompanyCardVariantC = ({
           className="w-10 h-10 rounded-full object-cover flex-shrink-0"
         />
 
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <span className="heading-200 text-text-interactive truncate">
-            {company.name}
-          </span>
-          <span className="detail-200 text-muted-foreground whitespace-nowrap">
-            · {company.industry ?? "—"} ·{" "}
-            <PvsTooltip pvsScore={company.pvsScore}>
-              <span className="cursor-default">
-                PVS {company.pvsScore ?? "—"}
+        <div className="flex flex-col min-w-0 flex-1 gap-0.5">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="heading-200 text-text-interactive truncate">
+              {company.name}
+            </span>
+            <span className="detail-200 text-muted-foreground whitespace-nowrap">
+              · {company.industry ?? "—"} ·{" "}
+              <PvsTooltip pvsScore={company.pvsScore}>
+                <span className="cursor-default">
+                  PVS {company.pvsScore ?? "—"}
+                </span>
+              </PvsTooltip>
+            </span>
+            {!currentPlayId && (
+              <span className="detail-200 text-muted-foreground whitespace-nowrap truncate">
+                {displayedSignals.length > 0
+                  ? `· ${displayedSignals.map((s) => s.text).join(" · ")}`
+                  : `· ${fallbackWhyNow}`}
               </span>
-            </PvsTooltip>
-          </span>
-          <span className="detail-200 text-muted-foreground whitespace-nowrap truncate">
-            {displayedSignals.length > 0
-              ? `· ${displayedSignals.map((s) => s.text).join(" · ")}`
-              : `· ${fallbackWhyNow}`}
-          </span>
+            )}
+          </div>
+          <CompanyPlayTags companyId={company.id} compact excludePlayId={currentPlayId} />
         </div>
 
         <HoverCard openDelay={120} closeDelay={80}>
@@ -350,42 +361,48 @@ const CompanyCardVariantC = ({
         </HoverCard>
 
         <div className="flex items-center gap-3 flex-shrink-0">
-          <MiniTouchDots statuses={displayedTouchStatuses as TouchStatus[]} />
-          <span className="detail-200 text-muted-foreground whitespace-nowrap">
-            due {company.touches.deadline}
-          </span>
+          {!currentPlayId && (
+            <>
+              <MiniTouchDots statuses={displayedTouchStatuses as TouchStatus[]} />
+              <span className="detail-200 text-muted-foreground whitespace-nowrap">
+                due {company.touches.deadline}
+              </span>
+            </>
+          )}
           <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsSnoozeModalOpen(true);
-                }}
-              >
-                Snooze
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsDismissModalOpen(true);
-                }}
-              >
-                Dismiss
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {!currentPlayId && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsSnoozeModalOpen(true);
+                  }}
+                >
+                  Snooze
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsDismissModalOpen(true);
+                  }}
+                >
+                  Dismiss
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 
