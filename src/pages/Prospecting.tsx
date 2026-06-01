@@ -8,7 +8,9 @@ import WorkspaceHeader from "@/components/WorkspaceHeader";
 import ProspectingSubNav from "@/components/ProspectingSubNav";
 import PlayHeader from "@/components/PlayHeader";
 import { usePlays } from "@/contexts/PlaysContext";
-import { Card } from "@/components/ui/card";
+import { usePlayHeaderStyle, type PlayHeaderStyle } from "@/contexts/PlayHeaderStyleContext";
+import { getPlayIdsForCompany } from "@/data/playData";
+import { DataWell } from "@/components/ui/data-well";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -39,6 +41,16 @@ import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { Company } from "@/components/CompanyCard";
 import { calculateCompanyStatus } from "@/utils/companyStatusUtils";
 import { useVariant, type CardVariant } from "@/contexts/VariantContext";
+
+const formatPlayPipeline = (amount: number) => {
+  if (amount >= 1_000_000) {
+    const millions = amount / 1_000_000;
+    return `$${millions % 1 === 0 ? millions : millions.toFixed(1)}M`;
+  }
+  if (amount >= 1_000) return `$${Math.round(amount / 1_000)}K`;
+  return `$${amount}`;
+};
+
 const Prospecting = () => {
   const { playId } = useParams();
   const navigate = useNavigate();
@@ -99,6 +111,22 @@ const Prospecting = () => {
   const clearWorkedStatuses = () => {
     setSelectedWorkedStatuses(new Set());
   };
+  const [selectedPlays, setSelectedPlays] = useState<Set<string>>(new Set());
+  const togglePlayFilter = (playId: string) => {
+    setSelectedPlays(prev => {
+      const next = new Set(prev);
+      if (next.has(playId)) {
+        next.delete(playId);
+      } else {
+        next.add(playId);
+      }
+      return next;
+    });
+  };
+  const clearPlayFilter = () => {
+    setSelectedPlays(new Set());
+  };
+  const activePlays = plays.filter(p => p.status === "live");
   // Fallback details for temp-* contacts
   const [selectedContactFallback, setSelectedContactFallback] = useState<{
     name?: string;
@@ -161,9 +189,16 @@ const Prospecting = () => {
     const workable = sortedCompanies.filter(c => c.status === "New" || c.status === "Unworked P1" || c.status === "In Progress" || c.status === "Over SLA");
 
     // Filter by current priority bucket (P1 default for companies that don't have one set)
-    if (!activePriority) return workable;
-    return workable.filter(c => (c.priority ?? "P1") === activePriority);
-  }, [prospectingCompanies, completedTasks, initialSortOrder, activePriority]);
+    const inPriority = !activePriority
+      ? workable
+      : workable.filter(c => (c.priority ?? "P1") === activePriority);
+
+    // Filter by selected plays (company must belong to at least one selected play)
+    if (selectedPlays.size === 0) return inPriority;
+    return inPriority.filter(c =>
+      getPlayIdsForCompany(c.id).some(playId => selectedPlays.has(playId))
+    );
+  }, [prospectingCompanies, completedTasks, initialSortOrder, activePriority, selectedPlays]);
   const incrementCompanyTouch = (taskId: string) => {
     setProspectingCompanies(prevCompanies => prevCompanies.map(company => {
       const hasTask = company.tasks.some(task => task.id === taskId);
@@ -185,7 +220,8 @@ const Prospecting = () => {
     }));
   };
   const handleCompanyClick = (companyId: string) => {
-    navigate(cyclePath(`/prospecting/strategy/${companyId}`));
+    const suffix = activePlay ? `?fromPlay=${activePlay.id}` : "";
+    navigate(cyclePath(`/prospecting/strategy/${companyId}${suffix}`));
   };
   const handleCompanyNameClick = (companyId: string) => {
     setSelectedCompanyId(companyId);
@@ -498,80 +534,44 @@ const Prospecting = () => {
             {/* Top Metrics - hidden when expanded panel is active or when a Full Book view is shown */}
             {activeNavItem !== "full-customer-book" && activeNavItem !== "full-prospect-book" && (
             <div className={`${expandedPanelCompanyId ? 'px-0 py-0' : 'max-w-[1440px] px-6 py-6'}`}>
-              {!expandedPanelCompanyId && <div className="grid grid-cols-4 gap-4 mb-6">
-                <Card className="flex flex-col items-center px-6 py-4 bg-card border border-border rounded shadow-100 flex-1">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="heading-25 text-foreground">TOTAL BOOK SIZE</span>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Total book size</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <div className="text-heading-500 font-normal text-foreground">497</div>
-                </Card>
-                
-                <Card className="flex flex-col items-center px-6 py-4 bg-card border border-border rounded shadow-100 flex-1">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="heading-25 text-foreground">BOOK WORKED</span>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Percentage of book worked</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="heading-500 text-foreground">52%</div>
-                    <div className="detail-100 text-muted-foreground">Target: 33%</div>
-                  </div>
-                </Card>
-                
-                <Card className="flex flex-col items-center px-6 py-4 bg-card border border-border rounded shadow-100 flex-1">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="heading-25 text-foreground">P1 WORKED WITHIN SLA</span>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>P1 priority worked</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="heading-500 text-foreground">84%</div>
-                    <div className="detail-100 text-muted-foreground">Target: 100%</div>
-                  </div>
-                </Card>
-                
-                <Card className="flex flex-col items-center px-6 py-4 bg-card border border-border rounded shadow-100 flex-1">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="heading-25 text-foreground">P2 WORKED WITHIN SLA</span>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>P2 priority worked</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="heading-500 text-foreground">40%</div>
-                    <div className="detail-100 text-muted-foreground">Target: 100%</div>
-                  </div>
-                </Card>
+              {!expandedPanelCompanyId && !activePlay && <div className="grid grid-cols-4 gap-4 mb-6">
+                <DataWell label="Total book size" value="497" tooltip="Total book size" />
+                <DataWell label="Book worked" value="52%" secondary="Target: 33%" tooltip="Percentage of book worked" />
+                <DataWell label="P1 worked within SLA" value="84%" secondary="Target: 100%" tooltip="P1 priority worked" />
+                <DataWell label="P2 worked within SLA" value="40%" secondary="Target: 100%" tooltip="P2 priority worked" />
               </div>}
 
               {/* Play Header - shown when a play is active */}
               {!expandedPanelCompanyId && activePlay && (
                 <PlayHeader play={activePlay} />
+              )}
+
+              {/* Play metrics - data wells, matching the other views' position/style */}
+              {!expandedPanelCompanyId && activePlay && (
+                <div className="grid grid-cols-4 gap-4 mb-12">
+                  <DataWell
+                    label="Companies worked"
+                    value={`${activePlay.metrics.worked}`}
+                    secondary={`${activePlay.metrics.totalCompanies} companies in play`}
+                    tooltip="Companies in this play that have been worked"
+                  />
+                  <DataWell
+                    label="Contacts engaged"
+                    value={`${activePlay.metrics.contactsEngaged}`}
+                    secondary={`${activePlay.metrics.contactsInPlay} contacts in play`}
+                    tooltip="Contacts in this play that have been engaged"
+                  />
+                  <DataWell
+                    label="Meetings booked"
+                    value={`${activePlay.metrics.meetings}`}
+                    tooltip="Meetings booked from this play"
+                  />
+                  <DataWell
+                    label="Pipeline created"
+                    value={formatPlayPipeline(activePlay.metrics.pipelineCreated)}
+                    tooltip="Open pipeline created from this play"
+                  />
+                </div>
               )}
 
               {/* Company Cards Section */}
@@ -666,6 +666,37 @@ const Prospecting = () => {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="medium" className="border border-transparent heading-50">
+                        Plays{selectedPlays.size > 0 && ` (${selectedPlays.size})`} <TrellisIcon name="downCarat" size={12} />
+                        {selectedPlays.size > 0 && <Button variant="ghost" size="icon" className="ml-1 h-5 w-5" onClick={e => {
+                          e.stopPropagation();
+                          clearPlayFilter();
+                        }}>
+                            <X className="h-3 w-3" />
+                          </Button>}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-64 bg-card border border-border shadow-lg">
+                      {activePlays.length === 0 ? (
+                        <DropdownMenuItem disabled>No active plays</DropdownMenuItem>
+                      ) : (
+                        activePlays.map(play => (
+                          <DropdownMenuItem key={play.id} className="flex items-center gap-3 px-3 py-2.5 cursor-pointer" onSelect={e => {
+                            e.preventDefault();
+                            togglePlayFilter(play.id);
+                          }}>
+                            <div className={`w-4 h-4 border border-foreground rounded-sm flex items-center justify-center flex-shrink-0 ${selectedPlays.has(play.id) ? "bg-foreground" : ""}`}>
+                              {selectedPlays.has(play.id) && <Check className="h-3 w-3 text-background" />}
+                            </div>
+                            <span className="body-100">{play.label}</span>
+                          </DropdownMenuItem>
+                        ))
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="medium" className="border border-transparent heading-50">
                         All industries <TrellisIcon name="downCarat" size={12} />
                       </Button>
                     </DropdownMenuTrigger>
@@ -681,6 +712,7 @@ const Prospecting = () => {
                     <ListFilter className="h-4 w-4" />
                     Advanced Filters
                   </Button>
+                  {activePlay && <PlayStyleToggle />}
                   {/* View toggle: new (Variant C) vs. original */}
                   <ViewToggle />
                 </div>
@@ -723,6 +755,7 @@ const Prospecting = () => {
                             onEmailClick={(contactId) => handleEmailClick(undefined, undefined, undefined, contactId)}
                             onPrepForCallClick={(contactId) => handlePrepForCallClick(contactId)}
                             completedTasks={completedTasks}
+                            currentPlayId={activePlay?.id}
                           />
                         </div>
                       );
@@ -730,7 +763,7 @@ const Prospecting = () => {
 
                     return (
                       <div key={company.id} {...(companyIndex === 0 ? { "data-tour": "first-company-card" } : {})}>
-                        <CompanyCardVariantC company={company} strategyHint={strategyHint} rank={companyIndex + 1} onCompanyClick={() => handleCompanyClick(company.id)} completedTasks={completedTasks} />
+                        <CompanyCardVariantC company={company} strategyHint={strategyHint} rank={companyIndex + 1} onCompanyClick={() => handleCompanyClick(company.id)} completedTasks={completedTasks} currentPlayId={activePlay?.id} />
                       </div>
                     );
                   });
@@ -1780,6 +1813,40 @@ const viewToggleOptions: { value: CardVariant; icon: string; label: string }[] =
   { value: "C", icon: "listView", label: "List view" },
   { value: "current", icon: "documents", label: "Card view" },
 ];
+
+const playStyleOptions: { value: PlayHeaderStyle; label: string }[] = [
+  { value: "tinted", label: "Tinted" },
+  { value: "banner", label: "Banner" },
+];
+
+const PlayStyleToggle = () => {
+  const { style, setStyle } = usePlayHeaderStyle();
+  return (
+    <div className="flex items-center" role="group" aria-label="Switch play box style">
+      {playStyleOptions.map((opt, i) => {
+        const isActive = style === opt.value;
+        const isFirst = i === 0;
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            aria-pressed={isActive}
+            onClick={() => setStyle(opt.value)}
+            className={`flex items-center justify-center px-3 py-2 heading-50 border border-core-subtle transition-colors ${
+              isFirst ? "rounded-l-[4px] -mr-px" : "rounded-r-[4px]"
+            } ${
+              isActive
+                ? "bg-fill-surface-recessed z-[1] text-foreground"
+                : "bg-card text-muted-foreground hover:bg-fill-surface-recessed"
+            }`}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
 
 const ViewToggle = () => {
   const { variant, setVariant } = useVariant();

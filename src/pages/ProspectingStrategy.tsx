@@ -10,10 +10,7 @@ import { Layout } from "@/components/Layout";
 import WorkspaceHeader from "@/components/WorkspaceHeader";
 import StrategyCompaniesSubNav from "@/components/StrategyCompaniesSubNav";
 import Tag from "@/components/Tag";
-import {
-  ResearchEmptyCard,
-  SequenceSectionPrompt,
-} from "@/components/StrategyAgentPrompts";
+import { ResearchEmptyCard } from "@/components/StrategyAgentPrompts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -36,6 +33,9 @@ import { OutreachSequenceCard } from "@/components/OutreachSequenceCard";
 import { TouchDots, type TouchStatus } from "@/components/TouchDot";
 
 import { getCompanyStrategy } from "@/data/companyStrategies";
+import PlayHeader from "@/components/PlayHeader";
+import { usePlays } from "@/contexts/PlaysContext";
+import { getPlaysForCompany } from "@/data/playData";
 import { useStrategyAssistant } from "@/contexts/StrategyAssistantContext";
 import {
   getOutreachState,
@@ -80,6 +80,7 @@ const ProspectingStrategy = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const emptyParam = searchParams.get("empty");
+  const fromPlay = searchParams.get("fromPlay");
   // hasResearch / hasSequences are owned per-company. Initial defaults come from:
   //   1. ?empty=… URL param (demo override) — wins if present
   //   2. company.hasGeneratedStrategy (data-driven default for P2+)
@@ -87,34 +88,15 @@ const ProspectingStrategy = () => {
   const [hasResearch, setHasResearch] = useState(true);
   const [hasSequences, setHasSequences] = useState(true);
   const [isRunningResearch, setIsRunningResearch] = useState(false);
-  const [isRunningSequences, setIsRunningSequences] = useState(false);
 
-  const runResearch = useCallback(() => {
+  const createStrategy = useCallback(() => {
     setIsRunningResearch(true);
-    setTimeout(() => {
-      setHasResearch(true);
-      setIsRunningResearch(false);
-    }, 2200);
-  }, []);
-
-  const runSequences = useCallback(() => {
-    setIsRunningSequences(true);
-    setTimeout(() => {
-      setHasSequences(true);
-      setIsRunningSequences(false);
-    }, 2200);
-  }, []);
-
-  const runBoth = useCallback(() => {
-    setIsRunningResearch(true);
-    setIsRunningSequences(true);
     setTimeout(() => {
       setHasResearch(true);
       setIsRunningResearch(false);
     }, 2200);
     setTimeout(() => {
       setHasSequences(true);
-      setIsRunningSequences(false);
     }, 3500);
   }, []);
   const { cyclePath } = useCyclePath();
@@ -221,6 +203,12 @@ const ProspectingStrategy = () => {
   const currentCompany = companies.find((c) => c.id === companyId) || companies[0];
   const currentCompanyDetails = companyDetails[currentCompany?.id || "1"];
 
+  const { plays } = usePlays();
+  const companyPlays = useMemo(
+    () => getPlaysForCompany(currentCompany?.id ?? "", plays),
+    [currentCompany?.id, plays],
+  );
+
   // Re-initialize empty-state defaults whenever the current company changes.
   // ?empty=… URL param wins; otherwise read from the company's hasGeneratedStrategy.
   useEffect(() => {
@@ -229,7 +217,6 @@ const ProspectingStrategy = () => {
     setHasResearch(emptyParam === "both" || emptyParam === "research" ? false : hasStrategy);
     setHasSequences(emptyParam === "both" || emptyParam === "sequences" ? false : hasStrategy);
     setIsRunningResearch(false);
-    setIsRunningSequences(false);
   }, [currentCompany?.id, emptyParam]);
   const {
     activeVariantByCompany,
@@ -439,16 +426,19 @@ const ProspectingStrategy = () => {
               </div>
 
               <TabsContent value="strategy" className="px-6 pt-12 pb-6 mt-0">
+                {companyPlays.map((play) => (
+                  <PlayHeader key={play.id} play={play} defaultOpen={play.id !== fromPlay} />
+                ))}
                 {isRunningResearch ? (
                   <div className="rounded-100 border border-core-subtle bg-card px-6 py-8 mb-12 flex items-center justify-center gap-3">
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                    <span className="body-100 text-muted-foreground">Researching {currentCompany.name}…</span>
+                    <span className="body-100 text-muted-foreground">Creating prospecting strategy for {currentCompany.name}…</span>
                   </div>
                 ) : !hasResearch ? (
                   <ResearchEmptyCard
                     companyName={currentCompany.name}
                     isRunning={isRunningResearch}
-                    onRun={runResearch}
+                    onRun={createStrategy}
                   />
                 ) : strategy.showFullResearch ? (
                   <>
@@ -525,14 +515,6 @@ const ProspectingStrategy = () => {
                     })()}
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-4" ref={outreachContainerRef}>
-
-                  {!hasSequences && (
-                    <SequenceSectionPrompt
-                      isRunning={isRunningSequences}
-                      onRun={runSequences}
-                      researchAvailable={hasResearch}
-                    />
-                  )}
 
                   {outreachTargets.map((contact, index) => {
                         const contactDetail = contactDetails[contact.id];
