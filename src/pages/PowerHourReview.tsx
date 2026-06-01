@@ -5,11 +5,10 @@ import { Layout } from "@/components/Layout";
 import WorkspaceHeader from "@/components/WorkspaceHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { DataWell } from "@/components/ui/data-well";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TableHeaderCell } from "@/components/ui/table-header-cell";
 import { TableDataCell } from "@/components/ui/table-data-cell";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info } from "lucide-react";
 import Tag from "@/components/Tag";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import ProspectingSubNav from "@/components/ProspectingSubNav";
@@ -400,63 +399,10 @@ const PowerHourReview = () => {
             <div className="max-w-[1440px] px-6 py-6">
               {/* Metrics */}
               <div className="grid grid-cols-4 gap-4 mb-6">
-                <Card className="flex flex-col items-center px-6 py-4 bg-card border border-border rounded shadow-100 flex-1">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="heading-25 text-foreground">TOTAL BOOK SIZE</span>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent><p>Total book size</p></TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <div className="text-heading-500 font-normal text-foreground">497</div>
-                </Card>
-                <Card className="flex flex-col items-center px-6 py-4 bg-card border border-border rounded shadow-100 flex-1">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="heading-25 text-foreground">BOOK WORKED</span>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent><p>Percentage of book worked</p></TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="heading-500 text-foreground">52%</div>
-                    <div className="detail-100 text-muted-foreground">Target: 33%</div>
-                  </div>
-                </Card>
-                <Card className="flex flex-col items-center px-6 py-4 bg-card border border-border rounded shadow-100 flex-1">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="heading-25 text-foreground">P1 WORKED WITHIN SLA</span>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent><p>P1 priority worked</p></TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="heading-500 text-foreground">84%</div>
-                    <div className="detail-100 text-muted-foreground">Target: 100%</div>
-                  </div>
-                </Card>
-                <Card className="flex flex-col items-center px-6 py-4 bg-card border border-border rounded shadow-100 flex-1">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="heading-25 text-foreground">P2 WORKED WITHIN SLA</span>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent><p>P2 priority worked</p></TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="heading-500 text-foreground">40%</div>
-                    <div className="detail-100 text-muted-foreground">Target: 100%</div>
-                  </div>
-                </Card>
+                <DataWell label="Total book size" value="497" tooltip="Total book size" />
+                <DataWell label="Book worked" value="52%" secondary="Target: 33%" tooltip="Percentage of book worked" />
+                <DataWell label="P1 worked within SLA" value="84%" secondary="Target: 100%" tooltip="P1 priority worked" />
+                <DataWell label="P2 worked within SLA" value="40%" secondary="Target: 100%" tooltip="P2 priority worked" />
               </div>
               {/* Header */}
               <div className="flex items-center justify-between py-4">

@@ -7,6 +7,7 @@ import { TourProvider } from "@/contexts/TourContext";
 import { VariantProvider } from "@/contexts/VariantContext";
 import { StrategyAssistantProvider } from "@/contexts/StrategyAssistantContext";
 import { PlaysProvider } from "@/contexts/PlaysContext";
+import { PlayHeaderStyleProvider } from "@/contexts/PlayHeaderStyleContext";
 import GuidedTour from "@/components/GuidedTour";
 import SalesWorkspace from "./pages/SalesWorkspace";
 import Summary from "./pages/Summary";
@@ -18,6 +19,8 @@ import Deals from "./pages/Deals";
 import Agents from "./pages/Agents";
 import AgentDetail from "./pages/AgentDetail";
 import DesignSystem from "./pages/DesignSystem";
+import DataWellSandbox from "./pages/DataWellSandbox";
+import PlayHeaderSandbox from "./pages/PlayHeaderSandbox";
 import ProspectingStrategy from "./pages/ProspectingStrategy";
 import HoverPreviewDemo from "./pages/HoverPreviewDemo";
 import OutreachStates from "./pages/OutreachStates";
@@ -39,12 +42,17 @@ const App = () => (
           <VariantProvider>
           <StrategyAssistantProvider>
           <PlaysProvider>
+          <PlayHeaderStyleProvider>
           <Routes>
             <Route path="/" element={<TeamHome />} />
             <Route path="/motion-sandbox" element={<MotionSandbox />} />
             <Route path="/:cycleSlug" element={<CyclePage />} />
             <Route path="/:cycleSlug/summary" element={<Summary />} />
             <Route path="/:cycleSlug/design-system" element={<DesignSystem />} />
+            <Route path="/data-well-sandbox" element={<DataWellSandbox />} />
+            <Route path="/:cycleSlug/data-well-sandbox" element={<DataWellSandbox />} />
+            <Route path="/play-box-sandbox" element={<PlayHeaderSandbox />} />
+            <Route path="/:cycleSlug/play-box-sandbox" element={<PlayHeaderSandbox />} />
             <Route path="/:cycleSlug/prospecting" element={<Prospecting />} />
             <Route path="/:cycleSlug/prospecting/play/:playId" element={<Prospecting />} />
             <Route path="/:cycleSlug/plays" element={<Plays />} />
@@ -62,6 +70,7 @@ const App = () => (
             <Route path="/:cycleSlug/outreach-states" element={<OutreachStates />} />
           </Routes>
           <GuidedTour />
+          </PlayHeaderStyleProvider>
           </PlaysProvider>
           </StrategyAssistantProvider>
           </VariantProvider>

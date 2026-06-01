@@ -39,6 +39,9 @@ import { OutreachSequenceCard } from "@/components/OutreachSequenceCard";
 import { TouchDots, type TouchStatus } from "@/components/TouchDot";
 
 import { getCompanyStrategy } from "@/data/companyStrategies";
+import CompanyPlaysSection from "@/components/CompanyPlaysSection";
+import { usePlays } from "@/contexts/PlaysContext";
+import { getPlaysForCompany } from "@/data/playData";
 import { useStrategyAssistant } from "@/contexts/StrategyAssistantContext";
 import {
   getOutreachState,
@@ -226,6 +229,12 @@ const ProspectingStrategy = () => {
 
   const currentCompany = companies.find((c) => c.id === companyId) || companies[0];
   const currentCompanyDetails = companyDetails[currentCompany?.id || "1"];
+
+  const { plays } = usePlays();
+  const companyPlays = useMemo(
+    () => getPlaysForCompany(currentCompany?.id ?? "", plays),
+    [currentCompany?.id, plays],
+  );
 
   // Re-initialize empty-state defaults whenever the current company changes.
   // ?empty=… URL param wins; otherwise read from the company's hasGeneratedStrategy.
@@ -448,6 +457,20 @@ const ProspectingStrategy = () => {
               </div>
 
               <TabsContent value="strategy" className="px-6 pt-12 pb-6 mt-0">
+                {companyPlays.length > 0 && (
+                  <Collapsible defaultOpen className="mb-12">
+                    <CollapsibleTrigger className="flex items-center gap-2 w-full group">
+                      <TrellisIcon name="downCarat" size={12} className="text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
+                      <h3 className="heading-200 text-foreground">
+                        {companyPlays.length === 1 ? "Part of a play" : "Part of plays"}
+                      </h3>
+                      <span className="detail-100 text-muted-foreground">({companyPlays.length})</span>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-3">
+                      <CompanyPlaysSection companyId={currentCompany.id} />
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
                 {isRunningResearch ? (
                   <div className="rounded-100 border border-core-subtle bg-card px-6 py-8 mb-12 flex items-center justify-center gap-3">
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
