@@ -40,6 +40,8 @@ import SortableContactCard from "@/components/SortableContactCard";
 import AddContactTile from "@/components/AddContactTile";
 import AddContactsModal from "@/components/AddContactsModal";
 import PvsTooltip from "@/components/PvsTooltip";
+import CompanyPlayTags from "@/components/CompanyPlayTags";
+import { getPlayStatusBadge } from "@/utils/companyStatusUtils";
 import SequenceEnrollmentModal from "@/components/SequenceEnrollmentModal";
 import { useCompanyContacts } from "@/hooks/useCompanyContacts";
 import { getAdditionalContactsForCompany } from "@/data/allContacts";
@@ -105,6 +107,7 @@ interface CompanyCardProps {
   onEmailClick?: (contactId: string, taskId: string) => void;
   onPrepForCallClick?: (contactId: string) => void;
   completedTasks?: Set<string>;
+  currentPlayId?: string;
 }
 const CompanyCard = ({
   company,
@@ -113,6 +116,7 @@ const CompanyCard = ({
   onContactClick,
   onCallClick,
   onEmailClick,
+  currentPlayId,
 }: CompanyCardProps) => {
   const [isDismissModalOpen, setIsDismissModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -224,7 +228,9 @@ const CompanyCard = ({
     }
   };
 
-  const statusBadge = getStatusBadgeVariant();
+  const statusBadge = currentPlayId
+    ? getPlayStatusBadge(company.status)
+    : getStatusBadgeVariant();
 
   const touchStatuses = [...(company.touches.touchStatuses || [])];
   while (touchStatuses.length < 5) {
@@ -267,10 +273,15 @@ const CompanyCard = ({
                     PVS {company.pvsScore ?? "—"}
                   </span>
                 </PvsTooltip>
-                <span>•</span>
-                <span>{company.conversionTrigger ?? "—"}</span>
-                <Info className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                {!currentPlayId && (
+                  <>
+                    <span>•</span>
+                    <span>{company.conversionTrigger ?? "—"}</span>
+                    <Info className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  </>
+                )}
               </p>
+              <CompanyPlayTags companyId={company.id} excludePlayId={currentPlayId} className="mt-1" />
             </div>
           </div>
         </div>
@@ -279,13 +290,15 @@ const CompanyCard = ({
         <div className="flex flex-col items-end gap-2">
           <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
 
-          <div className="flex flex-col items-end gap-1">
-            <span className="detail-200 text-muted-foreground">
-              {remainingTouches} more {remainingTouches === 1 ? "touch" : "touches"} required
-              before {company.touches.deadline}
-            </span>
-            <TouchDots statuses={displayedTouchStatuses as TouchStatus[]} />
-          </div>
+          {!currentPlayId && (
+            <div className="flex flex-col items-end gap-1">
+              <span className="detail-200 text-muted-foreground">
+                {remainingTouches} more {remainingTouches === 1 ? "touch" : "touches"} required
+                before {company.touches.deadline}
+              </span>
+              <TouchDots statuses={displayedTouchStatuses as TouchStatus[]} />
+            </div>
+          )}
         </div>
       </div>
 
@@ -325,24 +338,28 @@ const CompanyCard = ({
           </Button>
 
           <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex min-h-[40px] px-3 justify-center items-center gap-2 rounded border border-transparent bg-transparent heading-50 text-foreground hover:bg-accent/10 transition-colors">
-                  Snooze <TrellisIcon name="downCarat" size={12} />
+            {!currentPlayId && (
+              <>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex min-h-[40px] px-3 justify-center items-center gap-2 rounded border border-transparent bg-transparent heading-50 text-foreground hover:bg-accent/10 transition-colors">
+                      Snooze <TrellisIcon name="downCarat" size={12} />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem>1 day</DropdownMenuItem>
+                    <DropdownMenuItem>3 days</DropdownMenuItem>
+                    <DropdownMenuItem>1 week</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <button
+                  className="flex min-h-[40px] px-3 justify-center items-center gap-2 rounded border border-transparent bg-transparent heading-50 text-foreground hover:bg-accent/10 transition-colors"
+                  onClick={() => setIsDismissModalOpen(true)}
+                >
+                  Dismiss
                 </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>1 day</DropdownMenuItem>
-                <DropdownMenuItem>3 days</DropdownMenuItem>
-                <DropdownMenuItem>1 week</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <button
-              className="flex min-h-[40px] px-3 justify-center items-center gap-2 rounded border border-transparent bg-transparent heading-50 text-foreground hover:bg-accent/10 transition-colors"
-              onClick={() => setIsDismissModalOpen(true)}
-            >
-              Dismiss
-            </button>
+              </>
+            )}
             <Button
               variant="primary"
               size="medium"
