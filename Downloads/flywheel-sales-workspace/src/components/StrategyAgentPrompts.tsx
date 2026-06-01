@@ -73,16 +73,16 @@ export const ResearchEmptyCard = ({
       <AiStarIconGradient size={24} />
     </div>
     <h3 className="heading-200 text-foreground">
-      Company research hasn't run yet
+      {companyName} hasn't been prepped yet
     </h3>
     <p className="body-100 text-muted-foreground mt-2 max-w-md mx-auto">
-      Generate business intelligence, recent news and triggers, and per-contact
-      context for {companyName}.
+      Generate company research and personalized email sequences for every
+      outreach target.
     </p>
     <div className="mt-5 flex justify-center">
       <Button
         variant="ai"
-        size="small"
+        size="medium"
         onClick={onRun}
         disabled={isRunning}
       >
@@ -91,7 +91,7 @@ export const ResearchEmptyCard = ({
         ) : (
           <AiStarIcon size={14} />
         )}
-        {isRunning ? "Running research agent…" : "Run research agent"}
+        {isRunning ? "Creating prospecting strategy…" : "Create prospecting strategy"}
       </Button>
     </div>
   </div>

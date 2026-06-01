@@ -7,6 +7,7 @@ import { usePlayHeaderStyle } from "@/contexts/PlayHeaderStyleContext";
 
 interface PlayHeaderProps {
   play: Play;
+  defaultOpen?: boolean;
 }
 
 const materialIcon = (type: EnablementMaterial["type"]) => {
@@ -24,8 +25,8 @@ const formatDate = (dateStr: string) => {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 };
 
-const PlayHeader = ({ play }: PlayHeaderProps) => {
-  const [isOpen, setIsOpen] = useState(true);
+const PlayHeader = ({ play, defaultOpen = true }: PlayHeaderProps) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const { style } = usePlayHeaderStyle();
 
   const endDate = new Date(play.endDate);

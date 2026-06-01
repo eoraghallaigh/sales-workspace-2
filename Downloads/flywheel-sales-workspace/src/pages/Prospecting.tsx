@@ -220,7 +220,8 @@ const Prospecting = () => {
     }));
   };
   const handleCompanyClick = (companyId: string) => {
-    navigate(cyclePath(`/prospecting/strategy/${companyId}`));
+    const suffix = activePlay ? `?fromPlay=${activePlay.id}` : "";
+    navigate(cyclePath(`/prospecting/strategy/${companyId}${suffix}`));
   };
   const handleCompanyNameClick = (companyId: string) => {
     setSelectedCompanyId(companyId);
