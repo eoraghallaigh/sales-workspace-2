@@ -5,6 +5,26 @@ import type { IterationEntry } from "../types";
 // Each entry's `id` matches the folder name under public/about/iterations/.
 export const q2c2Iterations: IterationEntry[] = [
   {
+    id: "2026-06-01-plays-rep-experience-design",
+    date: "2026-06-01",
+    label: "plays-rep-experience-design",
+    whatChanged: [
+      "The company strategy page now shows the full play explanation box — the same one from the play list — for any company in a play, with one box per play when a company belongs to several.",
+      "Opening a company from a play list arrives with that play's box collapsed; opening it from anywhere else leaves it expanded.",
+      "The strategy empty state now has a single \"Create prospecting strategy\" CTA (primary AI button) that generates research and sequences together; the separate \"Run research agent\" and \"Run sequence agent\" CTAs are gone.",
+    ],
+    why: [
+      "A company's play context should look and behave the same wherever the rep encounters it, and stay out of the way when they've just come from that play.",
+      "One-click strategy creation fits the agentic-prospecting direction — reps shouldn't have to trigger research and sequencing as two separate steps.",
+    ],
+    prUrl: "https://github.com/eoraghallaigh_hubspot/flywheel-sales-workspace/pull/4",
+    commitment: "plays",
+    screenshots: [
+      { src: "/about/iterations/2026-06-01-plays-rep-experience-design/prospecting-strategy.png", alt: "prospecting-strategy screenshot" },
+      { src: "/about/iterations/2026-06-01-plays-rep-experience-design/prospecting-strategy-empty-both.png", alt: "prospecting-strategy-empty-both screenshot" },
+    ],
+  },
+  {
     id: "2026-05-29-insert-company-research-content",
     date: "2026-05-29",
     label: "insert-company-research-content",
