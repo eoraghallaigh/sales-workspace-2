@@ -8,8 +8,6 @@ import WorkspaceHeader from "@/components/WorkspaceHeader";
 import ProspectingSubNav from "@/components/ProspectingSubNav";
 import PlayHeader from "@/components/PlayHeader";
 import { usePlays } from "@/contexts/PlaysContext";
-import { usePlayHeaderStyle, type PlayHeaderStyle } from "@/contexts/PlayHeaderStyleContext";
-import { getPlayIdsForCompany } from "@/data/playData";
 import { DataWell } from "@/components/ui/data-well";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -112,22 +110,6 @@ const Prospecting = () => {
   const clearWorkedStatuses = () => {
     setSelectedWorkedStatuses(new Set());
   };
-  const [selectedPlays, setSelectedPlays] = useState<Set<string>>(new Set());
-  const togglePlayFilter = (playId: string) => {
-    setSelectedPlays(prev => {
-      const next = new Set(prev);
-      if (next.has(playId)) {
-        next.delete(playId);
-      } else {
-        next.add(playId);
-      }
-      return next;
-    });
-  };
-  const clearPlayFilter = () => {
-    setSelectedPlays(new Set());
-  };
-  const activePlays = plays.filter(p => p.status === "live");
   // Fallback details for temp-* contacts
   const [selectedContactFallback, setSelectedContactFallback] = useState<{
     name?: string;
@@ -190,16 +172,10 @@ const Prospecting = () => {
     const workable = sortedCompanies.filter(c => c.status === "New" || c.status === "Unworked P1" || c.status === "In Progress" || c.status === "Over SLA");
 
     // Filter by current priority bucket (P1 default for companies that don't have one set)
-    const inPriority = !activePriority
+    return !activePriority
       ? workable
       : workable.filter(c => (c.priority ?? "P1") === activePriority);
-
-    // Filter by selected plays (company must belong to at least one selected play)
-    if (selectedPlays.size === 0) return inPriority;
-    return inPriority.filter(c =>
-      getPlayIdsForCompany(c.id).some(playId => selectedPlays.has(playId))
-    );
-  }, [prospectingCompanies, completedTasks, initialSortOrder, activePriority, selectedPlays]);
+  }, [prospectingCompanies, completedTasks, initialSortOrder, activePriority]);
   const incrementCompanyTouch = (taskId: string) => {
     setProspectingCompanies(prevCompanies => prevCompanies.map(company => {
       const hasTask = company.tasks.some(task => task.id === taskId);
@@ -667,37 +643,6 @@ const Prospecting = () => {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="medium" className="border border-transparent heading-50">
-                        Plays{selectedPlays.size > 0 && ` (${selectedPlays.size})`} <TrellisIcon name="downCarat" size={12} />
-                        {selectedPlays.size > 0 && <Button variant="ghost" size="icon" className="ml-1 h-5 w-5" onClick={e => {
-                          e.stopPropagation();
-                          clearPlayFilter();
-                        }}>
-                            <X className="h-3 w-3" />
-                          </Button>}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-64 bg-card border border-border shadow-lg">
-                      {activePlays.length === 0 ? (
-                        <DropdownMenuItem disabled>No active plays</DropdownMenuItem>
-                      ) : (
-                        activePlays.map(play => (
-                          <DropdownMenuItem key={play.id} className="flex items-center gap-3 px-3 py-2.5 cursor-pointer" onSelect={e => {
-                            e.preventDefault();
-                            togglePlayFilter(play.id);
-                          }}>
-                            <div className={`w-4 h-4 border border-foreground rounded-sm flex items-center justify-center flex-shrink-0 ${selectedPlays.has(play.id) ? "bg-foreground" : ""}`}>
-                              {selectedPlays.has(play.id) && <Check className="h-3 w-3 text-background" />}
-                            </div>
-                            <span className="body-100">{play.label}</span>
-                          </DropdownMenuItem>
-                        ))
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="medium" className="border border-transparent heading-50">
                         All industries <TrellisIcon name="downCarat" size={12} />
                       </Button>
                     </DropdownMenuTrigger>
@@ -713,7 +658,6 @@ const Prospecting = () => {
                     <ListFilter className="h-4 w-4" />
                     Advanced Filters
                   </Button>
-                  {activePlay && <PlayStyleToggle />}
                   {/* View toggle: new (Variant C) vs. original */}
                   <ViewToggle />
                 </div>
@@ -1822,40 +1766,6 @@ const viewToggleOptions: { value: CardVariant; icon: string; label: string }[] =
   { value: "current", icon: "documents", label: "Card view" },
   { value: "table", icon: "table", label: "Table view" },
 ];
-
-const playStyleOptions: { value: PlayHeaderStyle; label: string }[] = [
-  { value: "tinted", label: "Tinted" },
-  { value: "banner", label: "Banner" },
-];
-
-const PlayStyleToggle = () => {
-  const { style, setStyle } = usePlayHeaderStyle();
-  return (
-    <div className="flex items-center" role="group" aria-label="Switch play box style">
-      {playStyleOptions.map((opt, i) => {
-        const isActive = style === opt.value;
-        const isFirst = i === 0;
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            aria-pressed={isActive}
-            onClick={() => setStyle(opt.value)}
-            className={`flex items-center justify-center px-3 py-2 heading-50 border border-core-subtle transition-colors ${
-              isFirst ? "rounded-l-[4px] -mr-px" : "rounded-r-[4px]"
-            } ${
-              isActive
-                ? "bg-fill-surface-recessed z-[1] text-foreground"
-                : "bg-card text-muted-foreground hover:bg-fill-surface-recessed"
-            }`}
-          >
-            {opt.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-};
 
 const ViewToggle = () => {
   const { variant, setVariant } = useVariant();
