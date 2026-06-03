@@ -22,6 +22,7 @@ import { TableDataCell } from "@/components/ui/table-data-cell";
 import { Info, ChevronDown, ListFilter, X, ExternalLink, FileEdit, Mail, Phone, ListTodo, Calendar, MoreHorizontal, Copy, Search, ArrowUpDown, ChevronRight, Check } from "lucide-react";
 import CompanyCard from "@/components/CompanyCard";
 import CompanyCardVariantC from "@/components/CompanyCardVariantC";
+import CompaniesTableView from "@/components/CompaniesTableView";
 import FullCustomerBook from "@/components/FullCustomerBook";
 import FullProspectBook from "@/components/FullProspectBook";
 import { companyStrategies, defaultStrategy } from "@/data/companyStrategies";
@@ -736,6 +737,13 @@ const Prospecting = () => {
                     </Button>
                   ))}
                 </nav>
+              ) : cardVariant === "table" ? (
+                <CompaniesTableView
+                  companies={companiesWithCalculatedStatus}
+                  onCompanyClick={handleCompanyClick}
+                  onNameClick={handleCompanyClick}
+                  currentPlayId={activePlay?.id}
+                />
               ) : (
                 (() => {
                   const rows = companiesWithCalculatedStatus.map((company, companyIndex) => {
@@ -1812,6 +1820,7 @@ const Prospecting = () => {
 const viewToggleOptions: { value: CardVariant; icon: string; label: string }[] = [
   { value: "C", icon: "listView", label: "List view" },
   { value: "current", icon: "documents", label: "Card view" },
+  { value: "table", icon: "table", label: "Table view" },
 ];
 
 const playStyleOptions: { value: PlayHeaderStyle; label: string }[] = [
@@ -1855,6 +1864,7 @@ const ViewToggle = () => {
       {viewToggleOptions.map((opt, i) => {
         const isActive = variant === opt.value;
         const isFirst = i === 0;
+        const isLast = i === viewToggleOptions.length - 1;
         return (
           <Tooltip key={opt.value}>
             <TooltipTrigger asChild>
@@ -1864,7 +1874,7 @@ const ViewToggle = () => {
                 aria-label={opt.label}
                 onClick={() => setVariant(opt.value)}
                 className={`relative flex items-center justify-center p-2.5 border border-core-subtle transition-colors ${
-                  isFirst ? "rounded-l-[4px] -mr-px" : "rounded-r-[4px]"
+                  isFirst ? "rounded-l-[4px] -mr-px" : isLast ? "rounded-r-[4px]" : "-mr-px"
                 } ${
                   isActive
                     ? "bg-fill-surface-recessed z-[1] text-foreground"
