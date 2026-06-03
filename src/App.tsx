@@ -7,7 +7,6 @@ import { TourProvider } from "@/contexts/TourContext";
 import { VariantProvider } from "@/contexts/VariantContext";
 import { StrategyAssistantProvider } from "@/contexts/StrategyAssistantContext";
 import { PlaysProvider } from "@/contexts/PlaysContext";
-import { PlayHeaderStyleProvider } from "@/contexts/PlayHeaderStyleContext";
 import GuidedTour from "@/components/GuidedTour";
 import SalesWorkspace from "./pages/SalesWorkspace";
 import Summary from "./pages/Summary";
@@ -42,7 +41,6 @@ const App = () => (
           <VariantProvider>
           <StrategyAssistantProvider>
           <PlaysProvider>
-          <PlayHeaderStyleProvider>
           <Routes>
             <Route path="/" element={<TeamHome />} />
             <Route path="/motion-sandbox" element={<MotionSandbox />} />
@@ -70,7 +68,6 @@ const App = () => (
             <Route path="/:cycleSlug/outreach-states" element={<OutreachStates />} />
           </Routes>
           <GuidedTour />
-          </PlayHeaderStyleProvider>
           </PlaysProvider>
           </StrategyAssistantProvider>
           </VariantProvider>

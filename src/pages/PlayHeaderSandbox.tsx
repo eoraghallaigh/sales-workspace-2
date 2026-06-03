@@ -1,8 +1,17 @@
 import { useMemo, useState } from "react";
 import { ChevronDown, Megaphone, Calendar, ExternalLink, FileText, Swords, MessageSquareText, Video, File } from "lucide-react";
 import { plays, EnablementMaterial } from "@/data/playData";
+import { Badge } from "@/components/ui/badge";
 
 const play = plays[0];
+
+const BADGE_COLORS = [
+  "orange", "lorax", "sorbet", "marigold", "yellow",
+  "oz", "green", "teal", "teal-dark", "calypso",
+  "blue", "thunderdome", "purple", "norman", "magenta",
+  "candy-apple", "red", "pantera", "koala",
+] as const;
+type BadgeColor = (typeof BADGE_COLORS)[number];
 
 const formatDate = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -41,9 +50,9 @@ interface Spacing {
 
 const DEFAULTS: Spacing = {
   cardPadX: 20,
-  cardPadY: 20,
+  cardPadY: 24,
   accentBarHeight: 4,
-  eyebrowToTitle: 8,
+  eyebrowToTitle: 16,
   titleToDescription: 12,
   descriptionToEnablement: 16,
   enablementHeadToGrid: 8,
@@ -85,6 +94,7 @@ const SectionTitle = ({ children }: { children: React.ReactNode }) => (
 
 const PlayHeaderSandbox = () => {
   const [s, setS] = useState<Spacing>(DEFAULTS);
+  const [badgeColor, setBadgeColor] = useState<BadgeColor>("red");
   const set = (key: keyof Spacing) => (value: number) => setS((prev) => ({ ...prev, [key]: value }));
 
   const summary = useMemo(
@@ -103,9 +113,11 @@ const PlayHeaderSandbox = () => {
       <div className="absolute inset-x-0 top-0 trellis-gradient-hero" style={{ height: s.accentBarHeight }} />
 
       {/* Eyebrow */}
-      <div className="flex items-center gap-1.5" style={{ marginBottom: s.eyebrowToTitle }}>
-        <Megaphone className="h-3.5 w-3.5 text-[var(--color-text-brand-default)]" />
-        <span className="heading-25 uppercase tracking-wide text-[var(--color-text-brand-default)]">Play</span>
+      <div className="flex items-center" style={{ marginBottom: s.eyebrowToTitle }}>
+        <Badge variant={badgeColor} className="gap-1">
+          <Megaphone className="h-3 w-3" />
+          <span className="uppercase tracking-wide">Prospecting Play</span>
+        </Badge>
       </div>
 
       {/* Title row */}
@@ -180,6 +192,26 @@ const PlayHeaderSandbox = () => {
           <button onClick={() => setS(DEFAULTS)} className="text-xs font-semibold text-[#FF4800] hover:underline">Reset</button>
         </div>
 
+        <SectionTitle>Badge colour</SectionTitle>
+        <div className="grid grid-cols-5 gap-2">
+          {BADGE_COLORS.map((c) => (
+            <button
+              key={c}
+              type="button"
+              title={c}
+              onClick={() => setBadgeColor(c)}
+              className={`flex items-center justify-center rounded-md border p-1.5 transition ${
+                badgeColor === c
+                  ? "border-[#FF4800] ring-2 ring-[#FF4800]/30"
+                  : "border-slate-200 hover:border-slate-300"
+              }`}
+            >
+              <Badge variant={c} className="pointer-events-none px-1.5 py-px text-[9px] leading-none">Aa</Badge>
+            </button>
+          ))}
+        </div>
+        <p className="mt-2 text-[11px] text-slate-500">Selected: <span className="font-semibold text-slate-700">{badgeColor}</span></p>
+
         <SectionTitle>Card</SectionTitle>
         <div className="flex flex-col gap-3">
           <RangeControl label="Padding X" value={s.cardPadX} min={0} max={48} onChange={set("cardPadX")} />
@@ -213,7 +245,7 @@ const PlayHeaderSandbox = () => {
         <div className="mx-auto max-w-[840px]">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Play explanation box</h3>
           {preview}
-          <p className="mt-6 text-xs text-slate-400">Type &amp; colour come from the design system; only spacing is adjustable here. Collapse is shown statically (always open).</p>
+          <p className="mt-6 text-xs text-slate-400">Type comes from the design system; spacing and the badge colour are adjustable here. Collapse is shown statically (always open).</p>
         </div>
       </main>
     </div>
