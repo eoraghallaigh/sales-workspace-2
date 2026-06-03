@@ -172,6 +172,7 @@ const ICON_FILE_MAP: Record<string, string> = {
   tablet: "Tablet",
   tag: "Tag",
   tasks: "Tasks",
+  table: "Table",
   test: "Test",
   text: "Text",
   textBodyExpanded: "TextBodyExpanded",

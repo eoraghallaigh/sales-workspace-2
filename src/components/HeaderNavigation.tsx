@@ -188,6 +188,7 @@ export const HeaderNavigation = ({
 const variantOptions: { label: string; value: CardVariant }[] = [
   { label: "Variant C (default)", value: "C" },
   { label: "Original UI", value: "current" },
+  { label: "Table view", value: "table" },
 ];
 
 const AccountMenu = () => {

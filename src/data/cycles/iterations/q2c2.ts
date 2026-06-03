@@ -5,6 +5,26 @@ import type { IterationEntry } from "../types";
 // Each entry's `id` matches the folder name under public/about/iterations/.
 export const q2c2Iterations: IterationEntry[] = [
   {
+    id: "2026-06-03-add-table-view-company-lists",
+    date: "2026-06-03",
+    label: "add-table-view-company-lists",
+    whatChanged: [
+      "Added a third \"Table view\" to the company-list view toggle (alongside List and Card), available across every Net New priority list (P1–P4) and inside plays.",
+      "Each company is a table row with Company, Industry, PVS, Why now (intent signals), Contacts, Touches, and Status columns; hovering the Contacts cell opens the same outreach-summary popover used in the list view.",
+      "Added a thin toolbar above the table header with a live \"Search companies\" field and an \"Edit columns\" control, built as a reusable component so future tables inherit it.",
+      "The chosen view is now deep-linkable via a `?variant=table` URL param.",
+    ],
+    why: [
+      "Reps wanted a dense, scannable table of their company lists — the same table treatment as the Full Prospect/Customer Books — not just the card and list layouts.",
+      "Building the search + edit-columns toolbar as shared chrome means any future table gets a consistent surface for free.",
+    ],
+    prUrl: "https://github.com/eoraghallaigh_hubspot/flywheel-sales-workspace/pull/7",
+    commitment: "full-prospect-book",
+    screenshots: [
+      { src: "/about/iterations/2026-06-03-add-table-view-company-lists/prospecting-table.png", alt: "Prospecting company list in the new table view" },
+    ],
+  },
+  {
     id: "2026-06-03-remove-toggle-add-play-badge",
     date: "2026-06-03",
     label: "remove-toggle-add-play-badge",
