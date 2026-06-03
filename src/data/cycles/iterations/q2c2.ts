@@ -18,6 +18,7 @@ export const q2c2Iterations: IterationEntry[] = [
       "Reps wanted a dense, scannable table of their company lists — the same table treatment as the Full Prospect/Customer Books — not just the card and list layouts.",
       "Building the search + edit-columns toolbar as shared chrome means any future table gets a consistent surface for free.",
     ],
+    prUrl: "https://github.com/eoraghallaigh_hubspot/flywheel-sales-workspace/pull/7",
     commitment: "full-prospect-book",
     screenshots: [
       { src: "/about/iterations/2026-06-03-add-table-view-company-lists/prospecting-table.png", alt: "Prospecting company list in the new table view" },
