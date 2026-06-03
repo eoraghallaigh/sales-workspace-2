@@ -1,9 +1,9 @@
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, FileText, Swords, MessageSquareText, Video, File, Calendar, ExternalLink, Megaphone } from "lucide-react";
 import { useState } from "react";
 import { Play, EnablementMaterial } from "@/data/playData";
-import { usePlayHeaderStyle } from "@/contexts/PlayHeaderStyleContext";
 
 interface PlayHeaderProps {
   play: Play;
@@ -27,7 +27,6 @@ const formatDate = (dateStr: string) => {
 
 const PlayHeader = ({ play, defaultOpen = true }: PlayHeaderProps) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
-  const { style } = usePlayHeaderStyle();
 
   const endDate = new Date(play.endDate);
   const today = new Date();
@@ -95,50 +94,21 @@ const PlayHeader = ({ play, defaultOpen = true }: PlayHeaderProps) => {
     </>
   );
 
-  if (style === "banner") {
-    return (
-      <Card className="relative overflow-hidden border border-[#F6CDBC] rounded shadow-200 mb-8 p-0">
-        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-          <div className="bg-[linear-gradient(135deg,#C93700_0%,#FF4800_50%,#FB31A7_100%)] px-5 py-4">
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <Megaphone className="h-3.5 w-3.5 text-white" />
-              <span className="heading-25 uppercase tracking-wide text-white/90">Play</span>
-            </div>
-            <div className="flex items-center justify-between gap-4">
-              <CollapsibleTrigger className="flex items-center gap-2 group text-left">
-                <ChevronDown className={`h-5 w-5 text-white flex-shrink-0 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
-                <h3 className="heading-300 text-white">{play.label}</h3>
-              </CollapsibleTrigger>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <Calendar className="h-3.5 w-3.5 text-white/80" />
-                <span className="detail-100 text-white/90">
-                  {formatDate(play.startDate)} – {formatDate(play.endDate)}
-                </span>
-                <span className="detail-100 text-white/90">·</span>
-                <span className="detail-100 text-white/90">{daysRemaining} days remaining</span>
-              </div>
-            </div>
-          </div>
-          <CollapsibleContent>
-            <div className="p-5">
-              <p className="body-100 text-foreground leading-relaxed mb-4">{play.description}</p>
-              {enablementSection}
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-      </Card>
-    );
-  }
-
   return (
-    <Card className="relative overflow-hidden bg-gradient-to-b from-[#FFF4EF] to-card border border-[#F6CDBC] rounded shadow-200 px-10 py-10 mb-8">
+    <Card className="relative overflow-hidden bg-gradient-to-b from-[#FFF4EF] to-card border border-[#F6CDBC] rounded shadow-200 px-10 pt-6 pb-8 mb-8">
       <div className="absolute inset-x-0 top-0 h-1 trellis-gradient-hero" />
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <div className="flex items-center justify-between gap-4">
-          <CollapsibleTrigger className="flex items-center gap-2 group text-left">
-            <ChevronDown className={`h-5 w-5 text-muted-foreground flex-shrink-0 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
-            <h3 className="heading-300 text-foreground">{play.label}</h3>
-          </CollapsibleTrigger>
+          <div className="flex flex-col gap-4">
+            <Badge variant="red" className="gap-1 self-start">
+              <Megaphone className="h-3 w-3" />
+              <span className="uppercase tracking-wide">Prospecting Play</span>
+            </Badge>
+            <CollapsibleTrigger className="flex items-center gap-2 group text-left">
+              <ChevronDown className={`h-5 w-5 text-muted-foreground flex-shrink-0 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
+              <h3 className="heading-300 text-foreground">{play.label}</h3>
+            </CollapsibleTrigger>
+          </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="detail-100 text-muted-foreground">

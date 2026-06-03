@@ -25,6 +25,29 @@ export const q2c2Iterations: IterationEntry[] = [
     ],
   },
   {
+    id: "2026-06-03-remove-toggle-add-play-badge",
+    date: "2026-06-03",
+    label: "remove-toggle-add-play-badge",
+    whatChanged: [
+      "A red \"Prospecting Play\" badge now sits above the play title in the play explanation box.",
+      "The play box has more breathing room — 24px top padding, 32px bottom, and a 16px gap between the badge and title.",
+      "The \"Tinted/Banner\" play-box style toggle is gone from the prospecting toolbar.",
+      "The \"Plays\" quick-filter dropdown is removed from the company list toolbar.",
+      "The badge component gained the full design-system colour palette (solid + subtle families), with a colour picker added to the play-box spacing sandbox.",
+    ],
+    why: [
+      "Every company belongs to a single play, so a multi-select Plays filter and a per-box style toggle were redundant scaffolding worth removing.",
+      "The badge makes it explicit, in design-system colours, that the box is a prospecting play — replacing the earlier one-off coral.",
+      "The sandbox colour picker let us trial the palette and settle on the red variant plus the new spacing.",
+    ],
+    prUrl: "https://github.com/eoraghallaigh_hubspot/flywheel-sales-workspace/pull/6",
+    commitment: "plays",
+    screenshots: [
+      { src: "/about/iterations/2026-06-03-remove-toggle-add-play-badge/play-salesforce-switchers.png", alt: "play-salesforce-switchers screenshot" },
+      { src: "/about/iterations/2026-06-03-remove-toggle-add-play-badge/prospecting.png", alt: "prospecting screenshot" },
+    ],
+  },
+  {
     id: "2026-06-01-plays-rep-experience-design",
     date: "2026-06-01",
     label: "plays-rep-experience-design",
