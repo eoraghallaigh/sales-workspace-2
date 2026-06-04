@@ -5,6 +5,27 @@ import type { IterationEntry } from "../types";
 // Each entry's `id` matches the folder name under public/about/iterations/.
 export const q2c2Iterations: IterationEntry[] = [
   {
+    id: "2026-06-04-prospecting-page-layout",
+    date: "2026-06-04",
+    label: "prospecting-page-layout",
+    whatChanged: [
+      "Reworked the strategy page into a wide multi-card layout: a full-height company sub-nav, a company-led page header, and Company data / Activity / Deals / Notes broken into separate, independently-scrollable cards beside a 60%-width strategy column on wide screens.",
+      "Added a Flywheel Prospecting Agent — a floating action button (bottom-right) that springs open a panel with a greeting and suggested prompts (UI only, no chat wired up).",
+      "\"Read full research\" under the strategy TL;DR now opens the full dossier in the Prospecting Agent panel instead of the Breeze assistant.",
+      "Sub-nav auto-collapses at 1200px (decoupled from the 1600px card-split breakpoint), and all inter-card gaps are standardized to 32px.",
+    ],
+    why: [
+      "Give reps the full account context (data, activity, deals, research) alongside the strategy without tab-switching.",
+      "Stand up a dedicated prospecting agent surface, separate from Breeze, so prospecting research and outreach help lives in its own space.",
+    ],
+    prUrl: "https://github.com/eoraghallaigh_hubspot/flywheel-sales-workspace/pull/8",
+    commitment: "outreach-strategy",
+    screenshots: [
+      { src: "/about/iterations/2026-06-04-prospecting-page-layout/prospecting-strategy.png", alt: "Strategy page in the new multi-card layout with the prospecting agent button" },
+      { src: "/about/iterations/2026-06-04-prospecting-page-layout/prospecting.png", alt: "Prospecting list with the prospecting agent button" },
+    ],
+  },
+  {
     id: "2026-06-03-add-table-view-company-lists",
     date: "2026-06-03",
     label: "add-table-view-company-lists",
