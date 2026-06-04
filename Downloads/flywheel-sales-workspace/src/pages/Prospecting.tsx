@@ -30,6 +30,7 @@ import QLSummary from "@/components/QLSummary";
 import EmailCommunicator from "@/components/EmailCommunicator";
 import DiallerCommunicator from "@/components/DiallerCommunicator";
 import CallPrepPanel from "@/components/CallPrepPanel";
+import ProspectingAgent from "@/components/ProspectingAgent";
 import { prospectingCompanies as initialProspectingCompanies } from "@/data/prospectingCompanies";
 import { companyDetails } from "@/data/companyDetails";
 import { contactDetails, ContactDetail } from "@/data/contactDetails";
@@ -1759,6 +1760,7 @@ const Prospecting = () => {
 
 
       </div>
+      <ProspectingAgent />
       </Layout>;
 };
 const viewToggleOptions: { value: CardVariant; icon: string; label: string }[] = [
