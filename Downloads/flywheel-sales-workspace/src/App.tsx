@@ -28,6 +28,7 @@ import CyclePage from "./pages/CyclePage";
 import MotionSandbox from "./pages/MotionSandbox";
 import Plays from "./pages/Plays";
 import PlayBuilder from "./pages/PlayBuilder";
+import DesignMode from "./sandbox/DesignMode";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +69,7 @@ const App = () => (
             <Route path="/:cycleSlug/outreach-states" element={<OutreachStates />} />
           </Routes>
           <GuidedTour />
+          {import.meta.env.DEV && <DesignMode />}
           </PlaysProvider>
           </StrategyAssistantProvider>
           </VariantProvider>
