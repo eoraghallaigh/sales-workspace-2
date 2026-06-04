@@ -28,6 +28,7 @@ import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { TextEditPopup } from "@/components/TextEditPopup";
 import PreviousDealCard, { PreviousDeal } from "@/components/PreviousDealCard";
 import EmailCommunicator from "@/components/EmailCommunicator";
+import ProspectingAgent from "@/components/ProspectingAgent";
 import { OutreachSequenceCard } from "@/components/OutreachSequenceCard";
 import { TouchDots, type TouchStatus } from "@/components/TouchDot";
 
@@ -65,10 +66,10 @@ const RewritingStatusMessage = () => {
   );
 };
 
-// Open the Breeze assistant with the full company research loaded.
+// Open the Flywheel Prospecting Agent with the full company research loaded.
 const openFullResearch = (companyId: string, companyName: string) => {
   window.dispatchEvent(
-    new CustomEvent("openAssistantChat", {
+    new CustomEvent("openProspectingAgent", {
       detail: { mode: "research", companyId, companyName },
     }),
   );
@@ -1374,6 +1375,8 @@ const ProspectingStrategy = () => {
         recipientEmail={emailReplyTo?.email}
         defaultSubject={emailReplyTo?.subject}
       />
+
+      <ProspectingAgent />
     </Layout>);
 
 };
