@@ -363,7 +363,7 @@ const SandboxPanel = ({
     <div
       data-sandbox-ui="true"
       className="fixed right-4 top-4 bottom-4 z-[2147483647] flex w-[360px] flex-col overflow-hidden rounded-lg border border-slate-300 bg-white shadow-2xl"
-      style={{ fontFamily: "'Lexend Deca', Helvetica, Arial, sans-serif" }}
+      style={{ fontFamily: "'Lexend Deca', Helvetica, Arial, sans-serif", pointerEvents: "auto" }}
     >
       <div className="flex items-start justify-between gap-2 border-b border-slate-200 p-4">
         <div className="min-w-0">

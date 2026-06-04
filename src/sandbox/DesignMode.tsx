@@ -173,10 +173,20 @@ const DesignMode = () => {
       setHovered(null);
       setFlash(null);
       closePanel();
-      document.body.style.cursor = "";
       return;
     }
-    document.body.style.cursor = "crosshair";
+
+    const stopSandboxInteraction = (event: Event) => {
+      const target = event.target;
+      const related = (event as FocusEvent).relatedTarget;
+      const fromSandbox = target instanceof Element && !!target.closest("[data-sandbox-ui]");
+      const toSandbox = related instanceof Element && !!related.closest("[data-sandbox-ui]");
+      if (fromSandbox || toSandbox) {
+        event.stopPropagation();
+      }
+    };
+    const interactionEvents = ["pointerdown", "mousedown", "pointerup", "click", "focusin", "focusout"];
+    interactionEvents.forEach((type) => document.body.addEventListener(type, stopSandboxInteraction));
 
     const onMove = (event: MouseEvent) => {
       const target = event.target;
@@ -217,9 +227,16 @@ const DesignMode = () => {
       document.removeEventListener("contextmenu", onContextMenu, true);
       window.removeEventListener("scroll", onReposition, true);
       window.removeEventListener("resize", onReposition, true);
-      document.body.style.cursor = "";
+      interactionEvents.forEach((type) => document.body.removeEventListener(type, stopSandboxInteraction));
     };
   }, [active, selectElement, closePanel]);
+
+  useEffect(() => {
+    document.body.style.cursor = active && !selection ? "crosshair" : "";
+    return () => {
+      document.body.style.cursor = "";
+    };
+  }, [active, selection]);
 
   useEffect(() => () => cleanupSelection(), [cleanupSelection]);
 
