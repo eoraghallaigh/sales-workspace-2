@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { ChevronDown } from "lucide-react";
 import { ColorToken } from "@/design-tokens/tokens";
 import { resolveVar } from "@/design-tokens/resolve";
 
@@ -23,6 +24,8 @@ export const RangeControl = ({
   step = 1,
   unit = "px",
   offToken,
+  muted,
+  displayValue,
   onChange,
 }: {
   label: string;
@@ -32,9 +35,11 @@ export const RangeControl = ({
   step?: number;
   unit?: string;
   offToken?: boolean;
+  muted?: boolean;
+  displayValue?: string;
   onChange: (v: number) => void;
 }) => (
-  <Field label={`${label} — ${value}${unit}${offToken ? " · off-token" : ""}`}>
+  <Field label={`${label} — ${displayValue ?? `${value}${unit}`}${offToken ? " · off-token" : ""}`}>
     <input
       type="range"
       min={min}
@@ -42,10 +47,66 @@ export const RangeControl = ({
       step={step}
       value={value}
       onChange={(e) => onChange(Number(e.target.value))}
-      className="w-full accent-[#FF4800]"
+      className={`w-full accent-[#FF4800] ${muted ? "opacity-40" : ""}`}
     />
   </Field>
 );
+
+interface SideValues {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
+export const AxisSpacingControl = ({
+  values,
+  min,
+  max,
+  step,
+  onChange,
+}: {
+  values: SideValues;
+  min: number;
+  max: number;
+  step: number;
+  onChange: (next: SideValues) => void;
+}) => {
+  const xMixed = values.left !== values.right;
+  const yMixed = values.top !== values.bottom;
+  return (
+    <div className="flex flex-col gap-3">
+      <RangeControl
+        label="Horizontal (left + right)"
+        value={values.left}
+        displayValue={xMixed ? "mixed — drag to sync" : undefined}
+        muted={xMixed}
+        min={min}
+        max={max}
+        step={step}
+        onChange={(v) => onChange({ ...values, left: v, right: v })}
+      />
+      <div className="flex flex-col gap-3 border-l-2 border-slate-200 pl-3">
+        <RangeControl label="Left" value={values.left} min={min} max={max} step={step} onChange={(v) => onChange({ ...values, left: v })} />
+        <RangeControl label="Right" value={values.right} min={min} max={max} step={step} onChange={(v) => onChange({ ...values, right: v })} />
+      </div>
+      <RangeControl
+        label="Vertical (top + bottom)"
+        value={values.top}
+        displayValue={yMixed ? "mixed — drag to sync" : undefined}
+        muted={yMixed}
+        min={min}
+        max={max}
+        step={step}
+        onChange={(v) => onChange({ ...values, top: v, bottom: v })}
+      />
+      <div className="flex flex-col gap-3 border-l-2 border-slate-200 pl-3">
+        <RangeControl label="Top" value={values.top} min={min} max={max} step={step} onChange={(v) => onChange({ ...values, top: v })} />
+        <RangeControl label="Bottom" value={values.bottom} min={min} max={max} step={step} onChange={(v) => onChange({ ...values, bottom: v })} />
+      </div>
+    </div>
+  );
+};
 
 export const EnumSelect = ({
   label,
@@ -127,4 +188,74 @@ export const TokenSelect = ({
       ))}
     </select>
   </Field>
+);
+
+export const NumberControl = ({
+  label,
+  value,
+  placeholder,
+  unit = "px",
+  onChange,
+}: {
+  label: string;
+  value: string;
+  placeholder?: string;
+  unit?: string;
+  onChange: (v: string) => void;
+}) => (
+  <Field label={label}>
+    <div className="flex items-center gap-2">
+      <input
+        type="number"
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+      />
+      <span className="shrink-0 text-[11px] text-slate-400">{unit}</span>
+    </div>
+  </Field>
+);
+
+export const CollapsibleSection = ({
+  sectionKey,
+  title,
+  open,
+  onReveal,
+  onToggle,
+  topOffset,
+  bottomOffset,
+  children,
+}: {
+  sectionKey: string;
+  title: string;
+  open: boolean;
+  onReveal: () => void;
+  onToggle: () => void;
+  topOffset: number;
+  bottomOffset: number;
+  children: ReactNode;
+}) => (
+  <>
+    <div
+      data-sbx-section={sectionKey}
+      onClick={onReveal}
+      style={{ top: topOffset, bottom: bottomOffset }}
+      className="sticky z-20 flex h-9 w-full shrink-0 cursor-pointer items-center justify-between border-b border-slate-200 bg-slate-100 px-4 text-left shadow-sm"
+    >
+      <span className="text-xs font-bold uppercase tracking-wider text-slate-600">{title}</span>
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onToggle();
+        }}
+        aria-label="Collapse or expand section"
+        className="ml-2 shrink-0 text-slate-400 hover:text-slate-600"
+      >
+        <ChevronDown className={`h-4 w-4 transition-transform ${open ? "" : "-rotate-90"}`} />
+      </button>
+    </div>
+    {open && <div className="flex flex-col gap-3 px-4 py-3">{children}</div>}
+  </>
 );
