@@ -18,6 +18,7 @@ export const q2c2Iterations: IterationEntry[] = [
       "Give reps the full account context (data, activity, deals, research) alongside the strategy without tab-switching.",
       "Stand up a dedicated prospecting agent surface, separate from Breeze, so prospecting research and outreach help lives in its own space.",
     ],
+    prUrl: "https://github.com/eoraghallaigh_hubspot/flywheel-sales-workspace/pull/8",
     commitment: "outreach-strategy",
     screenshots: [
       { src: "/about/iterations/2026-06-04-prospecting-page-layout/prospecting-strategy.png", alt: "Strategy page in the new multi-card layout with the prospecting agent button" },
