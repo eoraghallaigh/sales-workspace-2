@@ -10,6 +10,7 @@ import { Layout } from "@/components/Layout";
 import StrategyCompaniesSubNav from "@/components/StrategyCompaniesSubNav";
 import Tag from "@/components/Tag";
 import { ResearchEmptyCard } from "@/components/StrategyAgentPrompts";
+import AgentReasoningSteps from "@/components/AgentReasoningSteps";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -105,16 +106,32 @@ const ProspectingStrategy = () => {
   const [hasResearch, setHasResearch] = useState(true);
   const [hasSequences, setHasSequences] = useState(true);
   const [isRunningResearch, setIsRunningResearch] = useState(false);
+  const [isBuildingSequences, setIsBuildingSequences] = useState(false);
+  const generationTimersRef = useRef<number[]>([]);
 
   const createStrategy = useCallback(() => {
+    generationTimersRef.current.forEach((t) => window.clearTimeout(t));
+    generationTimersRef.current = [];
+
+    setHasResearch(false);
+    setHasSequences(false);
+    setIsBuildingSequences(false);
     setIsRunningResearch(true);
-    setTimeout(() => {
+
+    const researchWindow = 30000 + Math.floor(Math.random() * 4000);
+    const sequenceWindow = 18000 + Math.floor(Math.random() * 4000);
+
+    const researchTimer = window.setTimeout(() => {
       setHasResearch(true);
       setIsRunningResearch(false);
-    }, 2200);
-    setTimeout(() => {
-      setHasSequences(true);
-    }, 3500);
+      setIsBuildingSequences(true);
+      const sequenceTimer = window.setTimeout(() => {
+        setHasSequences(true);
+        setIsBuildingSequences(false);
+      }, sequenceWindow);
+      generationTimersRef.current.push(sequenceTimer);
+    }, researchWindow);
+    generationTimersRef.current.push(researchTimer);
   }, []);
   const { cyclePath } = useCyclePath();
   const [selectedContactIndex, setSelectedContactIndex] = useState(0);
@@ -232,10 +249,13 @@ const ProspectingStrategy = () => {
   // ?empty=… URL param wins; otherwise read from the company's hasGeneratedStrategy.
   useEffect(() => {
     if (!currentCompany) return;
+    generationTimersRef.current.forEach((t) => window.clearTimeout(t));
+    generationTimersRef.current = [];
     const hasStrategy = currentCompany.hasGeneratedStrategy !== false;
     setHasResearch(emptyParam === "both" || emptyParam === "research" ? false : hasStrategy);
     setHasSequences(emptyParam === "both" || emptyParam === "sequences" ? false : hasStrategy);
     setIsRunningResearch(false);
+    setIsBuildingSequences(false);
   }, [currentCompany?.id, emptyParam]);
   const {
     activeVariantByCompany,
@@ -818,6 +838,13 @@ const ProspectingStrategy = () => {
                       {currentCompanyDetails?.industry || currentCompany.industry} | {currentCompanyDetails?.employeeSize || "—"} employees
                     </span>
                   </div>
+                  <a
+                    href="#"
+                    onClick={(e) => e.preventDefault()}
+                    className="body-100 font-bold text-text-interactive hover:underline flex items-center gap-1 mt-1"
+                  >
+                    Open company record <TrellisIcon name="externalLink" size={12} />
+                  </a>
                 </div>
               </div>
               <div className="flex flex-col items-end gap-2 shrink-0">
@@ -924,9 +951,11 @@ const ProspectingStrategy = () => {
                   <PlayHeader key={play.id} play={play} defaultOpen={play.id !== fromPlay} />
                 ))}
                 {isRunningResearch ? (
-                  <div className="rounded-100 border border-core-subtle bg-card px-6 py-8 mb-12 flex items-center justify-center gap-3">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                    <span className="body-100 text-muted-foreground">Creating prospecting strategy for {currentCompany.name}…</span>
+                  <div className="rounded-100 border border-core-subtle bg-card px-6 py-6 mb-12 animate-fade-in">
+                    <p className="heading-50 text-foreground mb-3">
+                      Researching {currentCompany.name}…
+                    </p>
+                    <AgentReasoningSteps kind="research" stepMs={6000} />
                   </div>
                 ) : !hasResearch ? (
                   <ResearchEmptyCard
@@ -1069,6 +1098,13 @@ const ProspectingStrategy = () => {
                             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                             <span className="body-100 text-muted-foreground">Outreach agent is working…</span>
                           </div>
+                        ) : isBuildingSequences ? (
+                          <div key={`building-${contact.id}`} className="px-6 py-5 bg-card animate-fade-in">
+                            <p className="heading-50 text-foreground mb-3">
+                              Building {contact.name.split(" ")[0]}'s sequence…
+                            </p>
+                            <AgentReasoningSteps kind="sequence" stepMs={6000} />
+                          </div>
                         ) : !hasSequences ? (
                           <div key={`signals-${contact.id}`} className="px-6 py-5 bg-card animate-fade-in">
                             <div className="flex flex-col gap-1">
@@ -1098,7 +1134,7 @@ const ProspectingStrategy = () => {
                             )}
                           </div>
                         ) : (
-                        <div key={`content-${contact.id}`} className="px-6 pt-5 pb-3 bg-card animate-fade-in">
+                        <div key={`content-${contact.id}`} className="px-6 pt-4 pb-7 bg-card animate-fade-in">
                           {/* Description */}
                           <p className="body-100 text-foreground leading-relaxed mb-4">
                             {strategy.contactDescription(contact.name.split(" ")[0], currentCompany.name)}

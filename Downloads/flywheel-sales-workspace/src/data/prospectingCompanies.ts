@@ -2340,7 +2340,89 @@ const rawProspectingCompanies: Company[] = [
   },
 ];
 
-export const prospectingCompanies: Company[] = rawProspectingCompanies.map((company) => {
+type PlayCompanySeed = {
+  id: string;
+  name: string;
+  website: string;
+  industry: string;
+  pvs: "High" | "Medium" | "Low";
+  trigger: string;
+  priority: "P1" | "P2" | "P3" | "P4";
+  signal: SignalType;
+  contacts: Array<[string, string]>;
+};
+
+const initialsOf = (name: string) =>
+  name
+    .split(/\s+/)
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+let playDeadlineIdx = 0;
+const buildPlayCompany = (seed: PlayCompanySeed): Company => ({
+  id: seed.id,
+  name: seed.name,
+  website: seed.website,
+  industry: seed.industry,
+  pvsScore: seed.pvs,
+  conversionTrigger: seed.trigger,
+  status: "New",
+  priority: seed.priority,
+  hasGeneratedStrategy: false,
+  signals: [seed.signal],
+  tasks: [],
+  touches: {
+    contactsReached: { current: 0, total: seed.contacts.length },
+    totalTouches: 0,
+    progress: 0,
+    touchStatuses: ["empty", "empty", "empty", "empty", "empty"],
+    deadline: touchDeadlines[playDeadlineIdx++ % touchDeadlines.length],
+  },
+  recommendedContacts: seed.contacts.map(([cn, role], i) => ({
+    id: `${seed.id}-c${i + 1}`,
+    name: cn,
+    initials: initialsOf(cn),
+    role,
+    avatarColor: avatarColors[(i + seed.id.length) % avatarColors.length],
+    recentTouches: 0,
+    enrolledInSequence: false,
+    recentConversions: 0,
+    signals: i === 0 ? [seed.signal] : [],
+  })),
+});
+
+const playCompanySeeds: PlayCompanySeed[] = [
+  { id: "sf-1", name: "Cobalt CRM Group", website: "cobaltcrm.com", industry: "B2B Software", pvs: "High", trigger: "Evaluating CRM alternatives", priority: "P2", signal: SIGNALS.COMPETITIVE_RENEWAL, contacts: [["Dana Mercer", "RevOps Director"], ["Paul Iverson", "Head of Sales"]] },
+  { id: "sf-2", name: "Harbor & Finch", website: "harborfinch.com", industry: "Professional Services", pvs: "Medium", trigger: "Booked a demo", priority: "P2", signal: SIGNALS.MARKETING_HUB_QL, contacts: [["Greta Holm", "VP Marketing"], ["Sam Devlin", "Sales Ops Lead"]] },
+  { id: "sf-3", name: "Westbrook Retail Co.", website: "westbrookretail.com", industry: "Retail", pvs: "Medium", trigger: "Salesforce renewal approaching", priority: "P2", signal: SIGNALS.COMPETITIVE_RENEWAL, contacts: [["Nina Patel", "CRM Manager"], ["Theo Brunner", "Director of Sales"]] },
+  { id: "sf-4", name: "Lumen Software", website: "lumensoftware.io", industry: "Software", pvs: "High", trigger: "Compared pricing", priority: "P2", signal: SIGNALS.NON_QL_DEMAND, contacts: [["Erin Cole", "COO"], ["Raj Malhotra", "RevOps Manager"]] },
+  { id: "sf-5", name: "Tradewind Freight", website: "tradewindfreight.com", industry: "Logistics", pvs: "Medium", trigger: "Visited migration guide", priority: "P2", signal: SIGNALS.THIRD_PARTY_INTENT, contacts: [["Mona Reyes", "VP Revenue"], ["Bill Hartley", "Sales Director"]] },
+  { id: "sf-6", name: "Maple Financial", website: "maplefinancial.com", industry: "Financial Services", pvs: "Medium", trigger: "Requested ROI assessment", priority: "P2", signal: SIGNALS.COMPETITIVE_RENEWAL, contacts: [["Aisha Karim", "Head of Operations"], ["Dan Foley", "CRM Administrator"]] },
+  { id: "aeo-1", name: "Beacon Digital Media", website: "beacondigital.com", industry: "Marketing & Advertising", pvs: "High", trigger: "Downloaded AEO playbook", priority: "P3", signal: SIGNALS.THIRD_PARTY_INTENT, contacts: [["Chloe Adams", "Content Lead"], ["Marco Bianchi", "SEO Manager"]] },
+  { id: "aeo-2", name: "Northstar Content", website: "northstarcontent.com", industry: "Media", pvs: "Medium", trigger: "Read AI search guide", priority: "P3", signal: SIGNALS.NON_QL_DEMAND, contacts: [["Iris Wagner", "Editor in Chief"], ["Leo Park", "Growth Manager"]] },
+  { id: "aeo-3", name: "Prism Analytics Lab", website: "prismanalytics.io", industry: "Data Analytics", pvs: "High", trigger: "Attended AEO webinar", priority: "P3", signal: SIGNALS.MARKETING_HUB_QL, contacts: [["Sara Quinn", "VP Marketing"], ["Tomas Vidal", "Analytics Lead"]] },
+  { id: "aeo-4", name: "Evergreen Publishing", website: "evergreenpub.com", industry: "Publishing", pvs: "Medium", trigger: "Signed up for newsletter", priority: "P3", signal: SIGNALS.NON_QL_DEMAND, contacts: [["Faye Mitchell", "Digital Director"], ["Owen Bradley", "Content Strategist"]] },
+  { id: "aeo-5", name: "Skyline Marketing Group", website: "skylinemktg.com", industry: "Marketing & Advertising", pvs: "Medium", trigger: "Viewed AI content page", priority: "P3", signal: SIGNALS.THIRD_PARTY_INTENT, contacts: [["Hana Sato", "Demand Gen Lead"], ["Eli Roth", "Brand Lead"]] },
+  { id: "aeo-6", name: "Cadence Media", website: "cadencemedia.com", industry: "Media", pvs: "Low", trigger: "Researched competitors", priority: "P3", signal: SIGNALS.NON_QL_DEMAND, contacts: [["Priya Anand", "Head of Content"], ["Jack Doyle", "SEO Specialist"]] },
+  { id: "ent-1", name: "Continental Manufacturing", website: "continentalmfg.com", industry: "Manufacturing", pvs: "High", trigger: "Expansion inquiry", priority: "P2", signal: SIGNALS.COMPETITIVE_RENEWAL, contacts: [["Karl Brandt", "VP IT"], ["Lucia Romano", "Procurement Director"]] },
+  { id: "ent-2", name: "Granite Holdings", website: "graniteholdings.com", industry: "Financial Services", pvs: "High", trigger: "Multi-seat quote request", priority: "P2", signal: SIGNALS.RECENT_FUNDING, contacts: [["Margaret Shaw", "CFO"], ["Devon Pierce", "IT Director"]] },
+  { id: "ent-3", name: "Vanguard Industrial", website: "vanguardindustrial.com", industry: "Industrial Technology", pvs: "Medium", trigger: "Viewed enterprise plan", priority: "P2", signal: SIGNALS.NON_QL_DEMAND, contacts: [["Hugo Vance", "COO"], ["Tara Singh", "Operations Director"]] },
+  { id: "ent-4", name: "Imperial Foods Group", website: "imperialfoods.com", industry: "Food & Beverage", pvs: "Medium", trigger: "Requested security review", priority: "P2", signal: SIGNALS.THIRD_PARTY_INTENT, contacts: [["Rosa Lind", "VP Digital"], ["Neil Carver", "IT Lead"]] },
+  { id: "ent-5", name: "Sovereign Telecom", website: "sovereigntelecom.com", industry: "Telecommunications", pvs: "High", trigger: "Renewal plus expansion", priority: "P2", signal: SIGNALS.COMPETITIVE_RENEWAL, contacts: [["Amir Haddad", "VP Sales"], ["Beth Cromwell", "RevOps Manager"]] },
+  { id: "ent-6", name: "Atlas Aerospace", website: "atlasaerospace.com", industry: "Aerospace", pvs: "High", trigger: "Procurement engaged", priority: "P2", signal: SIGNALS.RECENT_FUNDING, contacts: [["Greg Mason", "Director of Operations"], ["Yuki Tanaka", "Program Manager"]] },
+  { id: "wb-1", name: "Bluebird Boutique", website: "bluebirdboutique.com", industry: "Retail", pvs: "Low", trigger: "Reopened account", priority: "P4", signal: SIGNALS.NON_QL_DEMAND, contacts: [["Ella Frost", "Owner"], ["Marcus Reed", "Store Manager"]] },
+  { id: "wb-2", name: "Corner Cafe Collective", website: "cornercafeco.com", industry: "Hospitality", pvs: "Low", trigger: "Re-engaged via email", priority: "P4", signal: SIGNALS.MARKETING_HUB_QL, contacts: [["Joy Tan", "Founder"], ["Pete Salas", "Operations Lead"]] },
+  { id: "wb-3", name: "Rapid Repair Auto", website: "rapidrepairauto.com", industry: "Automotive Services", pvs: "Low", trigger: "Requested a callback", priority: "P4", signal: SIGNALS.NON_QL_DEMAND, contacts: [["Vince Marino", "Owner"], ["Dana Beck", "Service Manager"]] },
+  { id: "wb-4", name: "Sunny Day Childcare", website: "sunnydaychildcare.com", industry: "Education", pvs: "Low", trigger: "Restarted trial", priority: "P4", signal: SIGNALS.THIRD_PARTY_INTENT, contacts: [["Grace Howell", "Director"], ["Sam Ortiz", "Admin Lead"]] },
+  { id: "wb-5", name: "Peak Fitness Studios", website: "peakfitnessstudios.com", industry: "Health & Fitness", pvs: "Low", trigger: "Viewed pricing again", priority: "P4", signal: SIGNALS.NON_QL_DEMAND, contacts: [["Tyler Quinn", "Owner"], ["Mia Larson", "General Manager"]] },
+  { id: "wb-6", name: "Hometown Hardware", website: "hometownhardware.com", industry: "Retail", pvs: "Low", trigger: "Won-back lead", priority: "P4", signal: SIGNALS.MARKETING_HUB_QL, contacts: [["Roy Becker", "Owner"], ["Lena Voss", "Buyer"]] },
+];
+
+const generatedPlayCompanies: Company[] = playCompanySeeds.map(buildPlayCompany);
+
+export const prospectingCompanies: Company[] = [...rawProspectingCompanies, ...generatedPlayCompanies].map((company) => {
   const primary = company.recommendedContacts?.[0];
   if (!primary) return company;
   const derived = deriveTouchesForContact(primary.id, primary.name);
