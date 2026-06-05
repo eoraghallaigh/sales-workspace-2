@@ -14,6 +14,7 @@ import {
 import {
   ChevronDown,
   ChevronRight,
+  Columns3,
   ExternalLink,
   ListFilter,
   Search,
@@ -220,6 +221,10 @@ const FullCustomerBook = () => {
             <ListFilter className="h-4 w-4" />
             Advanced filters
           </Button>
+          <Button variant="ghost" size="medium" className="border border-transparent heading-50 whitespace-nowrap">
+            <Columns3 className="h-4 w-4" />
+            Edit columns
+          </Button>
         </div>
       </div>
 
@@ -233,7 +238,7 @@ const FullCustomerBook = () => {
       <div className="border border-border bg-card overflow-x-auto">
         <Table className="min-w-[1100px]">
           <TableHeader>
-            <TableRow className="bg-[var(--color-specialty-table-header-default)] hover:bg-[var(--color-specialty-table-header-default)]">
+            <TableRow className="bg-[var(--color-specialty-table-header-default)] hover:bg-[var(--color-specialty-table-header-default)] border-[var(--color-border-transitional-core-subtle)]">
               <TableHead className="w-12 h-11 px-6 py-3 sticky left-0 z-20 bg-[var(--color-specialty-table-header-default)] table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
                 <Checkbox />
               </TableHead>
