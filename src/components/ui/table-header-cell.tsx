@@ -8,7 +8,7 @@ const TableHeaderCell = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "flex w-[115px] min-h-[44px] max-h-[44px] px-[var(--space-600,24px)] py-[var(--space-300,12px)] flex-col justify-center items-start border-b border-[var(--color-border-transitional-core-subtle)] bg-[var(--color-specialty-table-header-default)] table-header-text",
+      "flex w-[115px] min-h-[44px] max-h-[44px] px-[var(--space-600,24px)] py-[var(--space-300,12px)] flex-col justify-center items-start border-b border-r border-[var(--color-border-transitional-core-subtle)] last:border-r-0 bg-[var(--color-specialty-table-header-default)] table-header-text",
       className
     )}
     {...props}
