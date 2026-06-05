@@ -17,6 +17,7 @@ export const q2c2Iterations: IterationEntry[] = [
       "Make the agents' work legible and trustworthy while they research and build sequences, instead of a blank spinner.",
       "Give reps consistent, low-friction editing across every touch type and a fast way to re-steer a generated sequence.",
     ],
+    prUrl: "https://github.com/eoraghallaigh_hubspot/flywheel-sales-workspace/pull/12",
     commitment: "outreach-strategy",
     screenshots: [
       { src: "/about/iterations/2026-06-04-prospecting-page-layout-2/prospecting-strategy.png", alt: "prospecting-strategy screenshot" },
