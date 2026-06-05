@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import {
   GripVertical,
   Bold,
@@ -34,6 +34,8 @@ import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
+import { AiStarIcon } from "@/components/ui/ai-star-icon";
+import RegenerateSequenceModal from "@/components/RegenerateSequenceModal";
 import type { CallState, LinkedInState, EmailStatus, SequenceState } from "@/data/outreachStates";
 
 const POS_DOT = "bg-[var(--color-fill-accent-green-default)]";
@@ -373,7 +375,7 @@ const EmailEditor = ({ initialSubject, initialBody, onSave, onDiscard }: EmailEd
           className="min-h-[180px] leading-relaxed"
           autoFocus
         />
-        <div className="flex items-center justify-between gap-2 mt-1">
+        <div className="flex items-center justify-between gap-2 mt-3">
           <div className="flex items-center">
             <button
               type="button"
@@ -488,6 +490,254 @@ const EditableEmailBody = ({ subject, body, onSave }: EditableEmailBodyProps) =>
         </Button>
       </div>
     </div>
+  );
+};
+
+const ClickToEditView = ({
+  onActivate,
+  children,
+}: {
+  onActivate: () => void;
+  children: ReactNode;
+}) => (
+  <div
+    role="button"
+    tabIndex={0}
+    className="relative group cursor-pointer rounded-[var(--borderRadius-100)]"
+    onClick={onActivate}
+    onKeyDown={(e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onActivate();
+      }
+    }}
+  >
+    {children}
+    <div className="absolute -inset-4 flex items-center justify-center bg-white/40 backdrop-blur opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+      <Button variant="primary" size="small" tabIndex={-1} aria-hidden>
+        Click to edit
+      </Button>
+    </div>
+  </div>
+);
+
+type SingleFieldEditorProps = {
+  initialValue: string;
+  label: string;
+  onSave: (value: string) => void;
+  onDiscard: () => void;
+};
+
+const SingleFieldEditor = ({ initialValue, label, onSave, onDiscard }: SingleFieldEditorProps) => {
+  const [history, setHistory] = useState<string[]>([initialValue]);
+  const [index, setIndex] = useState(0);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+
+  const current = history[index];
+  const dirty = current !== initialValue;
+  const canUndo = index > 0;
+  const canRedo = index < history.length - 1;
+
+  const push = (next: string) => {
+    setHistory((prev) => [...prev.slice(0, index + 1), next]);
+    setIndex(index + 1);
+  };
+
+  const wrapSelection = (before: string, after = before) => {
+    const ta = bodyRef.current;
+    if (!ta) return;
+    const start = ta.selectionStart ?? current.length;
+    const end = ta.selectionEnd ?? current.length;
+    const next =
+      current.slice(0, start) + before + current.slice(start, end) + after + current.slice(end);
+    push(next);
+    requestAnimationFrame(() => {
+      ta.focus();
+      ta.setSelectionRange(start + before.length, end + before.length);
+    });
+  };
+
+  return (
+    <div className="flex flex-col gap-1 pt-2 pb-2" onClick={(e) => e.stopPropagation()}>
+      <label className="heading-50 text-foreground">{label}</label>
+      <Textarea
+        ref={bodyRef}
+        value={current}
+        onChange={(e) => push(e.target.value)}
+        className="min-h-[120px] leading-relaxed"
+        autoFocus
+      />
+      <div className="flex items-center justify-between gap-2 mt-3">
+        <div className="flex items-center">
+          <button
+            type="button"
+            className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+            onClick={() => wrapSelection("**")}
+            aria-label="Bold"
+          >
+            <Bold size={14} />
+          </button>
+          <button
+            type="button"
+            className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+            onClick={() => wrapSelection("*")}
+            aria-label="Italic"
+          >
+            <Italic size={14} />
+          </button>
+          <button
+            type="button"
+            className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+            onClick={() => wrapSelection("__")}
+            aria-label="Underline"
+          >
+            <Underline size={14} />
+          </button>
+          <button
+            type="button"
+            className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+            onClick={() => wrapSelection("[", "](url)")}
+            aria-label="Insert link"
+          >
+            <LinkIcon size={14} />
+          </button>
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
+            onClick={() => canUndo && setIndex(index - 1)}
+            disabled={!canUndo}
+            aria-label="Undo"
+          >
+            <Undo2 size={14} />
+          </button>
+          <button
+            type="button"
+            className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
+            onClick={() => canRedo && setIndex(index + 1)}
+            disabled={!canRedo}
+            aria-label="Redo"
+          >
+            <Redo2 size={14} />
+          </button>
+          <Button variant="secondary" size="extra-small" onClick={onDiscard}>
+            Discard
+          </Button>
+          <Button
+            variant="primary"
+            size="extra-small"
+            onClick={() => onSave(current)}
+            disabled={!dirty}
+          >
+            Save
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+type EditableTextProps = {
+  value: string;
+  label: string;
+  onSave: (value: string) => void;
+};
+
+const EditableText = ({ value, label, onSave }: EditableTextProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+  if (isEditing) {
+    return (
+      <SingleFieldEditor
+        initialValue={value}
+        label={label}
+        onSave={(v) => {
+          onSave(v);
+          setIsEditing(false);
+        }}
+        onDiscard={() => setIsEditing(false)}
+      />
+    );
+  }
+  return (
+    <ClickToEditView onActivate={() => setIsEditing(true)}>
+      <p className="body-100 text-foreground leading-relaxed whitespace-pre-line">{value}</p>
+    </ClickToEditView>
+  );
+};
+
+type BulletsEditorProps = {
+  initialBullets: string[];
+  onSave: (bullets: string[]) => void;
+  onDiscard: () => void;
+};
+
+const BulletsEditor = ({ initialBullets, onSave, onDiscard }: BulletsEditorProps) => {
+  const [bullets, setBullets] = useState<string[]>(initialBullets);
+  const dirty = bullets.some((b, i) => b !== initialBullets[i]);
+  return (
+    <div className="flex flex-col gap-3 pt-2 pb-2" onClick={(e) => e.stopPropagation()}>
+      <label className="heading-50 text-foreground">Call bullets</label>
+      <ul className="list-disc pl-4 space-y-2">
+        {bullets.map((b, i) => (
+          <li key={i} className="body-100 text-foreground leading-relaxed">
+            <Textarea
+              value={b}
+              onChange={(e) =>
+                setBullets((prev) => prev.map((x, idx) => (idx === i ? e.target.value : x)))
+              }
+              className="min-h-[40px] leading-relaxed"
+            />
+          </li>
+        ))}
+      </ul>
+      <div className="flex items-center justify-end gap-1">
+        <Button variant="secondary" size="extra-small" onClick={onDiscard}>
+          Discard
+        </Button>
+        <Button
+          variant="primary"
+          size="extra-small"
+          onClick={() => onSave(bullets)}
+          disabled={!dirty}
+        >
+          Save
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+const EditableBullets = ({
+  bullets,
+  onSave,
+}: {
+  bullets: string[];
+  onSave: (bullets: string[]) => void;
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  if (isEditing) {
+    return (
+      <BulletsEditor
+        initialBullets={bullets}
+        onSave={(b) => {
+          onSave(b);
+          setIsEditing(false);
+        }}
+        onDiscard={() => setIsEditing(false)}
+      />
+    );
+  }
+  return (
+    <ClickToEditView onActivate={() => setIsEditing(true)}>
+      <ul className="list-disc pl-4 space-y-1.5">
+        {bullets.map((b, i) => (
+          <li key={i} className="body-100 text-foreground leading-relaxed whitespace-pre-line">
+            {b}
+          </li>
+        ))}
+      </ul>
+    </ClickToEditView>
   );
 };
 
@@ -615,27 +865,16 @@ const SortableRow = ({
               (editable ? (
                 <>
                   {scriptMode === "script" ? (
-                    <textarea
-                      className="body-100 text-foreground leading-relaxed w-full bg-transparent resize-none border-0 p-0 focus:outline-none focus:ring-0 rounded-[var(--borderRadius-100)] hover:bg-[var(--color-fill-surface-recessed)] transition-colors cursor-text"
-                      style={{ fieldSizing: "content" } as React.CSSProperties}
+                    <EditableText
                       value={touch.script}
-                      onChange={(e) => onScriptChange?.(e.target.value)}
-                      rows={2}
+                      label="Call script"
+                      onSave={(v) => onScriptChange?.(v)}
                     />
                   ) : (
-                    <ul className="list-disc pl-4 space-y-1.5">
-                      {callBullets.map((b, i) => (
-                        <li key={i} className="body-100 text-foreground leading-relaxed">
-                          <textarea
-                            className="body-100 text-foreground leading-relaxed w-full bg-transparent resize-none border-0 p-0 focus:outline-none focus:ring-0 rounded-[var(--borderRadius-100)] hover:bg-[var(--color-fill-surface-recessed)] transition-colors cursor-text"
-                            style={{ fieldSizing: "content" } as React.CSSProperties}
-                            value={b}
-                            onChange={(e) => onCallBulletChange(i, e.target.value)}
-                            rows={1}
-                          />
-                        </li>
-                      ))}
-                    </ul>
+                    <EditableBullets
+                      bullets={callBullets}
+                      onSave={(next) => next.forEach((v, i) => onCallBulletChange(i, v))}
+                    />
                   )}
                   <ScriptModeToggle mode={scriptMode} onChange={onScriptModeChange} />
                 </>
@@ -646,12 +885,10 @@ const SortableRow = ({
               ))}
             {touch.kind === "linkedin" &&
               (editable ? (
-                <textarea
-                  className="body-100 text-foreground leading-relaxed w-full bg-transparent resize-none border-0 p-0 focus:outline-none focus:ring-0 rounded-[var(--borderRadius-100)] hover:bg-[var(--color-fill-surface-recessed)] transition-colors cursor-text"
-                  style={{ fieldSizing: "content" } as React.CSSProperties}
+                <EditableText
                   value={touch.message}
-                  onChange={(e) => onMessageChange?.(e.target.value)}
-                  rows={2}
+                  label="Message"
+                  onSave={(v) => onMessageChange?.(v)}
                 />
               ) : (
                 <p className="body-100 text-muted-foreground leading-relaxed whitespace-pre-line">
@@ -901,6 +1138,7 @@ export const OutreachSequenceCard = ({
 
   const [localOverride, setLocalOverride] = useState<LocalOverride>(null);
   const [order, setOrder] = useState<string[]>(() => buildDefaultOrder(contact.id));
+  const [isRegenerateOpen, setIsRegenerateOpen] = useState(false);
 
   const status = classifyStatus(localOverride, sequence);
   const fromBackend = !pristine;
@@ -910,7 +1148,7 @@ export const OutreachSequenceCard = ({
   const mutedAttribution = (
     <div className="flex items-center gap-1.5">
       <Sparkles size={12} className="text-muted-foreground" aria-hidden />
-      <span className="detail-200 text-muted-foreground">Created by Outreach Agent ·</span>
+      <span className="detail-200 text-muted-foreground">Created by Sequencing Agent ·</span>
       <button
         type="button"
         onClick={onViewReasoning}
@@ -1049,16 +1287,28 @@ export const OutreachSequenceCard = ({
                 </div>
               </SortableContext>
             </DndContext>
-            <div className="pt-4 flex flex-col items-start gap-6">
+            <div className="mt-10 flex items-center justify-between gap-6">
+              <div>
               {status === null && (
-                <Button
-                  variant="primary"
-                  size="small"
-                  onClick={() => setLocalOverride("enrolled")}
-                >
-                  <TrellisIcon name="email" size={12} className="mr-1 brightness-0 invert" />
-                  Enroll {firstName}
-                </Button>
+                <div className="flex items-center gap-6">
+                  <Button
+                    variant="primary"
+                    size="small"
+                    onClick={() => setLocalOverride("enrolled")}
+                  >
+                    <TrellisIcon name="email" size={12} className="mr-1 brightness-0 invert" />
+                    Enroll {firstName}
+                  </Button>
+                  <Button
+                    variant="transparent"
+                    size="small"
+                    className="gap-1"
+                    onClick={() => setIsRegenerateOpen(true)}
+                  >
+                    <AiStarIcon size={14} className="mr-1" />
+                    Regenerate sequence
+                  </Button>
+                </div>
               )}
               {(status === "enrolled" || status === "paused") && (
                 <div className="pl-[26px]">
@@ -1071,11 +1321,17 @@ export const OutreachSequenceCard = ({
                   )}
                 </div>
               )}
+              </div>
               {mutedAttribution}
             </div>
           </CollapsibleContent>
         </Collapsible>
       </div>
+      <RegenerateSequenceModal
+        open={isRegenerateOpen}
+        onOpenChange={setIsRegenerateOpen}
+        contactName={firstName}
+      />
     </div>
   );
 };

@@ -5,6 +5,26 @@ import type { IterationEntry } from "../types";
 // Each entry's `id` matches the folder name under public/about/iterations/.
 export const q2c2Iterations: IterationEntry[] = [
   {
+    id: "2026-06-04-prospecting-page-layout-2",
+    date: "2026-06-04",
+    label: "prospecting-page-layout",
+    whatChanged: [
+      "The empty-state \"generate strategy\" flow now streams the research and sequencing agents' reasoning as shimmering steps (in the research block, then under each outreach target), with a Breeze AILoader, over a ~45–60s run.",
+      "Call and LinkedIn sequence steps now use the same click-to-edit interaction as emails (read-only until clicked, then an editor with formatting plus Save/Discard).",
+      "Added a \"Regenerate sequence\" AI button beside Enroll on unenrolled sequences, opening a modal to give the sequencing agent free-text instructions.",
+    ],
+    why: [
+      "Make the agents' work legible and trustworthy while they research and build sequences, instead of a blank spinner.",
+      "Give reps consistent, low-friction editing across every touch type and a fast way to re-steer a generated sequence.",
+    ],
+    prUrl: "https://github.com/eoraghallaigh_hubspot/flywheel-sales-workspace/pull/12",
+    commitment: "outreach-strategy",
+    screenshots: [
+      { src: "/about/iterations/2026-06-04-prospecting-page-layout-2/prospecting-strategy.png", alt: "prospecting-strategy screenshot" },
+      { src: "/about/iterations/2026-06-04-prospecting-page-layout-2/prospecting-strategy-empty-sequences.png", alt: "prospecting-strategy-empty-sequences screenshot" },
+    ],
+  },
+  {
     id: "2026-06-04-prospecting-page-layout",
     date: "2026-06-04",
     label: "prospecting-page-layout",

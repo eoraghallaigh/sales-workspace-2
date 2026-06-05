@@ -241,6 +241,19 @@ export const companyPlayMembership: Record<string, string[]> = {
   "23": ["smb-winback"],
 };
 
+const generatedPlayCompanyIds: Record<string, string[]> = {
+  "salesforce-switchers": ["sf-1", "sf-2", "sf-3", "sf-4", "sf-5", "sf-6"],
+  "q3-aeo-push": ["aeo-1", "aeo-2", "aeo-3", "aeo-4", "aeo-5", "aeo-6"],
+  "enterprise-expansion": ["ent-1", "ent-2", "ent-3", "ent-4", "ent-5", "ent-6"],
+  "smb-winback": ["wb-1", "wb-2", "wb-3", "wb-4", "wb-5", "wb-6"],
+};
+
+Object.entries(generatedPlayCompanyIds).forEach(([playId, ids]) => {
+  ids.forEach((id) => {
+    companyPlayMembership[id] = [...(companyPlayMembership[id] ?? []), playId];
+  });
+});
+
 export const getPlayIdsForCompany = (companyId: string): string[] =>
   companyPlayMembership[companyId] ?? [];
 
