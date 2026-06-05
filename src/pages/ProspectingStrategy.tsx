@@ -4,7 +4,7 @@ import { AnimatePresence } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
 import ContactFeedbackModal from "@/components/ContactFeedbackModal";
 
-import { Link, useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useParams, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useCyclePath } from "@/hooks/useCyclePath";
 import { Layout } from "@/components/Layout";
 import StrategyCompaniesSubNav from "@/components/StrategyCompaniesSubNav";
@@ -96,6 +96,10 @@ const InfoCard = ({
 const ProspectingStrategy = () => {
   const { companyId } = useParams<{companyId: string;}>();
   const navigate = useNavigate();
+  const location = useLocation();
+  // The page that linked here passes { from, fromLabel } so the back button
+  // returns to that exact view; fall back to the P1 list for deep links.
+  const backState = location.state as { from?: string; fromLabel?: string } | null;
   const [searchParams] = useSearchParams();
   const emptyParam = searchParams.get("empty");
   const fromPlay = searchParams.get("fromPlay");
@@ -809,7 +813,7 @@ const ProspectingStrategy = () => {
         <StrategyCompaniesSubNav
           companies={companies}
           currentCompanyId={currentCompany.id}
-          onSelect={(companyId) => navigate(cyclePath(`/prospecting/strategy/${companyId}`))}
+          onSelect={(companyId) => navigate(cyclePath(`/prospecting/strategy/${companyId}`), { state: location.state })}
           isCollapsed={!isSubNavOpen}
           onToggle={() => setIsSubNavOpen((o) => !o)}
         />
@@ -818,11 +822,11 @@ const ProspectingStrategy = () => {
         <div className="flex flex-col flex-1 overflow-hidden">
           <div className="bg-card border-b border-core-subtle pl-8 pr-8 pt-6 pb-4" onWheel={(e) => e.stopPropagation()}>
             <Link
-              to={cyclePath("/prospecting")}
+              to={backState?.from ?? cyclePath("/prospecting")}
               className="inline-flex items-center gap-1 heading-25 text-text-interactive hover:underline"
             >
               <ChevronLeft className="h-3 w-3" />
-              <span>Prospecting</span>
+              <span>{backState?.fromLabel ?? "Prospecting"}</span>
             </Link>
             <div className="flex items-start justify-between gap-4 mt-3">
               <div className="flex items-center gap-3">

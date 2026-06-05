@@ -103,7 +103,7 @@ const CompaniesTableView = ({
       <div className="overflow-x-auto">
         <Table className="min-w-[1000px]">
           <TableHeader>
-            <TableRow className="bg-[var(--color-specialty-table-header-default)] hover:bg-[var(--color-specialty-table-header-default)]">
+            <TableRow className="bg-[var(--color-specialty-table-header-default)] hover:bg-[var(--color-specialty-table-header-default)] border-[var(--color-border-transitional-core-subtle)]">
               <TableHead className="w-12 h-11 px-4 py-3 sticky left-0 z-20 bg-[var(--color-specialty-table-header-default)] table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
                 <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} />
               </TableHead>

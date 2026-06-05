@@ -52,6 +52,18 @@ const formatPlayPipeline = (amount: number) => {
   return `$${amount}`;
 };
 
+// Human-readable labels for the prospecting sub-nav views, used to label the
+// back button on the company detail page so it names the view you came from.
+const VIEW_LABELS: Record<string, string> = {
+  "qls": "QLs",
+  "full-prospect-book": "Full Prospect Book",
+  "p1-now": "P1 - Now",
+  "p2-next": "P2 - Next",
+  "p3-later": "P3 - Later",
+  "p4-last": "P4 - Last",
+  "full-customer-book": "Full Customer Book",
+};
+
 const Prospecting = () => {
   const { playId } = useParams();
   const navigate = useNavigate();
@@ -211,7 +223,18 @@ const Prospecting = () => {
   };
   const handleCompanyClick = (companyId: string) => {
     const suffix = activePlay ? `?fromPlay=${activePlay.id}` : "";
-    navigate(cyclePath(`/prospecting/strategy/${companyId}${suffix}`));
+    // Capture the view the rep is coming from so the company detail page can
+    // offer a real back button (label + destination) instead of always
+    // dumping them on the P1 list.
+    const from = activePlay
+      ? cyclePath(`/prospecting/play/${activePlay.id}`)
+      : cyclePath(`/prospecting?view=${activeNavItem}`);
+    const fromLabel = activePlay
+      ? activePlay.label
+      : VIEW_LABELS[activeNavItem] ?? "Prospecting";
+    navigate(cyclePath(`/prospecting/strategy/${companyId}${suffix}`), {
+      state: { from, fromLabel },
+    });
   };
   const handleCompanyNameClick = (companyId: string) => {
     setSelectedCompanyId(companyId);
