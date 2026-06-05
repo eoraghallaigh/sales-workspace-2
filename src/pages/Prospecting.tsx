@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useCyclePath } from "@/hooks/useCyclePath";
 import { Layout } from "@/components/Layout";
@@ -8,6 +8,7 @@ import WorkspaceHeader from "@/components/WorkspaceHeader";
 import ProspectingSubNav from "@/components/ProspectingSubNav";
 import PlayHeader from "@/components/PlayHeader";
 import { usePlays } from "@/contexts/PlaysContext";
+import { getPlayIdsForCompany } from "@/data/playData";
 import { DataWell } from "@/components/ui/data-well";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -97,6 +98,13 @@ const Prospecting = () => {
     }
   }, [viewParam]);
   const activePlay = plays.find(c => c.id === activeNavItem) || null;
+
+  const listScrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (listScrollRef.current) {
+      listScrollRef.current.scrollTop = 0;
+    }
+  }, [activeNavItem]);
   const toggleWorkedStatus = (status: string) => {
     setSelectedWorkedStatuses(prev => {
       const next = new Set(prev);
@@ -172,11 +180,15 @@ const Prospecting = () => {
     // Filter to show New, Unworked P1, In Progress, and Over SLA companies
     const workable = sortedCompanies.filter(c => c.status === "New" || c.status === "Unworked P1" || c.status === "In Progress" || c.status === "Over SLA");
 
-    // Filter by current priority bucket (P1 default for companies that don't have one set)
+    if (activePlay) {
+      return workable.filter(c => getPlayIdsForCompany(c.id).includes(activePlay.id));
+    }
+
+    const bookCompanies = workable.filter(c => /^\d+$/.test(c.id));
     return !activePriority
-      ? workable
-      : workable.filter(c => (c.priority ?? "P1") === activePriority);
-  }, [prospectingCompanies, completedTasks, initialSortOrder, activePriority]);
+      ? bookCompanies
+      : bookCompanies.filter(c => (c.priority ?? "P1") === activePriority);
+  }, [prospectingCompanies, completedTasks, initialSortOrder, activePriority, activePlay]);
   const incrementCompanyTouch = (taskId: string) => {
     setProspectingCompanies(prevCompanies => prevCompanies.map(company => {
       const hasTask = company.tasks.some(task => task.id === taskId);
@@ -497,7 +509,7 @@ const Prospecting = () => {
           {!expandedPanelCompanyId && <ProspectingSubNav isCollapsed={isPanelOpen || isContactPanelOpen || isTaskPanelOpen} onActiveItemChange={setActiveNavItem} />}
 
           {/* Main Content Area - Only scrolling element */}
-          <div className={`${expandedPanelCompanyId ? 'w-[240px] flex-shrink-0' : 'flex-1'} overflow-y-auto overscroll-contain transition-all duration-300 ${!expandedPanelCompanyId && (isPanelOpen || isContactPanelOpen || isTaskPanelOpen) ? 'mr-[569px]' : 'mr-0'}`}>
+          <div ref={listScrollRef} className={`${expandedPanelCompanyId ? 'w-[240px] flex-shrink-0' : 'flex-1'} overflow-y-auto overscroll-contain transition-all duration-300 ${!expandedPanelCompanyId && (isPanelOpen || isContactPanelOpen || isTaskPanelOpen) ? 'mr-[569px]' : 'mr-0'}`}>
             {/* Full Customer Book / Full Prospect Book views replace the default cards layout */}
             {!expandedPanelCompanyId && activeNavItem === "full-customer-book" && (
               <div className="max-w-[1440px] px-6 py-6">

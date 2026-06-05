@@ -618,4 +618,39 @@ html, body {
 
 .trellis-shadow-400 {
   box-shadow: 0px 24px 48px 0px rgba(20, 20, 20, 0.08);
+}
+
+@keyframes reasoning-shimmer {
+  0% { background-position: 150% 0; }
+  100% { background-position: -150% 0; }
+}
+
+.reasoning-shimmer {
+  background: linear-gradient(
+    90deg,
+    #fb31a7 0%,
+    #ff4800 25%,
+    #fbddd2 50%,
+    #ff4800 75%,
+    #fb31a7 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: reasoning-shimmer 2.2s linear infinite;
+}
+
+@keyframes ai-loader-spin {
+  0% { transform: rotate(0deg); opacity: 1; }
+  20% { opacity: 0.3; }
+  40% { transform: rotate(180deg); opacity: 1; }
+  100% { transform: rotate(180deg); opacity: 1; }
+}
+
+.ai-loader-star {
+  display: inline-flex;
+  transform-origin: center;
+  animation: ai-loader-spin 2s ease-in-out infinite;
 } 
