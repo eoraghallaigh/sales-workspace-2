@@ -11,6 +11,7 @@ import { TableHeaderCell } from "@/components/ui/table-header-cell";
 import { TableDataCell } from "@/components/ui/table-data-cell";
 import Tag from "@/components/Tag";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
+import { Columns3 } from "lucide-react";
 import ProspectingSubNav from "@/components/ProspectingSubNav";
 
 // Power Hour contact data with enriched fields
@@ -425,6 +426,13 @@ const PowerHourReview = () => {
                   Remove from List ({selectedIds.size})
                 </Button>
               )}
+              <Button
+                    variant="ghost"
+                    size="small"
+                    className="border border-transparent heading-50 whitespace-nowrap">
+                <Columns3 className="h-4 w-4" />
+                Edit columns
+              </Button>
               <Button
                     variant="secondary"
                     size="small">
