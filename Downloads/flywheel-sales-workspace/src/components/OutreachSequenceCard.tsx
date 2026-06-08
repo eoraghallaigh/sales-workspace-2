@@ -1098,6 +1098,7 @@ export type OutreachSequenceCardProps = {
   onScriptModeChange: (mode: ScriptMode) => void;
   onReplyToEmail?: (idx: number) => void;
   onViewReasoning: () => void;
+  onRegenerate?: (instructions: string) => void;
 };
 
 const buildDefaultOrder = (contactId: string): string[] => [
@@ -1132,6 +1133,7 @@ export const OutreachSequenceCard = ({
   onScriptModeChange,
   onReplyToEmail,
   onViewReasoning,
+  onRegenerate,
 }: OutreachSequenceCardProps) => {
   const firstName = contact.name.split(" ")[0];
   const pristine = isPristine(call, linkedin, sequence);
@@ -1331,6 +1333,7 @@ export const OutreachSequenceCard = ({
         open={isRegenerateOpen}
         onOpenChange={setIsRegenerateOpen}
         contactName={firstName}
+        onRegenerate={onRegenerate}
       />
     </div>
   );

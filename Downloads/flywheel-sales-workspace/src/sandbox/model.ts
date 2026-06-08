@@ -19,6 +19,7 @@ import {
   toRgb,
 } from "@/design-tokens/resolve";
 import { ElementSource } from "./fiber";
+import { detectButtonVariant } from "./buttonVariants";
 
 export interface Crumb {
   element: HTMLElement;
@@ -58,6 +59,11 @@ export interface Original {
   borderWidth: ScaleOrigin;
   borderRadius: ScaleOrigin;
   shadow: { tokenName: string; raw: string; offToken: boolean };
+  // Component-level (currently buttons only): the variant prop is fixed by the
+  // component, so it gets its own control rather than free-form style edits.
+  isButton: boolean;
+  variant: string;
+  baseClassName: string;
 }
 
 export interface PanelState {
@@ -81,6 +87,7 @@ export interface PanelState {
   borderWidth: string;
   borderRadius: string;
   shadow: string;
+  variant: string;
 }
 
 export interface BuiltOutput {
@@ -126,6 +133,7 @@ const parseLetterSpacing = (value: string): number => {
 
 export const computeOriginal = (element: HTMLElement): Original => {
   const cs = getComputedStyle(element);
+  const detectedVariant = element.tagName === "BUTTON" ? detectButtonVariant(element) : "";
   const type = nearestTypographyToken(
     parsePx(cs.fontSize),
     parsePx(cs.lineHeight),
@@ -166,6 +174,9 @@ export const computeOriginal = (element: HTMLElement): Original => {
       offToken: !radius.exact,
     },
     shadow: matchShadow(cs.boxShadow),
+    isButton: detectedVariant !== "",
+    variant: detectedVariant,
+    baseClassName: typeof element.className === "string" ? element.className : "",
   };
 };
 
@@ -190,6 +201,7 @@ export const initialState = (o: Original): PanelState => ({
   borderWidth: o.borderWidth.tokenName,
   borderRadius: o.borderRadius.tokenName,
   shadow: o.shadow.tokenName,
+  variant: o.variant,
 });
 
 const colorValue = (list: ColorToken[], name: string): string => {
@@ -324,6 +336,12 @@ export const buildOutput = (state: PanelState, o: Original): BuiltOutput => {
       classes.push(token.twClass);
       summary.push(`shadow: ${token.name} (was ${o.shadow.tokenName || "custom"})`);
     }
+  }
+
+  // Variant is a component prop, not a style declaration — report it as guidance
+  // (no decls/classes to copy; the agent changes the `variant` prop).
+  if (o.isButton && state.variant && state.variant !== o.variant) {
+    summary.push(`variant prop: ${state.variant} (was ${o.variant})`);
   }
 
   return { decls, classes, summary };
