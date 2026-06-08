@@ -30,6 +30,7 @@ import MotionSandbox from "./pages/MotionSandbox";
 import Plays from "./pages/Plays";
 import PlayBuilder from "./pages/PlayBuilder";
 import DesignMode from "./sandbox/DesignMode";
+import Inspector from "./inspector/Inspector";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ const App = () => (
           </Routes>
           <GuidedTour />
           {import.meta.env.DEV && <DesignMode />}
+          <Inspector />
           </PlaysProvider>
           </StrategyAssistantProvider>
           </VariantProvider>
