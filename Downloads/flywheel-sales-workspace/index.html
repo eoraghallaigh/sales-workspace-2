@@ -4,6 +4,24 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Trellis theme: set the data attribute before first paint to avoid a
+         flash of the wrong theme. Precedence: ?theme= > localStorage > transitional.
+         Kept in sync at runtime by src/contexts/ThemeContext.tsx. -->
+    <script>
+      (function () {
+        try {
+          var q = new URLSearchParams(location.search).get('theme');
+          var s = localStorage.getItem('trellis-theme');
+          var t = (q === 'alpha' || q === 'transitional') ? q
+                : (s === 'alpha' || s === 'transitional') ? s
+                : 'transitional';
+          document.documentElement.setAttribute('data-trellis-theme', t);
+        } catch (e) {
+          document.documentElement.setAttribute('data-trellis-theme', 'transitional');
+        }
+      })();
+    </script>
     <title>Flywheel Sales Workspace</title>
     <meta name="description" content="A single workspace to view and engage all of a rep's prospects." />
 
@@ -95,7 +113,7 @@
       }
 
       body {
-        font-family: 'Lexend Deca', Helvetica, Arial, sans-serif !important;
+        font-family: var(--trellis-font-sans, 'Lexend Deca', Helvetica, Arial, sans-serif);
         background-color: #ffffff !important;
         color: #141414 !important;
         margin: 0 !important;

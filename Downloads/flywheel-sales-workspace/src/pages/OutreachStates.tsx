@@ -262,7 +262,7 @@ const SequenceShowcase = ({ state }: { state: SequenceState }) => {
 const OutreachStates = () => {
   return (
     <Layout>
-      <div className="h-[calc(100vh-48px)] overflow-y-auto bg-white">
+      <div className="h-[var(--page-content-height)] overflow-y-auto bg-white">
         <div className="px-10 py-12 max-w-4xl">
         <h1 className="heading-500 text-foreground mb-2">Outreach card states</h1>
         <p className="body-100 text-muted-foreground mb-10 max-w-2xl">

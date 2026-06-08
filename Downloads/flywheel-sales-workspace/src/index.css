@@ -45,6 +45,41 @@
 /* Fonts are loaded via <link> tags in index.html to avoid blocking CSS parsing */
 
 :root {
+  /* ── Theme: typeface ──────────────────────────────────────────
+   * Routed token so the whole app can swap fonts by theme. Default
+   * (transitional) = Lexend Deca; [data-trellis-theme="alpha"] below
+   * overrides to HubSpot Sans. Consumed by body, the typography
+   * utility classes (tailwind plugin), and the --typography-* tokens. */
+  --trellis-font-sans: 'Lexend Deca', Helvetica, Arial, sans-serif;
+
+  /* ── Theme: control shape (radius) ────────────────────────────
+   * Semantic radii routed so component shape swaps by theme.
+   * Transitional defaults here; alpha overrides in the block below. */
+  --radius-button: 4px;
+  --radius-control: 4px;   /* text inputs, selects */
+  --radius-card: 8px;      /* large surfaces / cards */
+  --radius-popover: 6px;   /* popovers, dropdowns */
+  --radius-dialog: 8px;    /* modals */
+
+  /* ── Theme: focus ring ────────────────────────────────────────
+   * Consumed by Tailwind's `ring` color (see tailwind.config.ts), so
+   * every focus-visible:ring-ring usage flips by theme. */
+  --ring-focus: var(--color-border-interactive-default);
+
+  /* ── Theme: button label + primary fill ───────────────────────
+   * Transitional: #141414 fill, 500 weight, 24px line. */
+  --button-primary-bg: var(--color-fill-primary-default);
+  --button-primary-bg-hover: var(--color-fill-primary-hover);
+  --button-label-weight: 500;
+  --button-line-height: 24px;
+
+  /* ── Theme: page canvas ───────────────────────────────────────
+   * Transitional pages paint the recessed grey and subtract the 48px
+   * top header from their height. Alpha pages sit on the white dynamic
+   * surface and fill it. */
+  --page-bg: var(--color-fill-surface-recessed);
+  --page-content-height: calc(100vh - 48px);
+
   /* Base Colors - Neutral Scale */
   --trellis-color-neutral-100: #f8f7f6;
   --trellis-color-neutral-200: #f5f3f2;
@@ -462,28 +497,28 @@
   --color-reporting-fill-highlight-purple-subtle: #EFEEFD;
 
   /* Typography System */
-  --typography-display-100-fontfamily: "Lexend Deca";
+  --typography-display-100-fontfamily: var(--trellis-font-sans);
   --typography-display-100-fontweight: 500;
   --typography-display-100-fontsize: 56;
   --typography-display-100-lineheight: 72;
   --typography-display-100-letterspacing: -0.3199999928474426;
   --typography-display-100-fallbackfontfamily: "Helvetica, Arial, sans-serif";
   
-  --typography-heading-50-fontfamily: "Lexend Deca";
+  --typography-heading-50-fontfamily: var(--trellis-font-sans);
   --typography-heading-50-fontweight: 600;
   --typography-heading-50-fontsize: 14;
   --typography-heading-50-lineheight: 18;
   --typography-heading-50-letterspacing: 0;
   --typography-heading-50-fallbackfontfamily: "Helvetica, Arial, sans-serif";
   
-  --typography-heading-300-fontfamily: "Lexend Deca";
+  --typography-heading-300-fontfamily: var(--trellis-font-sans);
   --typography-heading-300-fontweight: 600;
   --typography-heading-300-fontsize: 20;
   --typography-heading-300-lineheight: 24;
   --typography-heading-300-letterspacing: 0;
   --typography-heading-300-fallbackfontfamily: "Helvetica, Arial, sans-serif";
   
-  --typography-body-200-fontfamily: "Lexend Deca";
+  --typography-body-200-fontfamily: var(--trellis-font-sans);
   --typography-body-200-fontweight: 300;
   --typography-body-200-fontsize: 16;
   --typography-body-200-lineheight: 24;
@@ -498,6 +533,38 @@
   --typography-code-100-fallbackfontfamily: "Consolas, Monaco, Courier New, monospace";
 }
 
+/* ════════════════════════════════════════════════════════════════
+ * TRELLIS ALPHA THEME OVERRIDES
+ * Applied when <html data-trellis-theme="alpha">. Only values that
+ * differ from the transitional defaults above belong here. Phase 1
+ * scope: typeface. (Most color tokens already match Alpha, so they
+ * are intentionally not duplicated here.) Component-shape and shell
+ * differences come in later phases.
+ * ════════════════════════════════════════════════════════════════ */
+[data-trellis-theme="alpha"] {
+  --trellis-font-sans: 'HubSpot Sans', Helvetica, Arial, sans-serif;
+
+  /* Control shape — Alpha rounds large containers and pills its buttons */
+  --radius-button: 9999px;  /* full pill */
+  --radius-control: 6px;
+  --radius-card: 16px;
+  --radius-popover: 16px;
+  --radius-dialog: 16px;
+
+  /* Alpha focus ring is expressive blue */
+  --ring-focus: #0050c7;
+
+  /* Alpha: softer #333 primary fill, lighter 400 label, tighter 20px line */
+  --button-primary-bg: #333333;
+  --button-primary-bg-hover: #4d4d4d;
+  --button-label-weight: 400;
+  --button-line-height: 20px;
+
+  /* Alpha pages fill the white surface (no top header to subtract) */
+  --page-bg: #ffffff;
+  --page-content-height: 100%;
+}
+
 /* Base styles */
 * {
   box-sizing: border-box;
@@ -508,7 +575,7 @@
   overflow: hidden;
   color: var(--color-text-core-default, #141414);
   text-overflow: ellipsis;
-  font-family: "Lexend Deca";
+  font-family: var(--trellis-font-sans);
   font-size: 12px;
   font-style: normal;
   font-weight: 500;
@@ -532,7 +599,7 @@ textarea::placeholder {
 }
 
 body {
-  font-family: 'Lexend Deca', Helvetica, Arial, sans-serif;
+  font-family: var(--trellis-font-sans);
   background-color: var(--trellis-color-white);
   color: var(--color-text-core-default);
   margin: 0;

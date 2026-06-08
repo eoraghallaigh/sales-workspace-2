@@ -54,7 +54,7 @@ const CompanyTakeoverView = ({
   const [callPopoverContactId, setCallPopoverContactId] = useState<string | null>(null);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-48px)] bg-fill-surface-recessed overflow-hidden">
+    <div className="flex flex-col h-[var(--page-content-height)] bg-fill-surface-recessed overflow-hidden">
       {/* Breadcrumb Header */}
       <div className="flex items-center gap-2 px-6 py-3 bg-[var(--color-fill-surface-default)] border-b border-border">
         <button
