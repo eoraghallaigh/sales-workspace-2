@@ -6,6 +6,7 @@ import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { ChatPanel } from "./ChatPanel";
 import { LeftNavigation } from "./LeftNavigation";
 import { HeaderNavigation } from "./HeaderNavigation";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // Custom SheetContent without overlay
 const CustomSheetContent = ({ side = "right", className, children, ...props }: any) => (
@@ -20,6 +21,8 @@ const CustomSheetContent = ({ side = "right", className, children, ...props }: a
 );
 
 export const GlobalNavigation = () => {
+  const { theme } = useTheme();
+  const isAlpha = theme === "alpha";
   const navigate = useNavigate();
   const [selectedMeeting, setSelectedMeeting] = useState<string | null>(null);
   const [showChatHistory, setShowChatHistory] = useState(false);
@@ -100,17 +103,19 @@ export const GlobalNavigation = () => {
 
   return (
     <>
-      {/* Fixed Top Bar */}
-      <HeaderNavigation 
-        onChatPanelToggle={handleChatPanelToggle}
-        onNewChat={handleNewChat}
-        onChatHistory={handleChatHistory}
-        onBack={handleBack}
-        onMeetingClick={handleMeetingClick}
-        selectedMeeting={selectedMeeting}
-        showChatHistory={showChatHistory}
-        CustomSheetContent={CustomSheetContent}
-      />
+      {/* Fixed Top Bar — transitional only; Alpha moves these controls into the rail */}
+      {!isAlpha && (
+        <HeaderNavigation
+          onChatPanelToggle={handleChatPanelToggle}
+          onNewChat={handleNewChat}
+          onChatHistory={handleChatHistory}
+          onBack={handleBack}
+          onMeetingClick={handleMeetingClick}
+          selectedMeeting={selectedMeeting}
+          showChatHistory={showChatHistory}
+          CustomSheetContent={CustomSheetContent}
+        />
+      )}
 
       {/* Left Navigation */}
       <LeftNavigation />
