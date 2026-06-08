@@ -1,7 +1,7 @@
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
-import { AiStarIcon, AiStarIconGradient } from "@/components/ui/ai-star-icon";
+import { AiStarIconGradient } from "@/components/ui/ai-star-icon";
 
 interface StrategyEmptyBannerProps {
   companyName: string;
@@ -86,11 +86,7 @@ export const ResearchEmptyCard = ({
         onClick={onRun}
         disabled={isRunning}
       >
-        {isRunning ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <AiStarIcon size={14} />
-        )}
+        {isRunning && <Loader2 className="h-4 w-4 animate-spin" />}
         {isRunning ? "Creating prospecting strategy…" : "Create prospecting strategy"}
       </Button>
     </div>
@@ -122,11 +118,7 @@ export const SequenceSectionPrompt = ({
       disabled={isRunning}
       className="shrink-0"
     >
-      {isRunning ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        <AiStarIcon size={14} />
-      )}
+      {isRunning && <Loader2 className="h-4 w-4 animate-spin" />}
       {isRunning ? "Drafting sequences…" : "Run sequence agent"}
     </Button>
   </div>

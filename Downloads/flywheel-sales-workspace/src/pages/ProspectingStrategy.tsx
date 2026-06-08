@@ -17,7 +17,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
-import { AiStarIcon } from "@/components/ui/ai-star-icon";
 import { ResearchSectionBody } from "@/components/ResearchSectionBody";
 import { prospectingCompanies } from "@/data/prospectingCompanies";
 import { companyDetails } from "@/data/companyDetails";
@@ -145,6 +144,7 @@ const ProspectingStrategy = () => {
   const [editedContent, setEditedContent] = useState<Record<string, string>>({});
   const [addedContactIds, setAddedContactIds] = useState<Set<string>>(new Set());
   const [loadingContactIds, setLoadingContactIds] = useState<Set<string>>(new Set());
+  const [regeneratingContactIds, setRegeneratingContactIds] = useState<Set<string>>(new Set());
   const [removedContactIds, setRemovedContactIds] = useState<Set<string>>(new Set());
   const [feedbackContactId, setFeedbackContactId] = useState<string | null>(null);
   const [emailReplyTo, setEmailReplyTo] = useState<{ name: string; email: string; subject: string } | null>(null);
@@ -291,6 +291,20 @@ const ProspectingStrategy = () => {
         return next;
       });
     }, 3000);
+  }, []);
+
+  // Regenerating a sequence reruns the sequencing agent for that one contact,
+  // showing the same "Building … sequence" loading state used at creation.
+  const handleRegenerateSequence = useCallback((contactId: string) => {
+    setRegeneratingContactIds(prev => new Set(prev).add(contactId));
+    const timer = window.setTimeout(() => {
+      setRegeneratingContactIds(prev => {
+        const next = new Set(prev);
+        next.delete(contactId);
+        return next;
+      });
+    }, 9000);
+    generationTimersRef.current.push(timer);
   }, []);
 
   const openFeedback = (contactId: string) => {
@@ -955,11 +969,13 @@ const ProspectingStrategy = () => {
                   <PlayHeader key={play.id} play={play} defaultOpen={play.id !== fromPlay} />
                 ))}
                 {isRunningResearch ? (
-                  <div className="rounded-100 border border-core-subtle bg-card px-6 py-6 mb-12 animate-fade-in">
-                    <p className="heading-50 text-foreground mb-3">
-                      Researching {currentCompany.name}…
-                    </p>
-                    <AgentReasoningSteps kind="research" stepMs={6000} />
+                  <div className="flex items-center justify-center min-h-[420px] animate-fade-in">
+                    <div className="rounded-100 border border-core-subtle bg-card px-6 py-6 w-full max-w-md">
+                      <p className="heading-50 text-foreground mb-3">
+                        Researching {currentCompany.name}…
+                      </p>
+                      <AgentReasoningSteps kind="research" stepMs={6000} />
+                    </div>
                   </div>
                 ) : !hasResearch ? (
                   <ResearchEmptyCard
@@ -1001,7 +1017,6 @@ const ProspectingStrategy = () => {
                         className="mt-4"
                         onClick={() => openFullResearch(currentCompany.id, currentCompany.name)}
                       >
-                        <AiStarIcon size={14} />
                         Read full research
                       </Button>
                     </CollapsibleContent>
@@ -1102,7 +1117,7 @@ const ProspectingStrategy = () => {
                             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                             <span className="body-100 text-muted-foreground">Outreach agent is working…</span>
                           </div>
-                        ) : isBuildingSequences ? (
+                        ) : (isBuildingSequences || regeneratingContactIds.has(contact.id)) ? (
                           <div key={`building-${contact.id}`} className="px-6 py-5 bg-card animate-fade-in">
                             <p className="heading-50 text-foreground mb-3">
                               Building {contact.name.split(" ")[0]}'s sequence…
@@ -1241,6 +1256,7 @@ const ProspectingStrategy = () => {
                                   });
                                 }}
                                 onViewReasoning={() => setReasoningContactId(contact.id)}
+                                onRegenerate={() => handleRegenerateSequence(contact.id)}
                               />
                             );
                           })()}

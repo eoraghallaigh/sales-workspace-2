@@ -25,6 +25,7 @@ import {
   RangeControl,
   TokenSelect,
 } from "./controls";
+import { BUTTON_VARIANT_NAMES } from "./buttonVariants";
 
 export interface StashItem {
   id: string;
@@ -55,7 +56,7 @@ const TRANSFORM_OPTIONS: { value: string; label: string }[] = [
   { value: "lowercase", label: "lowercase" },
 ];
 
-type SectionKey = "colour" | "typography" | "padding" | "margin" | "layout" | "border" | "element" | "stash";
+type SectionKey = "component" | "colour" | "typography" | "padding" | "margin" | "layout" | "border" | "element" | "stash";
 
 const HEADER_H = 36;
 
@@ -81,6 +82,7 @@ const SandboxPanel = ({
   const [pos, setPos] = useState(() => ({ x: Math.max(16, window.innerWidth - 376), y: 16 }));
   const [size, setSize] = useState(() => ({ w: 360, h: window.innerHeight - 32 }));
   const [open, setOpen] = useState<Record<SectionKey, boolean>>({
+    component: true,
     colour: true,
     typography: true,
     padding: true,
@@ -166,6 +168,22 @@ const SandboxPanel = ({
   };
 
   const sections: { key: SectionKey; title: string; body: ReactNode }[] = [
+    ...(original.isButton
+      ? [
+          {
+            key: "component" as SectionKey,
+            title: "Component",
+            body: (
+              <EnumSelect
+                label="Button variant"
+                value={state.variant}
+                options={BUTTON_VARIANT_NAMES.map((name) => ({ value: name, label: name }))}
+                onChange={set("variant")}
+              />
+            ),
+          },
+        ]
+      : []),
     {
       key: "colour",
       title: "Colour",
