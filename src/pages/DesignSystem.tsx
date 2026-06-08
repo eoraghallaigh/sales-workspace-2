@@ -482,7 +482,7 @@ const IconGallery = () => {
 const DesignSystem = () => {
   const { cyclePath } = useCyclePath();
   return (
-    <div className="h-screen bg-fill-surface-recessed">
+    <div className="h-screen bg-[var(--page-bg)]">
       {/* Header */}
       <div className="h-12 bg-trellis-magenta-1400 border-b border-trellis-magenta-1100 flex items-center px-4 gap-4 shrink-0">
         <Link to={cyclePath("/summary")} className="flex items-center gap-2 text-[var(--color-text-primary-default)] hover:opacity-80 transition-opacity">
@@ -493,7 +493,7 @@ const DesignSystem = () => {
         <span className="heading-200 text-[var(--color-text-primary-default)]">Trellis Design System</span>
       </div>
 
-      <ScrollArea className="h-[calc(100vh-48px)]">
+      <ScrollArea className="h-[var(--page-content-height)]">
         <div className="max-w-[1200px] mx-auto p-8 space-y-12">
 
           {/* ── COLOUR TOKENS ── */}
