@@ -194,7 +194,7 @@ const SalesWorkspace = () => {
     hasIcon: true
   }];
   return <Layout>
-      <div className="flex flex-col h-[calc(100vh-48px)] bg-fill-surface-recessed overflow-hidden">
+      <div className="flex flex-col h-[var(--page-content-height)] bg-[var(--page-bg)] overflow-hidden">
         <WorkspaceHeader activeTab="summary" />
 
         {/* Main Content */}
