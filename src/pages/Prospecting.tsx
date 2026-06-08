@@ -525,7 +525,7 @@ const Prospecting = () => {
   }
 
   return <Layout>
-      <div className="flex flex-col h-[calc(100vh-48px)] bg-fill-surface-recessed overflow-hidden">
+      <div className="flex flex-col h-[var(--page-content-height)] bg-[var(--page-bg)] overflow-hidden">
         <WorkspaceHeader activeTab="prospecting" />
         <div className="flex flex-1 overflow-hidden relative">
           {/* Left Sidebar - No margin, right against left nav */}
@@ -1699,7 +1699,7 @@ const Prospecting = () => {
                 {/* Context - Pre-populated notes from task data */}
                 {selectedTask.notes && <div className="mb-8">
                     <label className="heading-100 text-foreground mb-2 block">Notes</label>
-                    <div className="p-4 bg-fill-surface-recessed rounded border border-border max-h-[300px] overflow-y-auto">
+                    <div className="p-4 bg-[var(--page-bg)] rounded border border-border max-h-[300px] overflow-y-auto">
                       <p className="body-100 text-muted-foreground whitespace-pre-wrap text-sm">{selectedTask.notes}</p>
                     </div>
                   </div>}
@@ -1824,8 +1824,8 @@ const ViewToggle = () => {
                   isFirst ? "rounded-l-[4px] -mr-px" : isLast ? "rounded-r-[4px]" : "-mr-px"
                 } ${
                   isActive
-                    ? "bg-fill-surface-recessed z-[1] text-foreground"
-                    : "bg-card text-muted-foreground hover:bg-fill-surface-recessed"
+                    ? "bg-[var(--page-bg)] z-[1] text-foreground"
+                    : "bg-card text-muted-foreground hover:bg-[var(--page-bg)]"
                 }`}
               >
                 <TrellisIcon name={opt.icon} size={16} />
