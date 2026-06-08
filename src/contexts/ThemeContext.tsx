@@ -7,7 +7,8 @@ import { createContext, useContext, useEffect, useMemo, useState, ReactNode } fr
  *   - "transitional" — the current (master) Trellis look. DEFAULT.
  *   - "alpha"        — the Trellis Alpha look, opt-in.
  *
- * Selection precedence: ?theme= query param  >  localStorage  >  "transitional".
+ * Selection precedence: ?theme= query param  >  "transitional" (Alpha is opt-in
+ * via the ?theme=alpha query string only and is intentionally not persisted).
  * The active theme is written to <html data-trellis-theme="…">, which CSS and
  * (later) components key off. To avoid a flash of the wrong theme on first
  * paint, the attribute is ALSO set by a tiny inline script in index.html before
@@ -20,7 +21,6 @@ import { createContext, useContext, useEffect, useMemo, useState, ReactNode } fr
 
 export type TrellisTheme = "transitional" | "alpha";
 
-const STORAGE_KEY = "trellis-theme";
 const VALID: TrellisTheme[] = ["transitional", "alpha"];
 
 const isValid = (v: string | null): v is TrellisTheme =>
@@ -30,8 +30,6 @@ export const resolveInitialTheme = (): TrellisTheme => {
   if (typeof window === "undefined") return "transitional";
   const fromQuery = new URLSearchParams(window.location.search).get("theme");
   if (isValid(fromQuery)) return fromQuery;
-  const fromStorage = window.localStorage.getItem(STORAGE_KEY);
-  if (isValid(fromStorage)) return fromStorage;
   return "transitional";
 };
 
@@ -46,14 +44,9 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setThemeState] = useState<TrellisTheme>(resolveInitialTheme);
 
-  // Reflect onto <html> and persist whenever the theme changes.
+  // Reflect onto <html> whenever the theme changes.
   useEffect(() => {
     document.documentElement.setAttribute("data-trellis-theme", theme);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, theme);
-    } catch {
-      /* localStorage unavailable (private mode) — attribute is enough */
-    }
   }, [theme]);
 
   const value = useMemo<ThemeContextValue>(
