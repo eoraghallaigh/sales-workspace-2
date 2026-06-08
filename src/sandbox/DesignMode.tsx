@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import SandboxPanel from "./SandboxPanel";
 import { getElementSource } from "./fiber";
 import { applyOverride, clearAllOverrides, clearOverride } from "./overrides";
+import { applyButtonVariant } from "./buttonVariants";
 import {
   Crumb,
   PanelState,
@@ -122,6 +123,7 @@ const DesignMode = () => {
     const entry = entriesRef.current[id];
     if (entry && !hasChanges(entry)) {
       clearOverride(id);
+      applyButtonVariant(entry.element, entry.original, entry.original.variant);
       entry.element.removeAttribute("data-sandbox-id");
       setEntries((prev) => {
         const next = { ...prev };
@@ -169,6 +171,7 @@ const DesignMode = () => {
     const entry = entriesRef.current[id];
     if (!entry) return;
     applyOverride(id, buildOutput(state, entry.original).decls);
+    applyButtonVariant(entry.element, entry.original, state.variant);
     setEntries((prev) => (prev[id] ? { ...prev, [id]: { ...prev[id], state } } : prev));
   }, []);
 
@@ -178,6 +181,7 @@ const DesignMode = () => {
     const entry = entriesRef.current[id];
     if (!entry) return;
     clearOverride(id);
+    applyButtonVariant(entry.element, entry.original, entry.original.variant);
     setEntries((prev) =>
       prev[id] ? { ...prev, [id]: { ...prev[id], state: initialState(entry.original) } } : prev,
     );
@@ -187,6 +191,7 @@ const DesignMode = () => {
     const entry = entriesRef.current[id];
     if (!entry) return;
     clearOverride(id);
+    applyButtonVariant(entry.element, entry.original, entry.original.variant);
     if (id === currentIdRef.current) {
       setEntries((prev) =>
         prev[id] ? { ...prev, [id]: { ...prev[id], state: initialState(entry.original) } } : prev,
@@ -226,7 +231,10 @@ const DesignMode = () => {
   }, []);
 
   const clearAll = useCallback(() => {
-    Object.values(entriesRef.current).forEach((entry) => entry.element.removeAttribute("data-sandbox-id"));
+    Object.values(entriesRef.current).forEach((entry) => {
+      applyButtonVariant(entry.element, entry.original, entry.original.variant);
+      entry.element.removeAttribute("data-sandbox-id");
+    });
     clearAllOverrides();
     setEntries({});
     setCurrentId(null);

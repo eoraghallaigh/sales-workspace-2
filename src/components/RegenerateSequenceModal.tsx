@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { AiStarIcon } from "@/components/ui/ai-star-icon";
 
 interface RegenerateSequenceModalProps {
   open: boolean;
@@ -65,7 +64,6 @@ const RegenerateSequenceModal = ({
 
         <DialogFooter className="sm:justify-start px-6 pb-6 pt-0 mt-6 gap-3">
           <Button variant="ai" size="small" onClick={handleRegenerate} disabled={!instructions.trim()}>
-            <AiStarIcon size={14} className="mr-1" />
             Regenerate
           </Button>
           <Button variant="ghost" size="small" onClick={() => onOpenChange(false)}>

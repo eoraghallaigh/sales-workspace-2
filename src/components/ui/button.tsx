@@ -3,27 +3,32 @@ import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
+import { AiStarIcon } from "@/components/ui/ai-star-icon"
+
+// Exported so dev-only tooling (the design sandbox) can enumerate variant
+// names and their class strings without duplicating them here.
+export const buttonVariantClasses = {
+  default: "bg-[var(--button-primary-bg)] text-primary-foreground hover:bg-[var(--button-primary-bg-hover)]",
+  destructive:
+    "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+  outline:
+    "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+  secondary:
+    "bg-[var(--color-fill-secondary-default)] text-[var(--color-text-core-default)] border border-[var(--color-border-secondary-default)] rounded-[var(--radius-button)] hover:bg-[var(--color-fill-secondary-hover)]",
+  ghost: "hover:bg-[var(--color-fill-accent-neutral-subtle-alt)]",
+  link: "text-primary underline-offset-4 hover:underline",
+  primary: "bg-[var(--button-primary-bg)] text-[var(--color-text-primary-default)] hover:bg-[var(--button-primary-bg-hover)] border border-[var(--color-border-primary-default)]",
+  "secondary-alt": "bg-[var(--color-fill-secondary-default)] text-[var(--color-text-core-default)] border border-[var(--color-border-secondary-default)] hover:bg-[var(--color-fill-secondary-hover)]",
+  transparent: "bg-transparent text-[var(--trellis-color-magenta-900)] hover:text-[var(--trellis-color-magenta-1000)]",
+  ai: "bg-[var(--trellis-color-magenta-900)] text-white hover:bg-[var(--trellis-color-magenta-1000)] !rounded-full heading-50",
+  "ai-secondary": "bg-card text-[var(--trellis-color-magenta-900)] border border-[var(--trellis-color-magenta-900)] hover:bg-[var(--trellis-color-magenta-200,#FBEAF1)] hover:text-[var(--trellis-color-magenta-1000)] hover:border-[var(--trellis-color-magenta-1000)] !rounded-full heading-50",
+} as const;
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius-button)] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 text-[14px] leading-[var(--button-line-height)] font-[var(--button-label-weight)]",
   {
     variants: {
-      variant: {
-        default: "bg-[var(--button-primary-bg)] text-primary-foreground hover:bg-[var(--button-primary-bg-hover)]",
-        destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary:
-          "bg-[var(--color-fill-secondary-default)] text-[var(--color-text-core-default)] border border-[var(--color-border-secondary-default)] rounded-[var(--radius-button)] hover:bg-[var(--color-fill-secondary-hover)]",
-        ghost: "hover:bg-[var(--color-fill-accent-neutral-subtle-alt)]",
-        link: "text-primary underline-offset-4 hover:underline",
-        primary: "bg-[var(--button-primary-bg)] text-[var(--color-text-primary-default)] hover:bg-[var(--button-primary-bg-hover)] border border-[var(--color-border-primary-default)]",
-        "secondary-alt": "bg-[var(--color-fill-secondary-default)] text-[var(--color-text-core-default)] border border-[var(--color-border-secondary-default)] hover:bg-[var(--color-fill-secondary-hover)]",
-        transparent: "bg-transparent text-[var(--trellis-color-magenta-900)] hover:text-[var(--trellis-color-magenta-1000)]",
-        ai: "bg-[var(--trellis-color-magenta-900)] text-white hover:bg-[var(--trellis-color-magenta-1000)] !rounded-full heading-50",
-        "ai-secondary": "bg-card text-[var(--trellis-color-magenta-900)] border border-[var(--trellis-color-magenta-900)] hover:bg-[var(--trellis-color-magenta-200,#FBEAF1)] hover:text-[var(--trellis-color-magenta-1000)] hover:border-[var(--trellis-color-magenta-1000)] !rounded-full heading-50",
-      },
+      variant: buttonVariantClasses,
       size: {
         default: "h-10 px-4 py-2",
         sm: "h-9 rounded-[var(--radius-button)] px-3",
@@ -155,14 +160,30 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, children, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
+    // AI buttons always lead with the AI star. Skip it when the caller already
+    // leads with its own icon (e.g. a loading spinner) so we never double up,
+    // and when asChild (Slot requires a single child).
+    const isAi = variant === "ai" || variant === "ai-secondary"
+    const leadsWithElement = React.isValidElement(React.Children.toArray(children)[0])
+    const content =
+      isAi && !asChild && !leadsWithElement ? (
+        <>
+          <AiStarIcon />
+          {children}
+        </>
+      ) : (
+        children
+      )
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         {...props}
-      />
+      >
+        {content}
+      </Comp>
     )
   }
 )
