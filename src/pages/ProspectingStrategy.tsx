@@ -822,7 +822,7 @@ const ProspectingStrategy = () => {
 
   return (
     <Layout>
-      <div className="flex h-[calc(100vh-48px)] bg-background">
+      <div className="flex h-[var(--page-content-height)] bg-background">
         {/* Left column - Company sub-nav, full height to the top */}
         <StrategyCompaniesSubNav
           companies={companies}

@@ -42,7 +42,7 @@ export const detectButtonVariant = (element: HTMLElement): string => {
 // their class string (e.g. `secondary` → rounded-[4px], `ai` → !rounded-full),
 // so stripping a variant can leave the element with no radius at all. When that
 // happens we restore this base radius so swapping never squares the corners.
-const BASE_RADIUS_CLASS = "rounded-[var(--borderRadius-100,4px)]";
+const BASE_RADIUS_CLASS = "rounded-[var(--radius-button)]";
 const isRadiusToken = (token: string): boolean => /^!?rounded(\b|-|\[)/.test(token);
 
 /**

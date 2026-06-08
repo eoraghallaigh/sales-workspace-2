@@ -14,7 +14,7 @@ const Deals = () => {
 
   return (
     <Layout>
-      <div className="flex flex-col h-[calc(100vh-48px)] overflow-hidden">
+      <div className="flex flex-col h-[var(--page-content-height)] overflow-hidden">
         <WorkspaceHeader activeTab="deals" />
 
         <div className="flex flex-1 overflow-hidden">

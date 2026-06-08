@@ -85,7 +85,7 @@ const Dashboard = () => {
   const filteredActivityData = filterByRep(activityWeeklyData);
   const filteredP2DepthData = filterByRep(p2DepthData);
   return <Layout>
-      <div className="flex flex-col h-[calc(100vh-48px)] bg-[var(--color-fill-surface-recessed)] overflow-hidden">
+      <div className="flex flex-col h-[var(--page-content-height)] bg-[var(--color-fill-surface-recessed)] overflow-hidden">
         <WorkspaceHeader activeTab="performance" />
 
         <div className="flex-1 overflow-y-auto">
