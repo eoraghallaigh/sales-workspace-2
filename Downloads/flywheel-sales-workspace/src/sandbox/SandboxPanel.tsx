@@ -56,7 +56,18 @@ const TRANSFORM_OPTIONS: { value: string; label: string }[] = [
   { value: "lowercase", label: "lowercase" },
 ];
 
-type SectionKey = "component" | "colour" | "typography" | "padding" | "margin" | "layout" | "border" | "element" | "stash";
+type SectionKey = "component" | "colour" | "typography" | "padding" | "margin" | "flex" | "layout" | "border" | "element" | "stash";
+
+const FLEX_DISPLAY_OPTIONS = ["block", "flex", "inline-flex", "grid", "inline-block", "inline", "none"];
+const FLEX_DIRECTION_OPTIONS = ["row", "row-reverse", "column", "column-reverse"];
+const JUSTIFY_OPTIONS = ["flex-start", "center", "flex-end", "space-between", "space-around", "space-evenly"];
+const ALIGN_OPTIONS = ["stretch", "flex-start", "center", "flex-end", "baseline"];
+const WRAP_OPTIONS = ["nowrap", "wrap", "wrap-reverse"];
+
+const enumOptions = (values: string[], current: string): { value: string; label: string }[] => {
+  const merged = current && !values.includes(current) ? [current, ...values] : values;
+  return merged.map((v) => ({ value: v, label: v }));
+};
 
 const HEADER_H = 36;
 
@@ -87,6 +98,7 @@ const SandboxPanel = ({
     typography: true,
     padding: true,
     margin: true,
+    flex: true,
     layout: true,
     border: true,
     element: true,
@@ -111,8 +123,8 @@ const SandboxPanel = ({
     onStateChange({ ...state, [key]: value });
 
   const targetLine = targetLineFor(source, element);
-  const agentBlock = formatEntryBlock(source, element, output);
-  const hasChanges = output.summary.length > 0;
+  const agentBlock = formatEntryBlock(source, element, output, entry.move, entry.deleted);
+  const hasChanges = output.summary.length > 0 || !!entry.move || !!entry.deleted;
 
   const declKey = JSON.stringify(output.decls);
   useEffect(() => {
@@ -292,6 +304,44 @@ const SandboxPanel = ({
             })
           }
         />
+      ),
+    },
+    {
+      key: "flex",
+      title: "Flexbox",
+      body: (
+        <>
+          <EnumSelect
+            label="Display"
+            value={state.display}
+            options={enumOptions(FLEX_DISPLAY_OPTIONS, original.display)}
+            onChange={set("display")}
+          />
+          <EnumSelect
+            label="Direction"
+            value={state.flexDirection}
+            options={enumOptions(FLEX_DIRECTION_OPTIONS, original.flexDirection)}
+            onChange={set("flexDirection")}
+          />
+          <EnumSelect
+            label="Justify content (main axis)"
+            value={state.justifyContent}
+            options={enumOptions(JUSTIFY_OPTIONS, original.justifyContent)}
+            onChange={set("justifyContent")}
+          />
+          <EnumSelect
+            label="Align items (cross axis)"
+            value={state.alignItems}
+            options={enumOptions(ALIGN_OPTIONS, original.alignItems)}
+            onChange={set("alignItems")}
+          />
+          <EnumSelect
+            label="Wrap"
+            value={state.flexWrap}
+            options={enumOptions(WRAP_OPTIONS, original.flexWrap)}
+            onChange={set("flexWrap")}
+          />
+        </>
       ),
     },
     {

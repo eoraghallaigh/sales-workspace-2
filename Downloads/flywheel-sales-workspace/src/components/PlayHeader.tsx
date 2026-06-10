@@ -25,7 +25,7 @@ const formatDate = (dateStr: string) => {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 };
 
-const PlayHeader = ({ play, defaultOpen = true }: PlayHeaderProps) => {
+const PlayHeader = ({ play, defaultOpen = false }: PlayHeaderProps) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   const endDate = new Date(play.endDate);

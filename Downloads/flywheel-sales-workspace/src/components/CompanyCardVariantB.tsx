@@ -19,6 +19,7 @@ import { ArrowRight, MoreHorizontal } from "lucide-react";
 import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { Company } from "@/components/CompanyCard";
 import SnoozeModal from "@/components/SnoozeModal";
+import { SIGNAL_CATALOG } from "@/data/signals";
 
 interface CompanyCardVariantBProps {
   company: Company;
@@ -57,7 +58,8 @@ const getStatusBadge = (
 const composeBrief = (company: Company): string => {
   const signalText = company.signals
     .slice(0, 2)
-    .map((s) => s.text.toLowerCase())
+    .map((s) => (SIGNAL_CATALOG[s.id]?.label ?? "").toLowerCase())
+    .filter(Boolean)
     .join(" and ");
   const topContact = company.recommendedContacts[0];
   const contactCount = company.recommendedContacts.length;

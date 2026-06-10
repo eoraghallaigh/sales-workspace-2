@@ -19,6 +19,7 @@ import { MoreHorizontal } from "lucide-react";
 import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { Company } from "@/components/CompanyCard";
 import SnoozeModal from "@/components/SnoozeModal";
+import { SIGNAL_CATALOG } from "@/data/signals";
 
 interface CompanyCardVariantAProps {
   company: Company;
@@ -30,8 +31,10 @@ interface CompanyCardVariantAProps {
 
 const getWhyNow = (company: Company): string => {
   const parts: string[] = [];
-  if (company.signals[0]?.text) parts.push(company.signals[0].text);
-  if (company.signals[1]?.text) parts.push(company.signals[1].text);
+  company.signals.slice(0, 2).forEach((signal) => {
+    const label = SIGNAL_CATALOG[signal.id]?.label;
+    if (label) parts.push(label);
+  });
   if (parts.length === 0 && company.conversionTrigger) {
     parts.push(company.conversionTrigger);
   }

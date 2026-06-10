@@ -37,6 +37,7 @@ import { companyDetails } from "@/data/companyDetails";
 import { contactDetails, ContactDetail } from "@/data/contactDetails";
 import ContactDetailSections from "@/components/ContactDetailSections";
 import ContactDetailPanel from "@/components/ContactDetailPanel";
+import { getContactDossier } from "@/data/contactDossier";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { Company } from "@/components/CompanyCard";
@@ -422,6 +423,17 @@ const Prospecting = () => {
   const selectedContact = useMemo(() => {
     if (!selectedContactId) return null;
     return resolveContactById(selectedContactId);
+  }, [selectedContactId, companiesWithCalculatedStatus]);
+
+  const selectedContactDossier = useMemo(() => {
+    if (!selectedContactId) return undefined;
+    const company = companiesWithCalculatedStatus.find(c => c.recommendedContacts.some(rc => rc.id === selectedContactId));
+    const rc = company?.recommendedContacts.find(rc => rc.id === selectedContactId);
+    if (!company || !rc) return undefined;
+    return getContactDossier(
+      { id: rc.id, name: rc.name, role: rc.role, signals: rc.signals, qlData: rc.qlData },
+      { id: company.id, name: company.name, industry: company.industry },
+    );
   }, [selectedContactId, companiesWithCalculatedStatus]);
 
   // Get the selected task's details
@@ -1421,6 +1433,7 @@ const Prospecting = () => {
               isOpen={isContactPanelOpen}
               onClose={() => setIsContactPanelOpen(false)}
               contact={selectedContact}
+              dossier={selectedContactDossier}
               companyLogo={(() => {
                 const company = companiesWithCalculatedStatus.find(c => c.name === selectedContact.company);
                 return company?.logo || companyLogoPlaceholder;

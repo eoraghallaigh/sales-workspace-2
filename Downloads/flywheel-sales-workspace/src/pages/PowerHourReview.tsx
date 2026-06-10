@@ -10,6 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { TableHeaderCell } from "@/components/ui/table-header-cell";
 import { TableDataCell } from "@/components/ui/table-data-cell";
 import Tag from "@/components/Tag";
+import { SignalChip } from "@/components/SignalChip";
+import type { SignalId } from "@/data/signals";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import { Columns3 } from "lucide-react";
 import ProspectingSubNav from "@/components/ProspectingSubNav";
@@ -348,14 +350,25 @@ const powerHourContacts = [
 }];
 
 
-const getSignalVariant = (signal: string): "green" | "blue" | "orange" | "yellow" | "neutral" => {
-  switch (signal) {
-    case "Competitive Renewal":return "orange";
-    case "Non-QL Demand":return "blue";
-    case "Recent Funding Round":return "green";
-    case "3rd Party Intent Signals":return "yellow";
-    case "Marketing QL":return "orange";
-    default:return "neutral";
+// Maps this page's legacy signal labels onto the shared intent-signal catalog.
+const labelToSignalId = (label: string): SignalId | undefined => {
+  switch (label) {
+    case "Competitive Renewal":
+    case "Past HubSpot user":
+      return "past-hubspot-user";
+    case "Non-QL Demand":
+    case "Viewed Pricing Page":
+      return "viewed-pricing";
+    case "Recent Funding Round":
+      return "recent-hire";
+    case "3rd Party Intent Signals":
+    case "Attended Webinar":
+    case "Downloaded Whitepaper":
+      return "attended-webinar";
+    case "Marketing QL":
+      return "recent-ql";
+    default:
+      return undefined;
   }
 };
 
@@ -523,11 +536,16 @@ const PowerHourReview = () => {
                     <TableDataCell className="flex-[2] w-auto">
                       {contact.signals.length > 0 ?
                           <div className="flex flex-wrap gap-1">
-                          {contact.signals.map((signal, i) =>
-                            <Tag key={i} variant={getSignalVariant(signal)}>
-                              {signal}
-                            </Tag>
-                            )}
+                          {contact.signals.map((signal, i) => {
+                            const signalId = labelToSignalId(signal);
+                            return signalId ?
+                              <SignalChip
+                                key={i}
+                                signal={{ id: signalId }}
+                                owner={{ kind: "contact", id: contact.id, name: contact.name, role: contact.title }}
+                              /> :
+                              <Tag key={i} variant="neutral">{signal}</Tag>;
+                          })}
                         </div> :
 
                           <span className="detail-200 text-muted-foreground">—</span>

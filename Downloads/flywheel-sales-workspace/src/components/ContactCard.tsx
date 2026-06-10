@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import Tag from "@/components/Tag";
+import { SignalChipRow } from "@/components/SignalChip";
+import type { SignalInstance } from "@/data/signals";
 import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import {
@@ -29,10 +30,7 @@ interface ContactCardProps {
     enrolledInSequence: boolean;
     recentConversions?: number;
     hasPhone?: boolean;
-    signals: Array<{
-      variant: "green" | "blue" | "yellow" | "orange";
-      text: string;
-    }>;
+    signals: SignalInstance[];
     qlData?: QLData;
   };
   companyLogo?: string;
@@ -471,18 +469,12 @@ const ContactCard = ({
               </div>
             </div>
 
-            <div className="flex flex-col items-start gap-2 px-4">
-              {contact.signals.length > 0 ? (
-                contact.signals.map((signal, idx) => (
-                  <Tag key={idx} variant={signal.variant}>
-                    {signal.text}
-                  </Tag>
-                ))
-              ) : (
-                <span className="detail-200 text-muted-foreground">
-                  No signals found
-                </span>
-              )}
+            <div className="px-4">
+              <SignalChipRow
+                signals={contact.signals}
+                owner={{ kind: "contact", id: contact.id, name: contact.name, role: contact.role }}
+                emptyLabel="No signals found"
+              />
             </div>
           </div>
 

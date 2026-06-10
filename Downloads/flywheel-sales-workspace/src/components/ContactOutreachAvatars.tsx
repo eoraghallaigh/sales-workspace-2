@@ -7,6 +7,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { TrellisIcon, type TrellisIconName } from "@/components/ui/trellis-icon";
 import { RecommendedContact } from "@/components/CompanyCard";
 import { getOutreachState } from "@/data/outreachStates";
+import Tag from "@/components/Tag";
+import { SIGNAL_CATALOG } from "@/data/signals";
 
 export const getSubtleAvatarStyles = (
   avatarColor: string,
@@ -225,6 +227,19 @@ const ContactOutreachAvatars = ({
                     ))
                   )}
                 </div>
+                {c.signals.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1 pl-7 pt-0.5">
+                    {c.signals.slice(0, 3).map((s, i) => {
+                      const def = SIGNAL_CATALOG[s.id];
+                      if (!def) return null;
+                      return (
+                        <span key={`${s.id}-${i}`} className="inline-flex">
+                          <Tag variant={def.variant}>{def.label}</Tag>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}

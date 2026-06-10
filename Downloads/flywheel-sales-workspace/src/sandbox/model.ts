@@ -20,6 +20,7 @@ import {
 } from "@/design-tokens/resolve";
 import { ElementSource } from "./fiber";
 import { detectButtonVariant } from "./buttonVariants";
+import { type MoveRecord, moveSummaryLine } from "./reorder";
 
 export interface Crumb {
   element: HTMLElement;
@@ -54,6 +55,11 @@ export interface Original {
   marginBottom: number;
   marginLeft: number;
   gap: number;
+  display: string;
+  flexDirection: string;
+  justifyContent: string;
+  alignItems: string;
+  flexWrap: string;
   width: number;
   height: number;
   borderWidth: ScaleOrigin;
@@ -82,6 +88,11 @@ export interface PanelState {
   marginBottom: number;
   marginLeft: number;
   gap: number;
+  display: string;
+  flexDirection: string;
+  justifyContent: string;
+  alignItems: string;
+  flexWrap: string;
   width: string;
   height: string;
   borderWidth: string;
@@ -104,6 +115,12 @@ export interface SandboxEntry {
   crumbs: Crumb[];
   original: Original;
   state: PanelState;
+  // A recorded DOM reorder for this element (set by dragging it in design mode).
+  move?: MoveRecord;
+  // Original DOM position, captured before the first move/delete so it can be restored.
+  moveUndo?: { parent: Node; next: Node | null };
+  // Marked for deletion (Backspace in design mode); removed from the live DOM as a preview.
+  deleted?: boolean;
 }
 
 const matchColor = (value: string, list: ColorToken[]): ColorOrigin => {
@@ -161,6 +178,11 @@ export const computeOriginal = (element: HTMLElement): Original => {
     marginBottom: nearestSpacingStep(parsePx(cs.marginBottom)).px,
     marginLeft: nearestSpacingStep(parsePx(cs.marginLeft)).px,
     gap: nearestSpacingStep(parsePx(cs.gap)).px,
+    display: cs.display,
+    flexDirection: cs.flexDirection,
+    justifyContent: cs.justifyContent,
+    alignItems: cs.alignItems,
+    flexWrap: cs.flexWrap,
     width: parsePx(cs.width),
     height: parsePx(cs.height),
     borderWidth: {
@@ -196,6 +218,11 @@ export const initialState = (o: Original): PanelState => ({
   marginBottom: o.marginBottom,
   marginLeft: o.marginLeft,
   gap: o.gap,
+  display: o.display,
+  flexDirection: o.flexDirection,
+  justifyContent: o.justifyContent,
+  alignItems: o.alignItems,
+  flexWrap: o.flexWrap,
   width: "",
   height: "",
   borderWidth: o.borderWidth.tokenName,
@@ -219,6 +246,49 @@ const transformClass = (value: string): string => {
   if (value === "lowercase") return "lowercase";
   if (value === "capitalize") return "capitalize";
   return "normal-case";
+};
+
+const FLEX_CLASS_MAPS: Record<string, Record<string, string>> = {
+  display: {
+    flex: "flex",
+    "inline-flex": "inline-flex",
+    grid: "grid",
+    "inline-grid": "inline-grid",
+    block: "block",
+    "inline-block": "inline-block",
+    inline: "inline",
+    none: "hidden",
+  },
+  "flex-direction": {
+    row: "flex-row",
+    "row-reverse": "flex-row-reverse",
+    column: "flex-col",
+    "column-reverse": "flex-col-reverse",
+  },
+  "justify-content": {
+    "flex-start": "justify-start",
+    start: "justify-start",
+    center: "justify-center",
+    "flex-end": "justify-end",
+    end: "justify-end",
+    "space-between": "justify-between",
+    "space-around": "justify-around",
+    "space-evenly": "justify-evenly",
+  },
+  "align-items": {
+    stretch: "items-stretch",
+    "flex-start": "items-start",
+    start: "items-start",
+    center: "items-center",
+    "flex-end": "items-end",
+    end: "items-end",
+    baseline: "items-baseline",
+  },
+  "flex-wrap": {
+    nowrap: "flex-nowrap",
+    wrap: "flex-wrap",
+    "wrap-reverse": "flex-wrap-reverse",
+  },
 };
 
 export const buildOutput = (state: PanelState, o: Original): BuiltOutput => {
@@ -293,6 +363,20 @@ export const buildOutput = (state: PanelState, o: Original): BuiltOutput => {
   spacingChange(["margin-left"], "ml", state.marginLeft, o.marginLeft, "margin-left");
   spacingChange(["gap"], "gap", state.gap, o.gap, "gap");
 
+  const flexChange = (cssProp: string, value: string, original: string, label: string) => {
+    if (!value || value === original) return;
+    decls[cssProp] = value;
+    const twClass = FLEX_CLASS_MAPS[cssProp]?.[value];
+    if (twClass) classes.push(twClass);
+    summary.push(`${label}: ${value} (was ${original})`);
+  };
+
+  flexChange("display", state.display, o.display, "display");
+  flexChange("flex-direction", state.flexDirection, o.flexDirection, "flex-direction");
+  flexChange("justify-content", state.justifyContent, o.justifyContent, "justify-content");
+  flexChange("align-items", state.alignItems, o.alignItems, "align-items");
+  flexChange("flex-wrap", state.flexWrap, o.flexWrap, "flex-wrap");
+
   if (state.width.trim() !== "") {
     const px = parseFloat(state.width);
     if (Number.isFinite(px)) {
@@ -347,8 +431,12 @@ export const buildOutput = (state: PanelState, o: Original): BuiltOutput => {
   return { decls, classes, summary };
 };
 
-export const hasChanges = (entry: SandboxEntry): boolean =>
-  buildOutput(entry.state, entry.original).summary.length > 0;
+export const changeCount = (entry: SandboxEntry): number =>
+  buildOutput(entry.state, entry.original).summary.length +
+  (entry.move ? 1 : 0) +
+  (entry.deleted ? 1 : 0);
+
+export const hasChanges = (entry: SandboxEntry): boolean => changeCount(entry) > 0;
 
 export const targetLineFor = (source: ElementSource, element: HTMLElement): string =>
   source.relativeFileName
@@ -361,15 +449,20 @@ export const formatEntryBlock = (
   source: ElementSource,
   element: HTMLElement,
   output: BuiltOutput,
+  move?: MoveRecord,
+  deleted?: boolean,
 ): string => {
   const classAttr =
     typeof element.className === "string" && element.className ? ` class="${element.className}"` : "";
+  const summaryLines = [...output.summary];
+  if (move) summaryLines.push(moveSummaryLine(move));
+  if (deleted) summaryLines.push("DOM: delete this element");
   const lines: string[] = [
     `Target: ${targetLineFor(source, element)}`,
     `Element: <${element.tagName.toLowerCase()}${classAttr}>`,
     "",
     "Changes:",
-    ...(output.summary.length ? output.summary.map((s) => `  - ${s}`) : ["  (none yet)"]),
+    ...(summaryLines.length ? summaryLines.map((s) => `  - ${s}`) : ["  (none yet)"]),
   ];
   if (output.classes.length) {
     lines.push("", `Tailwind classes to apply: ${output.classes.join(" ")}`);
