@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import Tag from "@/components/Tag";
+import { SignalChip } from "@/components/SignalChip";
+import { sig, type SignalInstance } from "@/data/signals";
 
 interface ProspectContact {
   id: string;
@@ -43,7 +45,7 @@ interface ProspectRow {
   domain: string;
   actionGuidanceCount: number;
   actionGuidanceLabel: string;
-  signals: Array<{ variant: "green" | "blue" | "orange" | "yellow" | "neutral"; text: string }>;
+  signals: SignalInstance[];
   priority: "P1" | "P2" | "P3" | "P4";
   contacts: ProspectContact[];
 }
@@ -55,10 +57,7 @@ const prospects: ProspectRow[] = [
     domain: "northwindlabs.com",
     actionGuidanceCount: 1,
     actionGuidanceLabel: "Recent Series B announced",
-    signals: [
-      { variant: "green", text: "Marketing Hub QL" },
-      { variant: "yellow", text: "Recent Funding Round" },
-    ],
+    signals: [sig("funding-round"), sig("recent-ql")],
     priority: "P1",
     contacts: [
       {
@@ -90,10 +89,7 @@ const prospects: ProspectRow[] = [
     domain: "latticestudios.io",
     actionGuidanceCount: 2,
     actionGuidanceLabel: "Active competitor renewal window",
-    signals: [
-      { variant: "green", text: "Competitive Renewal" },
-      { variant: "orange", text: "3rd Party Intent Signals" },
-    ],
+    signals: [sig("former-customer"), sig("viewed-pricing")],
     priority: "P1",
     contacts: [],
   },
@@ -103,7 +99,7 @@ const prospects: ProspectRow[] = [
     domain: "harborline.co",
     actionGuidanceCount: 1,
     actionGuidanceLabel: "Multiple non-QL demand signals",
-    signals: [{ variant: "blue", text: "Non-QL Demand" }],
+    signals: [sig("viewed-pricing")],
     priority: "P2",
     contacts: [],
   },
@@ -113,9 +109,7 @@ const prospects: ProspectRow[] = [
     domain: "carbonsix.ai",
     actionGuidanceCount: 1,
     actionGuidanceLabel: "Inbound demo request",
-    signals: [
-      { variant: "green", text: "Marketing Hub QL" },
-    ],
+    signals: [sig("recent-ql")],
     priority: "P2",
     contacts: [],
   },
@@ -125,9 +119,7 @@ const prospects: ProspectRow[] = [
     domain: "verdantbio.com",
     actionGuidanceCount: 1,
     actionGuidanceLabel: "Hiring sales leadership",
-    signals: [
-      { variant: "yellow", text: "Recent Funding Round" },
-    ],
+    signals: [sig("hiring-surge")],
     priority: "P3",
     contacts: [],
   },
@@ -137,7 +129,7 @@ const prospects: ProspectRow[] = [
     domain: "skylinefinance.com",
     actionGuidanceCount: 1,
     actionGuidanceLabel: "Inbound contact form submission",
-    signals: [{ variant: "blue", text: "Non-QL Demand" }],
+    signals: [sig("viewed-pricing")],
     priority: "P3",
     contacts: [],
   },
@@ -288,10 +280,12 @@ const FullProspectBook = () => {
                     </td>
                     <td className="border-b border-border px-4 py-3 align-middle">
                       <div className="flex flex-wrap gap-1">
-                        {prospect.signals.map(signal => (
-                          <Tag key={signal.text} variant={signal.variant === "neutral" ? "neutral" : signal.variant}>
-                            {signal.text}
-                          </Tag>
+                        {prospect.signals.map((signal, i) => (
+                          <SignalChip
+                            key={`${signal.id}-${i}`}
+                            signal={signal}
+                            owner={{ kind: "company", id: prospect.id, name: prospect.name }}
+                          />
                         ))}
                       </div>
                     </td>

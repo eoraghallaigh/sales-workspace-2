@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback, useEffect, type ReactNode } from "react";
-import { Plus, Loader2, FileEdit, Mail, Phone, ListTodo, Calendar, MoreHorizontal, ChevronLeft } from "lucide-react";
+import { Plus, Loader2, FileEdit, Mail, Phone, ListTodo, Calendar, MoreHorizontal, ChevronLeft, ChevronDown } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
 import ContactFeedbackModal from "@/components/ContactFeedbackModal";
@@ -8,7 +8,7 @@ import { Link, useParams, useNavigate, useSearchParams, useLocation } from "reac
 import { useCyclePath } from "@/hooks/useCyclePath";
 import { Layout } from "@/components/Layout";
 import StrategyCompaniesSubNav from "@/components/StrategyCompaniesSubNav";
-import Tag from "@/components/Tag";
+import { SignalChipRow } from "@/components/SignalChip";
 import { ResearchEmptyCard } from "@/components/StrategyAgentPrompts";
 import AgentReasoningSteps from "@/components/AgentReasoningSteps";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ import { OutreachSequenceCard } from "@/components/OutreachSequenceCard";
 import { TouchDots, type TouchStatus } from "@/components/TouchDot";
 
 import { getCompanyStrategy } from "@/data/companyStrategies";
+import { getContactDossier } from "@/data/contactDossier";
 import PlayHeader from "@/components/PlayHeader";
 import { usePlays } from "@/contexts/PlaysContext";
 import { getPlaysForCompany } from "@/data/playData";
@@ -78,19 +79,41 @@ const openFullResearch = (companyId: string, companyName: string) => {
 const InfoCard = ({
   title,
   maxHeight = "max-h-[600px]",
+  collapsible = false,
+  defaultCollapsed = false,
   children,
 }: {
   title: string;
   maxHeight?: string;
+  collapsible?: boolean;
+  defaultCollapsed?: boolean;
   children: ReactNode;
-}) => (
-  <div className={`bg-fill-secondary rounded-300 border border-core-subtle shadow-100 flex flex-col overflow-hidden ${maxHeight}`}>
-    <div className="px-6 py-4 border-b border-border-subtle shrink-0">
-      <h2 className="heading-100 text-foreground">{title}</h2>
+}) => {
+  const [open, setOpen] = useState(!(collapsible && defaultCollapsed));
+  const showContent = !collapsible || open;
+  return (
+    <div className={`bg-fill-secondary rounded-300 border border-core-subtle shadow-100 flex flex-col overflow-hidden ${showContent ? maxHeight : ""}`}>
+      <div className={`px-6 py-6 shrink-0 ${showContent ? "border-b border-border-subtle" : ""}`}>
+        {collapsible ? (
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            className="flex items-center gap-2 w-full text-left"
+          >
+            <ChevronDown
+              className={`h-4 w-4 text-muted-foreground transition-transform shrink-0 ${open ? "" : "-rotate-90"}`}
+            />
+            <h2 className="heading-100 text-foreground">{title}</h2>
+          </button>
+        ) : (
+          <h2 className="heading-100 text-foreground">{title}</h2>
+        )}
+      </div>
+      {showContent && <div className="overflow-y-auto px-6 py-4">{children}</div>}
     </div>
-    <div className="overflow-y-auto px-6 py-4">{children}</div>
-  </div>
-);
+  );
+};
 
 const ProspectingStrategy = () => {
   const { companyId } = useParams<{companyId: string;}>();
@@ -101,7 +124,6 @@ const ProspectingStrategy = () => {
   const backState = location.state as { from?: string; fromLabel?: string } | null;
   const [searchParams] = useSearchParams();
   const emptyParam = searchParams.get("empty");
-  const fromPlay = searchParams.get("fromPlay");
   // hasResearch / hasSequences are owned per-company. Initial defaults come from:
   //   1. ?empty=… URL param (demo override) — wins if present
   //   2. company.hasGeneratedStrategy (data-driven default for P2+)
@@ -110,6 +132,8 @@ const ProspectingStrategy = () => {
   const [hasSequences, setHasSequences] = useState(true);
   const [isRunningResearch, setIsRunningResearch] = useState(false);
   const [isBuildingSequences, setIsBuildingSequences] = useState(false);
+  // Collapse the company header to just the back link + name once the content scrolls.
+  const [condensed, setCondensed] = useState(false);
   const generationTimersRef = useRef<number[]>([]);
 
   const createStrategy = useCallback(() => {
@@ -500,7 +524,7 @@ const ProspectingStrategy = () => {
         if (sections.length === 0) {
           return (
             <div className="py-12 text-center body-100 text-muted-foreground">
-              No logged activity yet for {primaryContact?.name || "this contact"}.
+              No logged activity yet for {currentCompany.name}.
             </div>
           );
         }
@@ -834,7 +858,7 @@ const ProspectingStrategy = () => {
 
         {/* Main column - company header + content */}
         <div className="flex flex-col flex-1 overflow-hidden">
-          <div className="bg-card border-b border-core-subtle pl-8 pr-8 pt-6 pb-4" onWheel={(e) => e.stopPropagation()}>
+          <div className={`bg-card border-b border-core-subtle px-8 transition-all duration-200 ${condensed ? "py-2.5" : "pt-6 pb-4"}`} onWheel={(e) => e.stopPropagation()}>
             <Link
               to={backState?.from ?? cyclePath("/prospecting")}
               className="inline-flex items-center gap-1 heading-25 text-text-interactive hover:underline"
@@ -842,6 +866,9 @@ const ProspectingStrategy = () => {
               <ChevronLeft className="h-3 w-3" />
               <span>{backState?.fromLabel ?? "Prospecting"}</span>
             </Link>
+            {condensed ? (
+              <h1 className="heading-200 text-foreground mt-1.5 truncate">{currentCompany.name}</h1>
+            ) : (
             <div className="flex items-start justify-between gap-4 mt-3">
               <div className="flex items-center gap-3">
                 <img src={companyLogoPlaceholder} alt="" className="w-10 h-10 rounded" />
@@ -863,6 +890,13 @@ const ProspectingStrategy = () => {
                   >
                     Open company record <TrellisIcon name="externalLink" size={12} />
                   </a>
+                  {currentCompany.signals.length > 0 && (
+                    <SignalChipRow
+                      signals={currentCompany.signals}
+                      owner={{ kind: "company", id: currentCompany.id, name: currentCompany.name }}
+                      className="mt-2"
+                    />
+                  )}
                 </div>
               </div>
               <div className="flex flex-col items-end gap-2 shrink-0">
@@ -881,6 +915,7 @@ const ProspectingStrategy = () => {
                 <TouchDots statuses={(currentCompany.touches?.touchStatuses || []) as TouchStatus[]} />
               </div>
             </div>
+            )}
           </div>
 
           {/* Content row */}
@@ -909,7 +944,7 @@ const ProspectingStrategy = () => {
             )}
 
           {/* Strategy content */}
-          <div className={`flex-1 overflow-y-auto p-8 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+          <div onScroll={(e) => setCondensed(e.currentTarget.scrollTop > 48)} className={`flex-1 overflow-y-auto p-8 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
             {activeVariantId !== "default" && (
               <div
                 role="status"
@@ -958,15 +993,11 @@ const ProspectingStrategy = () => {
                 />
               </TabsList>
               </div>
-              ) : (
-              <div className="px-6 py-4 border-b border-border-subtle">
-                <h2 className="heading-100 text-foreground">Strategy</h2>
-              </div>
-              )}
+              ) : null}
 
               <TabsContent value="strategy" className="px-6 pt-12 pb-6 mt-0">
                 {companyPlays.map((play) => (
-                  <PlayHeader key={play.id} play={play} defaultOpen={play.id !== fromPlay} />
+                  <PlayHeader key={play.id} play={play} />
                 ))}
                 {isRunningResearch ? (
                   <div className="flex items-center justify-center min-h-[420px] animate-fade-in">
@@ -1001,7 +1032,7 @@ const ProspectingStrategy = () => {
                   <Collapsible defaultOpen className="mb-12">
                     <CollapsibleTrigger className="flex items-center gap-2 w-full group">
                       <TrellisIcon name="downCarat" size={12} className="text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
-                      <h3 className="heading-200 text-foreground">TL;DR</h3>
+                      <h3 className="heading-200 text-foreground">Company Research</h3>
                     </CollapsibleTrigger>
                     <CollapsibleContent className="mt-3">
                       <ul className="list-disc pl-5 flex flex-col gap-2.5">
@@ -1060,11 +1091,15 @@ const ProspectingStrategy = () => {
 
                   {outreachTargets.map((contact, index) => {
                         const contactDetail = contactDetails[contact.id];
+                        const dossier = getContactDossier(
+                          { id: contact.id, name: contact.name, role: contact.role, signals: contact.signals, qlData: contact.qlData },
+                          { id: currentCompany.id, name: currentCompany.name, industry: currentCompany.industry },
+                        );
                         return (
                           <div
                             key={contact.id}
-                            className="mb-6 rounded-100 border border-core-subtle overflow-hidden">
-                            
+                            className="mb-6 rounded-100 border-100 border-core-subtle overflow-hidden pb-6">
+
                         {/* Card header */}
                         <div
                               className="flex items-center justify-between gap-3 px-6 py-4 bg-[var(--color-fill-surface-recessed)] cursor-pointer"
@@ -1111,6 +1146,16 @@ const ProspectingStrategy = () => {
                           </div>
                         </div>
 
+                        {contact.signals.length > 0 && (
+                          <div className="px-6 py-3 bg-card">
+                            <SignalChipRow
+                              signals={contact.signals}
+                              owner={{ kind: "contact", id: contact.id, name: contact.name, role: contact.role }}
+                              className="mt-4 mb-4"
+                            />
+                          </div>
+                        )}
+
                         {/* Card body */}
                         {loadingContactIds.has(contact.id) ? (
                           <div key={`loading-${contact.id}`} className="px-6 py-8 bg-card flex items-center justify-center gap-3 animate-fade-in">
@@ -1144,34 +1189,26 @@ const ProspectingStrategy = () => {
                                 {contact.enrolledInSequence ? "Enrolled in a sequence" : "Not enrolled in a sequence"}
                               </div>
                             </div>
-                            {contact.signals.length > 0 && (
-                              <div className="flex flex-wrap items-start gap-2 mt-4">
-                                {contact.signals.map((signal, idx) => (
-                                  <Tag key={idx} variant={signal.variant}>{signal.text}</Tag>
-                                ))}
-                              </div>
-                            )}
                           </div>
                         ) : (
-                        <div key={`content-${contact.id}`} className="px-6 pt-4 pb-7 bg-card animate-fade-in">
+                        <div key={`content-${contact.id}`} className="px-6 pt-0 pb-0 bg-card animate-fade-in">
                           {/* Description */}
                           <p className="body-100 text-foreground leading-relaxed mb-4">
-                            {strategy.contactDescription(contact.name.split(" ")[0], currentCompany.name)}
+                            {dossier.blurb}
                           </p>
 
                           {/* Primary Friction */}
                           <p className="heading-50 text-foreground mb-1">Primary Friction:</p>
                           <p className="body-100 text-foreground leading-relaxed mb-4">
-                            {strategy.primaryFriction(currentCompany.name)}
+                            {dossier.primaryFriction}
                           </p>
 
                           {/* Call */}
                           {(() => {
                             const outreachState = getOutreachState(contact.id, contact.name.split(" ")[0]);
-                            const firstName = contact.name.split(" ")[0];
-                            const defaultCallScript = strategy.callScript(currentCompany.name, firstName);
-                            const defaultLinkedInMsg = strategy.linkedInMessage(currentCompany.name, firstName);
-                            const emailTemplates = strategy.emailTemplates(currentCompany.name, firstName);
+                            const defaultCallScript = dossier.callScript;
+                            const defaultLinkedInMsg = dossier.linkedInMessage;
+                            const emailTemplates = dossier.emails;
                             return (
                               <OutreachSequenceCard
                                 contact={{
@@ -1182,13 +1219,13 @@ const ProspectingStrategy = () => {
                                 }}
                                 callBullets={
                                   editedCallBullets[contact.id] ??
-                                  strategy.callBullets(currentCompany.name)
+                                  dossier.callBullets
                                 }
                                 onCallBulletChange={(idx, value) => {
                                   setEditedCallBullets((prev) => {
                                     const current =
                                       prev[contact.id] ??
-                                      strategy.callBullets(currentCompany.name);
+                                      dossier.callBullets;
                                     const next = [...current];
                                     next[idx] = value;
                                     return { ...prev, [contact.id]: next };
@@ -1285,6 +1322,13 @@ const ProspectingStrategy = () => {
                                     </button>
                                     <div className="detail-100 text-muted-foreground">{contact.role}</div>
                                     <div className="detail-100 text-muted-foreground truncate">{email}</div>
+                                    {contact.signals.length > 0 && (
+                                      <SignalChipRow
+                                        signals={contact.signals}
+                                        owner={{ kind: "contact", id: contact.id, name: contact.name, role: contact.role }}
+                                        className="mt-2"
+                                      />
+                                    )}
                                   </div>
                                   <div className="flex flex-col items-end gap-1 shrink-0">
                                     <Button
@@ -1326,11 +1370,11 @@ const ProspectingStrategy = () => {
             </Tabs>
             </div>
             {!isNarrow && (
-              <div className="flex flex-col gap-8 flex-[4_1_0%] min-w-0">
-                <InfoCard title="Company data" maxHeight="max-h-[640px]">{companyBody}</InfoCard>
-                <InfoCard title="Activity" maxHeight="max-h-[640px]">{activityBody}</InfoCard>
-                <InfoCard title="Deals" maxHeight="max-h-[480px]">{dealsBody}</InfoCard>
-                <InfoCard title="Notes" maxHeight="max-h-[320px]">{notesBody}</InfoCard>
+              <div className="flex flex-col gap-4 flex-[4_1_0%] min-w-0">
+                <InfoCard title="Company data" maxHeight="max-h-[640px]" collapsible defaultCollapsed>{companyBody}</InfoCard>
+                <InfoCard title="Activity" maxHeight="max-h-[640px]" collapsible defaultCollapsed>{activityBody}</InfoCard>
+                <InfoCard title="Deals" maxHeight="max-h-[480px]" collapsible defaultCollapsed>{dealsBody}</InfoCard>
+                <InfoCard title="Notes" maxHeight="max-h-[320px]" collapsible defaultCollapsed>{notesBody}</InfoCard>
               </div>
             )}
             </div>
@@ -1344,6 +1388,12 @@ const ProspectingStrategy = () => {
         const drawerContact = outreachTargets.find(c => c.id === contactDrawerId)
           || otherContacts.find(c => c.id === contactDrawerId);
         const detail = contactDetails[contactDrawerId];
+        const drawerDossier = drawerContact
+          ? getContactDossier(
+              { id: drawerContact.id, name: drawerContact.name, role: drawerContact.role, signals: drawerContact.signals, qlData: drawerContact.qlData },
+              { id: currentCompany.id, name: currentCompany.name, industry: currentCompany.industry },
+            )
+          : undefined;
         const fallbackContact = drawerContact && {
           id: contactDrawerId,
           name: drawerContact.name,
@@ -1376,6 +1426,13 @@ const ProspectingStrategy = () => {
             onClose={() => setContactDrawerId(null)}
             contact={contact}
             companyLogo={companyLogoPlaceholder}
+            signals={drawerContact?.signals ?? []}
+            signalsOwner={
+              drawerContact
+                ? { kind: "contact", id: drawerContact.id, name: drawerContact.name, role: drawerContact.role }
+                : undefined
+            }
+            dossier={drawerDossier}
             actionsRow={actionDefs.map((action) => {
               const handleClick =
                 action.label === "Email"

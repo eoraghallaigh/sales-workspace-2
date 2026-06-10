@@ -12,7 +12,7 @@ import {
 import { TableToolbar } from "@/components/ui/table-toolbar";
 import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { Company } from "@/components/CompanyCard";
-import Tag from "@/components/Tag";
+import { SignalChipRow } from "@/components/SignalChip";
 import PvsTooltip from "@/components/PvsTooltip";
 import CompanyPlayTags from "@/components/CompanyPlayTags";
 import ContactOutreachAvatars from "@/components/ContactOutreachAvatars";
@@ -173,13 +173,10 @@ const CompaniesTableView = ({
                   </td>
                   <td className={bodyCellClass}>
                     {displayedSignals.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {displayedSignals.map((signal) => (
-                          <Tag key={signal.text} variant={signal.variant}>
-                            {signal.text}
-                          </Tag>
-                        ))}
-                      </div>
+                      <SignalChipRow
+                        signals={displayedSignals}
+                        owner={{ kind: "company", id: company.id, name: company.name }}
+                      />
                     ) : (
                       <span className="body-100 text-muted-foreground">{getWhyNow(company)}</span>
                     )}

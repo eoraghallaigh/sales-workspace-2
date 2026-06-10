@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import Tag from "@/components/Tag";
+import { SignalChipRow } from "@/components/SignalChip";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { RecommendedContact } from "@/components/CompanyCard";
 
@@ -182,19 +182,11 @@ const AddContactsModal = ({
                             : "None"}
                         </TableCell>
                         <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {contact.signals.length === 0 ? (
-                              <span className="detail-200 text-muted-foreground">
-                                —
-                              </span>
-                            ) : (
-                              contact.signals.map((signal, idx) => (
-                                <Tag key={idx} variant={signal.variant}>
-                                  {signal.text}
-                                </Tag>
-                              ))
-                            )}
-                          </div>
+                          <SignalChipRow
+                            signals={contact.signals}
+                            owner={{ kind: "contact", id: contact.id, name: contact.name, role: contact.role }}
+                            emptyLabel="—"
+                          />
                         </TableCell>
                       </TableRow>
                     );

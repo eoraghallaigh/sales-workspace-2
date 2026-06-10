@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { TableHeaderCell } from "@/components/ui/table-header-cell";
 import { TableDataCell } from "@/components/ui/table-data-cell";
-import { Mail, Phone, Calendar, ChevronRight, Search, ArrowUpDown } from "lucide-react";
+import { Mail, Phone, Calendar, ChevronRight, Search, ArrowUpDown, Globe, FileText, Video, Linkedin } from "lucide-react";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import CollapsibleSection from "@/components/CollapsibleSection";
 import QLSummary from "@/components/QLSummary";
 import { ContactDetail } from "@/data/contactDetails";
 import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
+import type { ContactDossier } from "@/data/contactDossier";
 
 interface ContactDetailSectionsProps {
   contact: ContactDetail;
@@ -18,15 +19,44 @@ interface ContactDetailSectionsProps {
   defaultOpen?: boolean;
   /** Whether to show the Deals section (default true) */
   showDeals?: boolean;
+  dossier?: ContactDossier;
 }
 
 const ContactDetailSections = ({
   contact,
   companyLogo,
   defaultOpen = true,
-  showDeals = true
+  showDeals = true,
+  dossier
 }: ContactDetailSectionsProps) => {
   const [expandedActivityIds, setExpandedActivityIds] = useState<string[]>([]);
+
+  const iconFor = (type: string) => {
+    switch (type) {
+      case "email":
+        return Mail;
+      case "call":
+        return Phone;
+      case "meeting":
+        return Calendar;
+      case "linkedin":
+        return Linkedin;
+      case "pageview":
+        return Globe;
+      case "form":
+        return FileText;
+      case "webinar":
+        return Video;
+      default:
+        return Calendar;
+    }
+  };
+
+  const activities = dossier?.activity?.length
+    ? dossier.activity.map((a) => ({ id: a.id, type: a.type as string, title: a.title, when: a.when, detail: a.detail }))
+    : (contact.recentActivity ?? []).map((a) => ({ id: a.id, type: a.type as string, title: a.title, when: `${a.date} at ${a.time}`, detail: a.preview }));
+
+  const conversions = dossier?.conversions ?? [];
 
   return (
     <>
@@ -146,46 +176,21 @@ const ContactDetailSections = ({
               </tr>
             </thead>
             <tbody>
-              {contact.name === "Jennifer Park" ?
-              <>
-                  <tr className="flex">
-                    <TableDataCell className="flex-1 w-auto">
-                      <span className="body-100 text-[#8B1538]">{contact.name}</span>
-                    </TableDataCell>
-                    <TableDataCell className="flex-1 w-auto">
-                      <div className="flex flex-col gap-1">
-                        <span className="body-100 text-foreground">Invited User Accepted Invitation</span>
-                        <span className="body-50 text-muted-foreground">(Additional Info) | API</span>
-                        <span className="body-50 text-muted-foreground">2 days ago</span>
-                      </div>
-                    </TableDataCell>
-                  </tr>
-                  <tr className="flex">
-                    <TableDataCell className="flex-1 w-auto">
-                      <span className="body-100 text-[#8B1538]">{contact.name}</span>
-                    </TableDataCell>
-                    <TableDataCell className="flex-1 w-auto">
-                      <div className="flex flex-col gap-1">
-                        <span className="body-100 text-foreground">Invited User Accepted Invitation</span>
-                        <span className="body-50 text-muted-foreground">(Additional Info) | API</span>
-                        <span className="body-50 text-muted-foreground">7 days ago</span>
-                      </div>
-                    </TableDataCell>
-                  </tr>
-                </> :
-              contact.name === "Priya Sharma" ?
-              <tr className="flex">
+              {conversions.length > 0 ?
+              conversions.map((cv) =>
+              <tr className="flex" key={cv.id}>
                   <TableDataCell className="flex-1 w-auto">
                     <span className="body-100 text-[#8B1538]">{contact.name}</span>
                   </TableDataCell>
                   <TableDataCell className="flex-1 w-auto">
                     <div className="flex flex-col gap-1">
-                      <span className="body-100 text-foreground">Viewed Pricing Page</span>
-                      <span className="body-50 text-muted-foreground">5 days ago</span>
+                      <span className="body-100 text-foreground">{cv.label}</span>
+                      <span className="body-50 text-muted-foreground">{cv.detail}</span>
+                      <span className="body-50 text-muted-foreground">{cv.when}</span>
                     </div>
                   </TableDataCell>
-                </tr> :
-
+                </tr>
+              ) :
               <tr className="flex">
                   <TableDataCell className="flex-1 w-auto" colSpan={2}>
                     <span className="body-100 text-muted-foreground">No recent conversions for this contact.</span>
@@ -258,9 +263,8 @@ const ContactDetailSections = ({
 
         {/* Activity Timeline */}
         <div className="space-y-3">
-          {contact.recentActivity && contact.recentActivity.length > 0 ? contact.recentActivity.map((activity, index) => {
-            const activityIcon = activity.type === 'email' ? Mail : activity.type === 'call' ? Phone : Calendar;
-            const ActivityIcon = activityIcon;
+          {activities.length > 0 ? activities.map((activity, index) => {
+            const ActivityIcon = iconFor(activity.type);
             const isExpanded = expandedActivityIds.includes(activity.id);
             return (
               <div key={activity.id} className="flex gap-3 items-start">
@@ -268,7 +272,7 @@ const ContactDetailSections = ({
                   <div className="w-8 h-8 rounded-full border border-core-subtle bg-trellis-white flex items-center justify-center flex-shrink-0">
                     <ActivityIcon className="h-4 w-4 text-foreground" />
                   </div>
-                  {index < contact.recentActivity.length - 1 && <div className="w-0.5 flex-1 bg-border mt-1" />}
+                  {index < activities.length - 1 && <div className="w-0.5 flex-1 bg-border mt-1" />}
                 </div>
 
                 <div className="flex-1 border border-core-subtle rounded-lg p-4 bg-trellis-white">
@@ -283,12 +287,12 @@ const ContactDetailSections = ({
                       <span className="link-100 text-foreground">{activity.title}</span>
                     </div>
                     <span className="detail-100 text-muted-foreground whitespace-nowrap ml-2">
-                      {activity.date} at {activity.time}
+                      {activity.when}
                     </span>
                   </div>
-                  {isExpanded && activity.preview &&
+                  {isExpanded && activity.detail &&
                   <div className="body-100 text-muted-foreground ml-6 mt-2 italic">
-                      {activity.preview}
+                      {activity.detail}
                     </div>
                   }
                 </div>

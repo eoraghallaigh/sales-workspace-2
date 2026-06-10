@@ -16,7 +16,7 @@ import {
   Copy,
   Building2
 } from "lucide-react";
-import Tag from "@/components/Tag";
+import { SignalChipRow } from "@/components/SignalChip";
 import CollapsibleSection from "@/components/CollapsibleSection";
 import { Company } from "@/components/CompanyCard";
 import { CompanyDetail } from "@/data/companyDetails";
@@ -93,13 +93,11 @@ const CompanyTakeoverView = ({
 
               {/* Signals */}
               {company.signals.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {company.signals.map((signal, idx) => (
-                    <Tag key={idx} variant={signal.variant}>
-                      {signal.text}
-                    </Tag>
-                  ))}
-                </div>
+                <SignalChipRow
+                  signals={company.signals}
+                  owner={{ kind: "company", id: company.id, name: company.name }}
+                  className="mb-6"
+                />
               )}
 
               {/* Quick Actions */}
