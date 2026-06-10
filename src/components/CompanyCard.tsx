@@ -48,6 +48,8 @@ import ContactFeedbackModal, {
 } from "@/components/ContactFeedbackModal";
 import { useCompanyContacts } from "@/hooks/useCompanyContacts";
 import { getAdditionalContactsForCompany } from "@/data/allContacts";
+import { SignalChipRow } from "@/components/SignalChip";
+import type { SignalInstance } from "@/data/signals";
 
 export interface QLData {
   requestType: string;
@@ -66,10 +68,7 @@ export interface RecommendedContact {
   sequenceEnrollmentStatus?: "enrolled" | "not-currently-enrolled" | "never-enrolled";
   outreachStrategyCreated?: boolean;
   recentConversions?: number;
-  signals: Array<{
-    variant: "green" | "blue" | "yellow" | "orange";
-    text: string;
-  }>;
+  signals: SignalInstance[];
   qlData?: QLData;
 }
 export interface Company {
@@ -81,10 +80,7 @@ export interface Company {
   pvsScore?: "High" | "Medium" | "Low";
   conversionTrigger?: string;
   status: "New" | "Unworked QL" | "Unworked P1" | "In Progress" | "Over SLA" | "Worked" | "Snoozed" | "Dismissed";
-  signals: Array<{
-    variant: "green" | "blue" | "yellow" | "orange";
-    text: string;
-  }>;
+  signals: SignalInstance[];
   tasks: Task[];
   touches: {
     contactsReached: {
@@ -342,6 +338,11 @@ const CompanyCard = ({
                 )}
               </p>
               <CompanyPlayTags companyId={company.id} excludePlayId={currentPlayId} className="mt-1" />
+              <SignalChipRow
+                signals={company.signals}
+                owner={{ kind: "company", id: company.id, name: company.name }}
+                className="mt-3"
+              />
             </div>
           </div>
         </div>

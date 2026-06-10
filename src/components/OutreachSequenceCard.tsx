@@ -8,6 +8,7 @@ import {
   Sparkles,
   Undo2,
   Redo2,
+  ChevronDown,
 } from "lucide-react";
 import {
   DndContext,
@@ -77,6 +78,7 @@ const touchIcon = (t: Touch) => {
 
 const renderEmailMeta = (status: EmailStatus) => {
   if (status.kind === "scheduled") {
+    if (status.sendsAt === "when enrolled") return null;
     return (
       <span className="detail-200 text-muted-foreground flex items-center gap-1.5">
         <TrellisIcon name="clock" size={12} className="text-muted-foreground" />
@@ -100,10 +102,11 @@ const renderEmailMeta = (status: EmailStatus) => {
 
 const renderCallMeta = (s: CallState, isEnrolled: boolean) => {
   if (s.kind === "not-attempted") {
+    if (!isEnrolled) return null;
     return (
       <span className="detail-200 text-muted-foreground flex items-center gap-1.5">
         <TrellisIcon name="clock" size={12} className="text-muted-foreground" />
-        {isEnrolled ? "Task created when enrolled" : "Task created on enrollment"}
+        Task created when enrolled
       </span>
     );
   }
@@ -127,10 +130,11 @@ const renderCallMeta = (s: CallState, isEnrolled: boolean) => {
 
 const renderLinkedInMeta = (s: LinkedInState, isEnrolled: boolean) => {
   if (s.kind === "not-sent") {
+    if (!isEnrolled) return null;
     return (
       <span className="detail-200 text-muted-foreground flex items-center gap-1.5">
         <TrellisIcon name="clock" size={12} className="text-muted-foreground" />
-        {isEnrolled ? "Task created when enrolled" : "Task created on enrollment"}
+        Task created when enrolled
       </span>
     );
   }
@@ -818,15 +822,16 @@ const SortableRow = ({
             {touch.subject}
           </span>
         )}
-        <TrellisIcon
-          name="downCarat"
-          size={12}
-          className={`ml-auto text-muted-foreground transition-transform ${
+        <ChevronDown
+          className={`ml-auto h-4 w-4 text-muted-foreground transition-transform ${
             isExpanded ? "" : "-rotate-90"
           }`}
         />
       </div>
-      <div className="mt-1">{renderTouchMeta(touch, isEnrolled)}</div>
+      {(() => {
+        const meta = renderTouchMeta(touch, isEnrolled);
+        return meta ? <div className="mt-1">{meta}</div> : null;
+      })()}
     </div>
   );
 
@@ -1148,7 +1153,7 @@ export const OutreachSequenceCard = ({
   const draggable = !isEnrolled;
 
   const mutedAttribution = (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1.5 ml-3">
       <Sparkles size={12} className="text-muted-foreground" aria-hidden />
       <span className="detail-200 text-muted-foreground">Created by Sequencing Agent ·</span>
       <button
@@ -1217,15 +1222,14 @@ export const OutreachSequenceCard = ({
         <Collapsible open={isExpanded} onOpenChange={onToggleExpanded}>
           <div className="flex flex-wrap items-center gap-2 py-3">
             <CollapsibleTrigger className="flex items-center gap-2">
-              <TrellisIcon
-                name="downCarat"
-                size={12}
-                className={`text-muted-foreground transition-transform ${
+              <ChevronDown
+                className={`h-4 w-4 text-muted-foreground transition-transform ${
                   isExpanded ? "" : "-rotate-90"
                 }`}
               />
               <span className="heading-50 text-foreground">5-touch sequence</span>
             </CollapsibleTrigger>
+            {mutedAttribution}
             <div className="flex-1" />
             {status !== null && renderStatusBadgeStack(status, sequence, localOverride)}
           </div>
@@ -1289,7 +1293,7 @@ export const OutreachSequenceCard = ({
                 </div>
               </SortableContext>
             </DndContext>
-            <div className="mt-10 flex items-center justify-between gap-6">
+            <div className="mt-4 flex items-center justify-between gap-6">
               <div>
               {status === null && (
                 <div className="flex items-center gap-6">
@@ -1324,7 +1328,6 @@ export const OutreachSequenceCard = ({
                 </div>
               )}
               </div>
-              {mutedAttribution}
             </div>
           </CollapsibleContent>
         </Collapsible>

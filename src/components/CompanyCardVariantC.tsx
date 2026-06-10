@@ -24,6 +24,7 @@ import { MiniTouchDots, type TouchStatus } from "@/components/TouchDot";
 import PvsTooltip from "@/components/PvsTooltip";
 import CompanyPlayTags from "@/components/CompanyPlayTags";
 import ContactOutreachAvatars from "@/components/ContactOutreachAvatars";
+import { SignalChipRow } from "@/components/SignalChip";
 
 interface CompanyCardVariantCProps {
   company: Company;
@@ -132,11 +133,16 @@ const CompanyCardVariantC = ({
                 </span>
               </PvsTooltip>
             </span>
-            {!currentPlayId && (
+            {!currentPlayId && displayedSignals.length > 0 && (
+              <SignalChipRow
+                signals={displayedSignals}
+                owner={{ kind: "company", id: company.id, name: company.name }}
+                className="gap-1.5"
+              />
+            )}
+            {!currentPlayId && displayedSignals.length === 0 && (
               <span className="detail-200 text-muted-foreground whitespace-nowrap truncate">
-                {displayedSignals.length > 0
-                  ? `· ${displayedSignals.map((s) => s.text).join(" · ")}`
-                  : `· ${fallbackWhyNow}`}
+                · {fallbackWhyNow}
               </span>
             )}
           </div>

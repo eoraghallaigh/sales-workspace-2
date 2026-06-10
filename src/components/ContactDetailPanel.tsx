@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import ContactDetailSections from "@/components/ContactDetailSections";
 import { ContactDetail } from "@/data/contactDetails";
 import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
+import { SignalChipRow } from "@/components/SignalChip";
+import type { SignalInstance, SignalOwner } from "@/data/signals";
+import type { ContactDossier } from "@/data/contactDossier";
 
 interface ContactDetailPanelProps {
   isOpen: boolean;
@@ -12,6 +15,9 @@ interface ContactDetailPanelProps {
   companyLogo?: string;
   actionsRow?: ReactNode;
   showDeals?: boolean;
+  signals?: SignalInstance[];
+  signalsOwner?: SignalOwner;
+  dossier?: ContactDossier;
 }
 
 const ContactDetailPanel = ({
@@ -21,6 +27,9 @@ const ContactDetailPanel = ({
   companyLogo,
   actionsRow,
   showDeals,
+  signals,
+  signalsOwner,
+  dossier,
 }: ContactDetailPanelProps) => {
   const logo = companyLogo || companyLogoPlaceholder;
 
@@ -65,7 +74,14 @@ const ContactDetailPanel = ({
         {actionsRow && <div className="flex items-start gap-4">{actionsRow}</div>}
       </div>
 
-      <ContactDetailSections contact={contact} companyLogo={logo} showDeals={showDeals} />
+      {signals && signals.length > 0 && (
+        <div className="px-6 pb-6 border-b border-border">
+          <p className="heading-50 text-muted-foreground mb-3">Intent signals</p>
+          <SignalChipRow signals={signals} owner={signalsOwner} />
+        </div>
+      )}
+
+      <ContactDetailSections contact={contact} companyLogo={logo} showDeals={showDeals} dossier={dossier} />
     </div>
   );
 };
