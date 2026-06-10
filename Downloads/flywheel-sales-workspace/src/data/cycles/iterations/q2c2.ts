@@ -5,6 +5,32 @@ import type { IterationEntry } from "../types";
 // Each entry's `id` matches the folder name under public/about/iterations/.
 export const q2c2Iterations: IterationEntry[] = [
   {
+    id: "2026-06-10-intent-signals-chips-popover",
+    date: "2026-06-10",
+    label: "intent-signals-chips-popover",
+    whatChanged: [
+      "Intent-signal chips now appear at both company and contact level across the card, table, and list views, the strategy page, and the contact sidebar — each with a plain-English explanation on hover.",
+      "A contact's outreach (blurb, Primary Friction, call script and bullets, LinkedIn message, and email sequence) plus their recent activity and conversions are now generated coherently from that contact's own signals, role, and company.",
+      "Restyled the company-review page: Company data / Activity / Deals / Notes are collapsible cards (collapsed by default), the header condenses to just the back link and company name on scroll, the play explanation banner starts collapsed, and \"TL;DR\" is renamed \"Company Research\".",
+      "Sequence cards drop the \"sends when enrolled\" / \"task created on enrollment\" placeholder lines when not enrolled, move the \"Created by Sequencing Agent\" attribution up beside the sequence title, and reuse the cards' chevron indicator.",
+    ],
+    why: [
+      "Surface buying intent consistently everywhere a rep sees a company or contact, with explanations they can trust at a glance.",
+      "Cut the rep's parsing work — the outreach and the supporting data all reference the same real signals, so each contact reads as one coherent story.",
+      "Reduce visual noise on the company-review page so reps can focus and expand only what they need.",
+    ],
+    prUrl: "https://github.com/eoraghallaigh_hubspot/flywheel-sales-workspace/pull/17",
+    commitment: "outreach-strategy",
+    screenshots: [
+      { src: "/about/iterations/2026-06-10-intent-signals-chips-popover/prospecting-strategy.png", alt: "prospecting-strategy screenshot" },
+      { src: "/about/iterations/2026-06-10-intent-signals-chips-popover/prospecting.png", alt: "prospecting screenshot" },
+      { src: "/about/iterations/2026-06-10-intent-signals-chips-popover/prospecting-table.png", alt: "prospecting-table screenshot" },
+      { src: "/about/iterations/2026-06-10-intent-signals-chips-popover/full-prospect-book.png", alt: "full-prospect-book screenshot" },
+      { src: "/about/iterations/2026-06-10-intent-signals-chips-popover/power-hour.png", alt: "power-hour screenshot" },
+      { src: "/about/iterations/2026-06-10-intent-signals-chips-popover/prospecting-strategy-empty-sequences.png", alt: "prospecting-strategy-empty-sequences screenshot" },
+    ],
+  },
+  {
     id: "2026-06-04-prospecting-page-layout-2",
     date: "2026-06-04",
     label: "prospecting-page-layout",

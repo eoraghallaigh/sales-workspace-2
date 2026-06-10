@@ -1,5 +1,6 @@
 import { Company } from "@/components/CompanyCard";
 import { deriveTouchesForContact } from "@/data/deriveTouches";
+import { sig, type SignalInstance } from "@/data/signals";
 
 const avatarColors = [
   "bg-trellis-purple-600",
@@ -14,15 +15,451 @@ const avatarColors = [
 
 const getRandomColor = () => avatarColors[Math.floor(Math.random() * avatarColors.length)];
 
-// Intent signal definitions - these are the 5 possible intent signals
-type SignalType = { variant: "green" | "blue" | "yellow" | "orange"; text: string };
-
+// Contact-level intent signals. Each references a signal id in the catalog
+// (src/data/signals.ts); the chip resolves its label, colour, and popover.
 const SIGNALS = {
-  COMPETITIVE_RENEWAL: { variant: "green" as const, text: "Competitive Renewal" },
-  NON_QL_DEMAND: { variant: "blue" as const, text: "Non-QL Demand" },
-  RECENT_FUNDING: { variant: "yellow" as const, text: "Recent Funding Round" },
-  THIRD_PARTY_INTENT: { variant: "orange" as const, text: "3rd Party Intent Signals" },
-  MARKETING_HUB_QL: { variant: "green" as const, text: "Marketing Hub Qualified Lead" },
+  VIEWED_PRICING: sig("viewed-pricing"),
+  PAST_HUBSPOT_USER: sig("past-hubspot-user"),
+  RECENT_QL: sig("recent-ql"),
+  ATTENDED_WEBINAR: sig("attended-webinar"),
+  RECENT_HIRE: sig("recent-hire"),
+} satisfies Record<string, SignalInstance>;
+
+// Company-level intent signals, authored per company with specific detail.
+const COMPANY_SIGNALS: Record<string, SignalInstance[]> = {
+  "1": [
+    sig("funding-round", {
+      headline: "Raised $28M Series B",
+      rows: [
+        { label: "Round", value: "Series B" },
+        { label: "Amount", value: "$28M" },
+        { label: "Announced", value: "12 Mar 2026" },
+        { label: "Lead investor", value: "Accel" },
+      ],
+      footnote: "Source: Crunchbase",
+    }),
+    sig("hiring-surge", {
+      headline: "24 open roles, up 45% this quarter",
+      rows: [
+        { label: "Open roles", value: "24" },
+        { label: "Concentrated in", value: "Sales" },
+        { label: "Trend", value: "+45% vs. last quarter" },
+      ],
+      footnote: "Source: job listings",
+    }),
+  ],
+  "2": [
+    sig("new-hire", {
+      headline: "Marcus Bell joined as Chief Revenue Officer",
+      rows: [
+        { label: "Joined", value: "last month" },
+        { label: "Role", value: "Chief Revenue Officer" },
+        { label: "Previously at", value: "Gong" },
+      ],
+      footnote: "Source: LinkedIn",
+    }),
+    sig("tech-stack-change", {
+      headline: "Adopted Snowflake, replacing a legacy warehouse",
+      rows: [
+        { label: "Added", value: "Snowflake" },
+        { label: "Replaced", value: "a legacy warehouse" },
+        { label: "Category", value: "Data platform" },
+        { label: "When", value: "detected this month" },
+      ],
+      footnote: "Source: BuiltWith",
+    }),
+  ],
+  "3": [
+    sig("hiring-surge", {
+      headline: "18 open roles, up 32% this quarter",
+      rows: [
+        { label: "Open roles", value: "18" },
+        { label: "Concentrated in", value: "Engineering" },
+        { label: "Trend", value: "+32% vs. last quarter" },
+      ],
+      footnote: "Source: job listings",
+    }),
+    sig("former-customer", {
+      headline: "Previously a Sales Hub customer",
+      rows: [
+        { label: "Product", value: "Sales Hub" },
+        { label: "Active", value: "2020–2022" },
+        { label: "Churned", value: "switched at renewal" },
+      ],
+      footnote: "Source: CRM history",
+    }),
+  ],
+  "4": [
+    sig("funding-round", {
+      headline: "Raised $65M Series C",
+      rows: [
+        { label: "Round", value: "Series C" },
+        { label: "Amount", value: "$65M" },
+        { label: "Announced", value: "28 Apr 2026" },
+        { label: "Lead investor", value: "Insight Partners" },
+      ],
+      footnote: "Source: Crunchbase",
+    }),
+    sig("new-hire", {
+      headline: "Priya Anand joined as VP of Marketing",
+      rows: [
+        { label: "Joined", value: "6 weeks ago" },
+        { label: "Role", value: "VP of Marketing" },
+        { label: "Previously at", value: "Segment" },
+      ],
+      footnote: "Source: LinkedIn",
+    }),
+  ],
+  "5": [
+    sig("hiring-surge", {
+      headline: "42 open roles, up 60% this quarter",
+      rows: [
+        { label: "Open roles", value: "42" },
+        { label: "Concentrated in", value: "Engineering" },
+        { label: "Trend", value: "+60% vs. last quarter" },
+      ],
+      footnote: "Source: job listings",
+    }),
+    sig("tech-stack-change", {
+      headline: "Adopted Segment, replacing in-house tracking",
+      rows: [
+        { label: "Added", value: "Segment" },
+        { label: "Replaced", value: "in-house tracking" },
+        { label: "Category", value: "Customer data" },
+        { label: "When", value: "detected 3 weeks ago" },
+      ],
+      footnote: "Source: BuiltWith",
+    }),
+  ],
+  "6": [
+    sig("former-customer", {
+      headline: "Previously a Marketing Hub customer",
+      rows: [
+        { label: "Product", value: "Marketing Hub" },
+        { label: "Active", value: "2019–2024" },
+        { label: "Churned", value: "paused after a reorg" },
+      ],
+      footnote: "Source: CRM history",
+    }),
+    sig("new-hire", {
+      headline: "Helen Choi joined as Chief Marketing Officer",
+      rows: [
+        { label: "Joined", value: "2 months ago" },
+        { label: "Role", value: "Chief Marketing Officer" },
+        { label: "Previously at", value: "Klaviyo" },
+      ],
+      footnote: "Source: LinkedIn",
+    }),
+  ],
+  "7": [
+    sig("funding-round", {
+      headline: "Raised $12M Series A",
+      rows: [
+        { label: "Round", value: "Series A" },
+        { label: "Amount", value: "$12M" },
+        { label: "Announced", value: "2 Feb 2026" },
+        { label: "Lead investor", value: "Bessemer" },
+      ],
+      footnote: "Source: Crunchbase",
+    }),
+    sig("hiring-surge", {
+      headline: "18 open roles, up 28% this quarter",
+      rows: [
+        { label: "Open roles", value: "18" },
+        { label: "Concentrated in", value: "Delivery" },
+        { label: "Trend", value: "+28% vs. last quarter" },
+      ],
+      footnote: "Source: job listings",
+    }),
+  ],
+  "8": [
+    sig("new-hire", {
+      headline: "Tomás Rivera joined as VP of Sales",
+      rows: [
+        { label: "Joined", value: "3 weeks ago" },
+        { label: "Role", value: "VP of Sales" },
+        { label: "Previously at", value: "Outreach" },
+      ],
+      footnote: "Source: LinkedIn",
+    }),
+    sig("tech-stack-change", {
+      headline: "Adopted Outreach, replacing manual sequences",
+      rows: [
+        { label: "Added", value: "Outreach" },
+        { label: "Replaced", value: "manual sequences" },
+        { label: "Category", value: "Sales engagement" },
+        { label: "When", value: "detected in April 2026" },
+      ],
+      footnote: "Source: BuiltWith",
+    }),
+  ],
+  "9": [
+    sig("funding-round", {
+      headline: "Raised $40M Series B",
+      rows: [
+        { label: "Round", value: "Series B" },
+        { label: "Amount", value: "$40M" },
+        { label: "Announced", value: "19 May 2026" },
+        { label: "Lead investor", value: "a16z" },
+      ],
+      footnote: "Source: Crunchbase",
+    }),
+    sig("hiring-surge", {
+      headline: "31 open roles, up 51% this quarter",
+      rows: [
+        { label: "Open roles", value: "31" },
+        { label: "Concentrated in", value: "Marketing" },
+        { label: "Trend", value: "+51% vs. last quarter" },
+      ],
+      footnote: "Source: job listings",
+    }),
+  ],
+  "10": [
+    sig("former-customer", {
+      headline: "Previously a Service Hub customer",
+      rows: [
+        { label: "Product", value: "Service Hub" },
+        { label: "Active", value: "for 18 months" },
+        { label: "Churned", value: "downgraded during a cost review" },
+      ],
+      footnote: "Source: CRM history",
+    }),
+    sig("new-hire", {
+      headline: "Dana Whitfield joined as VP of Marketing",
+      rows: [
+        { label: "Joined", value: "last month" },
+        { label: "Role", value: "VP of Marketing" },
+        { label: "Previously at", value: "Ramp" },
+      ],
+      footnote: "Source: LinkedIn",
+    }),
+  ],
+  "11": [
+    sig("hiring-surge", {
+      headline: "24 open roles, up 45% this quarter",
+      rows: [
+        { label: "Open roles", value: "24" },
+        { label: "Concentrated in", value: "Content & Sales" },
+        { label: "Trend", value: "+45% vs. last quarter" },
+      ],
+      footnote: "Source: job listings",
+    }),
+    sig("tech-stack-change", {
+      headline: "Adopted Marketo, replacing Pardot",
+      rows: [
+        { label: "Added", value: "Marketo" },
+        { label: "Replaced", value: "Pardot" },
+        { label: "Category", value: "Marketing automation" },
+        { label: "When", value: "detected last quarter" },
+      ],
+      footnote: "Source: BuiltWith",
+    }),
+  ],
+  "12": [
+    sig("funding-round", {
+      headline: "Raised $18M Series A",
+      rows: [
+        { label: "Round", value: "Series A" },
+        { label: "Amount", value: "$18M" },
+        { label: "Announced", value: "8 Jan 2026" },
+        { label: "Lead investor", value: "Sequoia" },
+      ],
+      footnote: "Source: Crunchbase",
+    }),
+    sig("new-hire", {
+      headline: "Marcus Bell joined as Head of Growth",
+      rows: [
+        { label: "Joined", value: "6 weeks ago" },
+        { label: "Role", value: "Head of Growth" },
+        { label: "Previously at", value: "Notion" },
+      ],
+      footnote: "Source: LinkedIn",
+    }),
+  ],
+  "13": [
+    sig("tech-stack-change", {
+      headline: "Adopted Salesforce, replacing a legacy CRM",
+      rows: [
+        { label: "Added", value: "Salesforce" },
+        { label: "Replaced", value: "a legacy CRM" },
+        { label: "Category", value: "CRM" },
+        { label: "When", value: "detected this month" },
+      ],
+      footnote: "Source: BuiltWith",
+    }),
+    sig("hiring-surge", {
+      headline: "57 open roles, up 60% this quarter",
+      rows: [
+        { label: "Open roles", value: "57" },
+        { label: "Concentrated in", value: "Engineering" },
+        { label: "Trend", value: "+60% vs. last quarter" },
+      ],
+      footnote: "Source: job listings",
+    }),
+    sig("former-customer", {
+      headline: "Previously a Marketing Hub customer",
+      rows: [
+        { label: "Product", value: "Marketing Hub" },
+        { label: "Active", value: "2020–2022" },
+        { label: "Churned", value: "outgrew the Starter tier" },
+      ],
+      footnote: "Source: CRM history",
+    }),
+  ],
+  "14": [
+    sig("new-hire", {
+      headline: "Helen Choi joined as Head of Platform",
+      rows: [
+        { label: "Joined", value: "2 months ago" },
+        { label: "Role", value: "Head of Platform" },
+        { label: "Previously at", value: "Asana" },
+      ],
+      footnote: "Source: LinkedIn",
+    }),
+    sig("hiring-surge", {
+      headline: "12 open roles, up 28% this quarter",
+      rows: [
+        { label: "Open roles", value: "12" },
+        { label: "Concentrated in", value: "Investment team" },
+        { label: "Trend", value: "+28% vs. last quarter" },
+      ],
+      footnote: "Source: job listings",
+    }),
+  ],
+  "15": [
+    sig("funding-round", {
+      headline: "Raised $32M Series B",
+      rows: [
+        { label: "Round", value: "Series B" },
+        { label: "Amount", value: "$32M" },
+        { label: "Announced", value: "28 Apr 2026" },
+        { label: "Lead investor", value: "Insight Partners" },
+      ],
+      footnote: "Source: Crunchbase",
+    }),
+    sig("former-customer", {
+      headline: "Previously a Sales Hub customer",
+      rows: [
+        { label: "Product", value: "Sales Hub" },
+        { label: "Active", value: "2021–2023" },
+        { label: "Churned", value: "switched at renewal" },
+      ],
+      footnote: "Source: CRM history",
+    }),
+  ],
+  "16": [
+    sig("new-hire", {
+      headline: "Priya Anand joined as Chief Marketing Officer",
+      rows: [
+        { label: "Joined", value: "last month" },
+        { label: "Role", value: "Chief Marketing Officer" },
+        { label: "Previously at", value: "Zendesk" },
+      ],
+      footnote: "Source: LinkedIn",
+    }),
+    sig("hiring-surge", {
+      headline: "28 open roles, up 32% this quarter",
+      rows: [
+        { label: "Open roles", value: "28" },
+        { label: "Concentrated in", value: "Customer Success" },
+        { label: "Trend", value: "+32% vs. last quarter" },
+      ],
+      footnote: "Source: job listings",
+    }),
+  ],
+  "17": [
+    sig("hiring-surge", {
+      headline: "21 open roles, up 45% this quarter",
+      rows: [
+        { label: "Open roles", value: "21" },
+        { label: "Concentrated in", value: "Delivery" },
+        { label: "Trend", value: "+45% vs. last quarter" },
+      ],
+      footnote: "Source: job listings",
+    }),
+    sig("tech-stack-change", {
+      headline: "Adopted Intercom, replacing Zendesk",
+      rows: [
+        { label: "Added", value: "Intercom" },
+        { label: "Replaced", value: "Zendesk" },
+        { label: "Category", value: "Support" },
+        { label: "When", value: "detected 3 weeks ago" },
+      ],
+      footnote: "Source: BuiltWith",
+    }),
+  ],
+  "18": [
+    sig("funding-round", {
+      headline: "Raised $65M Series C",
+      rows: [
+        { label: "Round", value: "Series C" },
+        { label: "Amount", value: "$65M" },
+        { label: "Announced", value: "19 May 2026" },
+        { label: "Lead investor", value: "a16z" },
+      ],
+      footnote: "Source: Crunchbase",
+    }),
+    sig("new-hire", {
+      headline: "Tomás Rivera joined as Chief Revenue Officer",
+      rows: [
+        { label: "Joined", value: "3 weeks ago" },
+        { label: "Role", value: "Chief Revenue Officer" },
+        { label: "Previously at", value: "Datadog" },
+      ],
+      footnote: "Source: LinkedIn",
+    }),
+  ],
+  "19": [
+    sig("tech-stack-change", {
+      headline: "Adopted Salesforce, replacing a legacy CRM",
+      rows: [
+        { label: "Added", value: "Salesforce" },
+        { label: "Replaced", value: "a legacy CRM" },
+        { label: "Category", value: "CRM" },
+        { label: "When", value: "detected in April 2026" },
+      ],
+      footnote: "Source: BuiltWith",
+    }),
+    sig("funding-round", {
+      headline: "Raised $110M Series C",
+      rows: [
+        { label: "Round", value: "Series C" },
+        { label: "Amount", value: "$110M" },
+        { label: "Announced", value: "12 Mar 2026" },
+        { label: "Lead investor", value: "Sequoia" },
+      ],
+      footnote: "Source: Crunchbase",
+    }),
+    sig("hiring-surge", {
+      headline: "42 open roles, up 51% this quarter",
+      rows: [
+        { label: "Open roles", value: "42" },
+        { label: "Concentrated in", value: "Sales" },
+        { label: "Trend", value: "+51% vs. last quarter" },
+      ],
+      footnote: "Source: job listings",
+    }),
+  ],
+  "20": [
+    sig("former-customer", {
+      headline: "Previously a Marketing Hub customer",
+      rows: [
+        { label: "Product", value: "Marketing Hub" },
+        { label: "Active", value: "2020–2022" },
+        { label: "Churned", value: "downgraded during a cost review" },
+      ],
+      footnote: "Source: CRM history",
+    }),
+    sig("new-hire", {
+      headline: "Dana Whitfield joined as VP of Sales",
+      rows: [
+        { label: "Joined", value: "2 months ago" },
+        { label: "Role", value: "VP of Sales" },
+        { label: "Previously at", value: "Ramp" },
+      ],
+      footnote: "Source: LinkedIn",
+    }),
+  ],
 };
 
 const getRandomTouches = () => Math.floor(Math.random() * 4); // 0-3 touches
@@ -42,181 +479,168 @@ const touchDeadlines = [
   "December 4th", "December 11th", "November 19th", "December 9th", "December 2nd"
 ];
 
-// Helper to aggregate signals from contacts (deduplicated by text)
-const aggregateSignals = (contacts: Array<{ signals: SignalType[] }>): SignalType[] => {
-  const signalMap = new Map<string, SignalType>();
-  contacts.forEach(contact => {
-    contact.signals.forEach(signal => {
-      if (!signalMap.has(signal.text)) {
-        signalMap.set(signal.text, signal);
-      }
-    });
-  });
-  return Array.from(signalMap.values());
-};
-
 // Pre-defined contact signal combinations for each company (randomized, max 2 per contact)
 const company1Contacts = [
-  { id: "c1", name: "Jennifer Park", initials: "JP", role: "VP, Marketing", avatarColor: "bg-trellis-purple-600", recentTouches: 1, enrolledInSequence: true, recentConversions: 1, signals: [SIGNALS.COMPETITIVE_RENEWAL, SIGNALS.NON_QL_DEMAND] },
-  { id: "c2", name: "Keisha Blue", initials: "KB", role: "Marketing Director", avatarColor: "bg-trellis-blue-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [SIGNALS.RECENT_FUNDING], hasPhone: false },
-  { id: "c3", name: "Elowen Green", initials: "EG", role: "Head of Product", avatarColor: "bg-trellis-green-600", recentTouches: 0, enrolledInSequence: true, recentConversions: 2, signals: [SIGNALS.THIRD_PARTY_INTENT] },
-  { id: "c1a", name: "Marcus Chen", initials: "MC", role: "Sr. Product Manager", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: getRandomEnrollment(), recentConversions: 0, signals: [SIGNALS.MARKETING_HUB_QL] },
+  { id: "c1", name: "Jennifer Park", initials: "JP", role: "VP, Marketing", avatarColor: "bg-trellis-purple-600", recentTouches: 1, enrolledInSequence: true, recentConversions: 1, signals: [SIGNALS.PAST_HUBSPOT_USER, SIGNALS.VIEWED_PRICING] },
+  { id: "c2", name: "Keisha Blue", initials: "KB", role: "Marketing Director", avatarColor: "bg-trellis-blue-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [SIGNALS.RECENT_HIRE], hasPhone: false },
+  { id: "c3", name: "Elowen Green", initials: "EG", role: "Head of Product", avatarColor: "bg-trellis-green-600", recentTouches: 0, enrolledInSequence: true, recentConversions: 2, signals: [SIGNALS.ATTENDED_WEBINAR] },
+  { id: "c1a", name: "Marcus Chen", initials: "MC", role: "Sr. Product Manager", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: getRandomEnrollment(), recentConversions: 0, signals: [SIGNALS.RECENT_QL] },
   { id: "c1b", name: "Diana Ross", initials: "DR", role: "Content Lead", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: getRandomEnrollment(), recentConversions: 1, signals: [] },
-  { id: "c1c", name: "Victor Huang", initials: "VH", role: "Growth Manager", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: getRandomEnrollment(), recentConversions: 0, signals: [SIGNALS.RECENT_FUNDING, SIGNALS.THIRD_PARTY_INTENT] },
-  { id: "c1d", name: "Sophia Martinez", initials: "SM", role: "Demand Gen Lead", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: getRandomEnrollment(), recentConversions: 2, signals: [SIGNALS.NON_QL_DEMAND] },
+  { id: "c1c", name: "Victor Huang", initials: "VH", role: "Growth Manager", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: getRandomEnrollment(), recentConversions: 0, signals: [SIGNALS.RECENT_HIRE, SIGNALS.ATTENDED_WEBINAR] },
+  { id: "c1d", name: "Sophia Martinez", initials: "SM", role: "Demand Gen Lead", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: getRandomEnrollment(), recentConversions: 2, signals: [SIGNALS.VIEWED_PRICING] },
 ];
 
 const company2Contacts = [
-  { id: "c4", name: "Sarah Johnson", initials: "SJ", role: "CEO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), recentConversions: 1, signals: [SIGNALS.MARKETING_HUB_QL], qlData: { requestType: "Requested a demo", requestDate: "22 Nov 2025 06:41", deadline: "25 November" } },
-  { id: "c5", name: "Tom Williams", initials: "TW", role: "CTO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), recentConversions: 0, signals: [SIGNALS.NON_QL_DEMAND, SIGNALS.RECENT_FUNDING] },
-  { id: "c5a", name: "Priya Sharma", initials: "PS", role: "VP Engineering", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), recentConversions: 0, signals: [SIGNALS.THIRD_PARTY_INTENT] },
-  { id: "c5b", name: "Kevin O'Malley", initials: "KO", role: "Head of Sales", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), recentConversions: 1, signals: [SIGNALS.COMPETITIVE_RENEWAL] },
+  { id: "c4", name: "Sarah Johnson", initials: "SJ", role: "CEO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), recentConversions: 1, signals: [sig("recent-ql", { headline: "Requested a demo", rows: [{ label: "Trigger", value: "Requested a demo" }, { label: "Occurred", value: "22 Nov 2025" }], footnote: "Work or reject before 25 November" })], qlData: { requestType: "Requested a demo", requestDate: "22 Nov 2025 06:41", deadline: "25 November" } },
+  { id: "c5", name: "Tom Williams", initials: "TW", role: "CTO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), recentConversions: 0, signals: [SIGNALS.VIEWED_PRICING, SIGNALS.RECENT_HIRE] },
+  { id: "c5a", name: "Priya Sharma", initials: "PS", role: "VP Engineering", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), recentConversions: 0, signals: [SIGNALS.ATTENDED_WEBINAR] },
+  { id: "c5b", name: "Kevin O'Malley", initials: "KO", role: "Head of Sales", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), recentConversions: 1, signals: [SIGNALS.PAST_HUBSPOT_USER] },
   { id: "c5c", name: "Mei Lin", initials: "ML", role: "Product Manager", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), recentConversions: 0, signals: [], hasPhone: false },
-  { id: "c5d", name: "Robert Chang", initials: "RC", role: "Director of IT", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), recentConversions: 0, signals: [SIGNALS.RECENT_FUNDING] },
+  { id: "c5d", name: "Robert Chang", initials: "RC", role: "Director of IT", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), recentConversions: 0, signals: [SIGNALS.RECENT_HIRE] },
 ];
 
 const company3Contacts = [
-  { id: "c6", name: "David Lee", initials: "DL", role: "CMO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.COMPETITIVE_RENEWAL] },
-  { id: "c7", name: "Emily Rodriguez", initials: "ER", role: "VP Sales", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.THIRD_PARTY_INTENT, SIGNALS.MARKETING_HUB_QL] },
+  { id: "c6", name: "David Lee", initials: "DL", role: "CMO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.PAST_HUBSPOT_USER] },
+  { id: "c7", name: "Emily Rodriguez", initials: "ER", role: "VP Sales", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.ATTENDED_WEBINAR, SIGNALS.RECENT_QL] },
   { id: "c8", name: "Michael O'Brien", initials: "MO", role: "Head of Growth", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [] },
-  { id: "c8a", name: "Jessica Wong", initials: "JW", role: "Revenue Operations", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.NON_QL_DEMAND] },
-  { id: "c8b", name: "Ryan Peters", initials: "RP", role: "Enterprise AE", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_FUNDING] },
-  { id: "c8c", name: "Taylor Kim", initials: "TK", role: "Customer Success", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.COMPETITIVE_RENEWAL, SIGNALS.MARKETING_HUB_QL] },
+  { id: "c8a", name: "Jessica Wong", initials: "JW", role: "Revenue Operations", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.VIEWED_PRICING] },
+  { id: "c8b", name: "Ryan Peters", initials: "RP", role: "Enterprise AE", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_HIRE] },
+  { id: "c8c", name: "Taylor Kim", initials: "TK", role: "Customer Success", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.PAST_HUBSPOT_USER, SIGNALS.RECENT_QL] },
   { id: "c8d", name: "Alex Johnson", initials: "AJ", role: "Sales Director", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [] },
-  { id: "c8e", name: "Morgan Bailey", initials: "MB", role: "SDR Manager", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.THIRD_PARTY_INTENT] },
+  { id: "c8e", name: "Morgan Bailey", initials: "MB", role: "SDR Manager", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.ATTENDED_WEBINAR] },
 ];
 
 const company4Contacts = [
-  { id: "c9", name: "James Wilson", initials: "JW", role: "VP Analytics", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.NON_QL_DEMAND], qlData: { requestType: "Pricing inquiry", requestDate: "3 Jan 2026 14:22", deadline: "8 January" } },
-  { id: "c10", name: "Lisa Thompson", initials: "LT", role: "Chief Data Officer", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_FUNDING, SIGNALS.COMPETITIVE_RENEWAL] },
-  { id: "c10a", name: "Fernando Reyes", initials: "FR", role: "Data Science Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.THIRD_PARTY_INTENT] },
-  { id: "c10b", name: "Alicia Novak", initials: "AN", role: "BI Manager", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.MARKETING_HUB_QL] },
+  { id: "c9", name: "James Wilson", initials: "JW", role: "VP Analytics", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [sig("recent-ql", { headline: "Pricing inquiry", rows: [{ label: "Trigger", value: "Pricing inquiry" }, { label: "Occurred", value: "3 Jan 2026" }], footnote: "Work or reject before 8 January" }), SIGNALS.VIEWED_PRICING], qlData: { requestType: "Pricing inquiry", requestDate: "3 Jan 2026 14:22", deadline: "8 January" } },
+  { id: "c10", name: "Lisa Thompson", initials: "LT", role: "Chief Data Officer", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_HIRE, SIGNALS.PAST_HUBSPOT_USER] },
+  { id: "c10a", name: "Fernando Reyes", initials: "FR", role: "Data Science Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.ATTENDED_WEBINAR] },
+  { id: "c10b", name: "Alicia Novak", initials: "AN", role: "BI Manager", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_QL] },
   { id: "c10c", name: "Chris Donovan", initials: "CD", role: "Analytics Engineer", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [] },
-  { id: "c10d", name: "Nadia Petrova", initials: "NP", role: "VP Product", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.NON_QL_DEMAND] },
-  { id: "c10e", name: "Greg Tanaka", initials: "GT", role: "Solutions Architect", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_FUNDING] },
+  { id: "c10d", name: "Nadia Petrova", initials: "NP", role: "VP Product", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.VIEWED_PRICING] },
+  { id: "c10e", name: "Greg Tanaka", initials: "GT", role: "Solutions Architect", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_HIRE] },
 ];
 
 const company5Contacts = [
-  { id: "c11", name: "Rachel Green", initials: "RG", role: "CTO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.MARKETING_HUB_QL, SIGNALS.THIRD_PARTY_INTENT] },
+  { id: "c11", name: "Rachel Green", initials: "RG", role: "CTO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_QL, SIGNALS.ATTENDED_WEBINAR] },
   { id: "c12", name: "Nathan Brooks", initials: "NB", role: "Engineering Director", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [] },
-  { id: "c13", name: "Amanda Clarke", initials: "AC", role: "Tech Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.NON_QL_DEMAND] },
-  { id: "c13a", name: "Derek Sullivan", initials: "DS", role: "Platform Architect", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_FUNDING] },
-  { id: "c13b", name: "Hannah Liu", initials: "HL", role: "DevOps Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.COMPETITIVE_RENEWAL] },
-  { id: "c13c", name: "Brandon Cole", initials: "BC", role: "VP Engineering", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.THIRD_PARTY_INTENT, SIGNALS.NON_QL_DEMAND] },
+  { id: "c13", name: "Amanda Clarke", initials: "AC", role: "Tech Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.VIEWED_PRICING] },
+  { id: "c13a", name: "Derek Sullivan", initials: "DS", role: "Platform Architect", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_HIRE] },
+  { id: "c13b", name: "Hannah Liu", initials: "HL", role: "DevOps Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.PAST_HUBSPOT_USER] },
+  { id: "c13c", name: "Brandon Cole", initials: "BC", role: "VP Engineering", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.ATTENDED_WEBINAR, SIGNALS.VIEWED_PRICING] },
 ];
 
 const company6Contacts = [
-  { id: "c14", name: "Carlos Santos", initials: "CS", role: "COO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_FUNDING] },
-  { id: "c15", name: "Diana Peterson", initials: "DP", role: "VP Operations", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.COMPETITIVE_RENEWAL, SIGNALS.MARKETING_HUB_QL] },
-  { id: "c15a", name: "Omar Hassan", initials: "OH", role: "Supply Chain Director", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.THIRD_PARTY_INTENT] },
+  { id: "c14", name: "Carlos Santos", initials: "CS", role: "COO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_HIRE] },
+  { id: "c15", name: "Diana Peterson", initials: "DP", role: "VP Operations", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.PAST_HUBSPOT_USER, SIGNALS.RECENT_QL] },
+  { id: "c15a", name: "Omar Hassan", initials: "OH", role: "Supply Chain Director", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.ATTENDED_WEBINAR] },
   { id: "c15b", name: "Julia Fernandez", initials: "JF", role: "Operations Manager", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [] },
-  { id: "c15c", name: "Steve Park", initials: "SP", role: "Logistics Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.NON_QL_DEMAND] },
-  { id: "c15d", name: "Tanya Ivanova", initials: "TI", role: "Process Engineer", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_FUNDING, SIGNALS.COMPETITIVE_RENEWAL] },
-  { id: "c15e", name: "Ben Whitaker", initials: "BW", role: "Quality Assurance", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.MARKETING_HUB_QL] },
-  { id: "c15f", name: "Linda Chow", initials: "LC", role: "Procurement Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.THIRD_PARTY_INTENT] },
+  { id: "c15c", name: "Steve Park", initials: "SP", role: "Logistics Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.VIEWED_PRICING] },
+  { id: "c15d", name: "Tanya Ivanova", initials: "TI", role: "Process Engineer", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_HIRE, SIGNALS.PAST_HUBSPOT_USER] },
+  { id: "c15e", name: "Ben Whitaker", initials: "BW", role: "Quality Assurance", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_QL] },
+  { id: "c15f", name: "Linda Chow", initials: "LC", role: "Procurement Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.ATTENDED_WEBINAR] },
 ];
 
 const company7Contacts = [
-  { id: "c16", name: "Olivia Hayes", initials: "OH", role: "VP Business Development", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.THIRD_PARTY_INTENT] },
-  { id: "c17", name: "Ethan Kumar", initials: "EK", role: "Partnership Director", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.NON_QL_DEMAND, SIGNALS.RECENT_FUNDING] },
+  { id: "c16", name: "Olivia Hayes", initials: "OH", role: "VP Business Development", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.ATTENDED_WEBINAR] },
+  { id: "c17", name: "Ethan Kumar", initials: "EK", role: "Partnership Director", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.VIEWED_PRICING, SIGNALS.RECENT_HIRE] },
   { id: "c18", name: "Grace Allen", initials: "GA", role: "Strategic Accounts Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [] },
 ];
 
 const company8Contacts = [
-  { id: "c19", name: "Samuel Turner", initials: "ST", role: "Head of Product", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.MARKETING_HUB_QL] },
-  { id: "c20", name: "Maya Patel", initials: "MP", role: "VP Product Strategy", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.COMPETITIVE_RENEWAL] },
-  { id: "c20a", name: "Liam O'Connor", initials: "LO", role: "UX Research Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.NON_QL_DEMAND] },
-  { id: "c20b", name: "Zara Ahmed", initials: "ZA", role: "Product Designer", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.THIRD_PARTY_INTENT] },
-  { id: "c20c", name: "Eric Johansson", initials: "EJ", role: "Technical PM", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_FUNDING] },
+  { id: "c19", name: "Samuel Turner", initials: "ST", role: "Head of Product", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_QL] },
+  { id: "c20", name: "Maya Patel", initials: "MP", role: "VP Product Strategy", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.PAST_HUBSPOT_USER] },
+  { id: "c20a", name: "Liam O'Connor", initials: "LO", role: "UX Research Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.VIEWED_PRICING] },
+  { id: "c20b", name: "Zara Ahmed", initials: "ZA", role: "Product Designer", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.ATTENDED_WEBINAR] },
+  { id: "c20c", name: "Eric Johansson", initials: "EJ", role: "Technical PM", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_HIRE] },
 ];
 
 const company9Contacts = [
-  { id: "c21", name: "Hannah Scott", initials: "HS", role: "VP E-commerce", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.THIRD_PARTY_INTENT, SIGNALS.NON_QL_DEMAND] },
+  { id: "c21", name: "Hannah Scott", initials: "HS", role: "VP E-commerce", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.ATTENDED_WEBINAR, SIGNALS.VIEWED_PRICING] },
   { id: "c22", name: "Lucas Martin", initials: "LM", role: "Digital Strategy Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [] },
-  { id: "c22a", name: "Rebecca Stone", initials: "RS", role: "Marketplace Manager", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.COMPETITIVE_RENEWAL] },
-  { id: "c22b", name: "David Okafor", initials: "DO", role: "Growth Marketing", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.MARKETING_HUB_QL] },
-  { id: "c22c", name: "Amy Nakamura", initials: "AN", role: "Customer Insights", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_FUNDING] },
-  { id: "c22d", name: "Paul Fitzgerald", initials: "PF", role: "E-commerce Director", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.NON_QL_DEMAND, SIGNALS.THIRD_PARTY_INTENT] },
+  { id: "c22a", name: "Rebecca Stone", initials: "RS", role: "Marketplace Manager", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.PAST_HUBSPOT_USER] },
+  { id: "c22b", name: "David Okafor", initials: "DO", role: "Growth Marketing", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_QL] },
+  { id: "c22c", name: "Amy Nakamura", initials: "AN", role: "Customer Insights", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_HIRE] },
+  { id: "c22d", name: "Paul Fitzgerald", initials: "PF", role: "E-commerce Director", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.VIEWED_PRICING, SIGNALS.ATTENDED_WEBINAR] },
   { id: "c22e", name: "Simone Dubois", initials: "SD", role: "CX Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [] },
-  { id: "c22f", name: "Raj Krishnan", initials: "RK", role: "Tech Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.COMPETITIVE_RENEWAL] },
-  { id: "c22g", name: "Lisa Bergström", initials: "LB", role: "Conversion Analyst", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.MARKETING_HUB_QL] },
+  { id: "c22f", name: "Raj Krishnan", initials: "RK", role: "Tech Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.PAST_HUBSPOT_USER] },
+  { id: "c22g", name: "Lisa Bergström", initials: "LB", role: "Conversion Analyst", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_QL] },
 ];
 
 const company10Contacts = [
-  { id: "c23", name: "Patrick Walsh", initials: "PW", role: "CFO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_FUNDING, SIGNALS.MARKETING_HUB_QL], qlData: { requestType: "ROI assessment requested", requestDate: "5 Jan 2026 09:15", deadline: "10 January" } },
-  { id: "c24", name: "Nicole Rivera", initials: "NR", role: "VP Finance", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.COMPETITIVE_RENEWAL] },
+  { id: "c23", name: "Patrick Walsh", initials: "PW", role: "CFO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_HIRE, sig("recent-ql", { headline: "ROI assessment requested", rows: [{ label: "Trigger", value: "ROI assessment requested" }, { label: "Occurred", value: "5 Jan 2026" }], footnote: "Work or reject before 10 January" })], qlData: { requestType: "ROI assessment requested", requestDate: "5 Jan 2026 09:15", deadline: "10 January" } },
+  { id: "c24", name: "Nicole Rivera", initials: "NR", role: "VP Finance", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.PAST_HUBSPOT_USER] },
   { id: "c25", name: "Andrew Kim", initials: "AK", role: "Finance Director", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [] },
 ];
 
 const company11Contacts = [
-  { id: "c26", name: "Tyler Robinson", initials: "TR", role: "VP Content", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.NON_QL_DEMAND] },
-  { id: "c27", name: "Mia Jackson", initials: "MJ", role: "Media Director", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.THIRD_PARTY_INTENT, SIGNALS.RECENT_FUNDING] },
-  { id: "c27a", name: "Connor Walsh", initials: "CW", role: "Creative Director", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.COMPETITIVE_RENEWAL] },
-  { id: "c27b", name: "Yuki Tanaka", initials: "YT", role: "Content Strategist", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.MARKETING_HUB_QL] },
+  { id: "c26", name: "Tyler Robinson", initials: "TR", role: "VP Content", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.VIEWED_PRICING] },
+  { id: "c27", name: "Mia Jackson", initials: "MJ", role: "Media Director", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.ATTENDED_WEBINAR, SIGNALS.RECENT_HIRE] },
+  { id: "c27a", name: "Connor Walsh", initials: "CW", role: "Creative Director", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.PAST_HUBSPOT_USER] },
+  { id: "c27b", name: "Yuki Tanaka", initials: "YT", role: "Content Strategist", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_QL] },
   { id: "c27c", name: "Elena Vasquez", initials: "EV", role: "Social Media Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [] },
 ];
 
 const company12Contacts = [
-  { id: "c28", name: "Chloe Martinez", initials: "CM", role: "VP Research", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.MARKETING_HUB_QL] },
-  { id: "c29", name: "Daniel Foster", initials: "DF", role: "Chief Scientist", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.COMPETITIVE_RENEWAL, SIGNALS.NON_QL_DEMAND] },
+  { id: "c28", name: "Chloe Martinez", initials: "CM", role: "VP Research", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_QL] },
+  { id: "c29", name: "Daniel Foster", initials: "DF", role: "Chief Scientist", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.PAST_HUBSPOT_USER, SIGNALS.VIEWED_PRICING] },
   { id: "c30", name: "Emma Wilson", initials: "EW", role: "Innovation Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [] },
 ];
 
 const company13Contacts = [
-  { id: "c31", name: "Rachel White", initials: "RW", role: "CTO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_FUNDING] },
-  { id: "c32", name: "Brandon Lee", initials: "BL", role: "VP Technology", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.THIRD_PARTY_INTENT, SIGNALS.MARKETING_HUB_QL] },
-  { id: "c32a", name: "Ingrid Larsen", initials: "IL", role: "Security Architect", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.COMPETITIVE_RENEWAL] },
-  { id: "c32b", name: "Amir Farouk", initials: "AF", role: "Cloud Infrastructure", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.NON_QL_DEMAND] },
+  { id: "c31", name: "Rachel White", initials: "RW", role: "CTO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_HIRE] },
+  { id: "c32", name: "Brandon Lee", initials: "BL", role: "VP Technology", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.ATTENDED_WEBINAR, SIGNALS.RECENT_QL] },
+  { id: "c32a", name: "Ingrid Larsen", initials: "IL", role: "Security Architect", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.PAST_HUBSPOT_USER] },
+  { id: "c32b", name: "Amir Farouk", initials: "AF", role: "Cloud Infrastructure", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.VIEWED_PRICING] },
   { id: "c32c", name: "Sandra Kim", initials: "SK", role: "Engineering Manager", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [] },
-  { id: "c32d", name: "Troy Anderson", initials: "TA", role: "DevRel Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_FUNDING, SIGNALS.MARKETING_HUB_QL] },
+  { id: "c32d", name: "Troy Anderson", initials: "TA", role: "DevRel Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_HIRE, SIGNALS.RECENT_QL] },
 ];
 
 const company14Contacts = [
-  { id: "c33", name: "Samantha Moore", initials: "SM", role: "Managing Partner", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.COMPETITIVE_RENEWAL] },
-  { id: "c34", name: "Joshua Clark", initials: "JC", role: "VP Investments", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.NON_QL_DEMAND] },
-  { id: "c35", name: "Natalie Brooks", initials: "NB", role: "Senior Associate", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_FUNDING, SIGNALS.THIRD_PARTY_INTENT] },
+  { id: "c33", name: "Samantha Moore", initials: "SM", role: "Managing Partner", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.PAST_HUBSPOT_USER] },
+  { id: "c34", name: "Joshua Clark", initials: "JC", role: "VP Investments", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.VIEWED_PRICING] },
+  { id: "c35", name: "Natalie Brooks", initials: "NB", role: "Senior Associate", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_HIRE, SIGNALS.ATTENDED_WEBINAR] },
 ];
 
 const company15Contacts = [
-  { id: "c36", name: "Henry Adams", initials: "HA", role: "COO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.MARKETING_HUB_QL, SIGNALS.COMPETITIVE_RENEWAL] },
+  { id: "c36", name: "Henry Adams", initials: "HA", role: "COO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_QL, SIGNALS.PAST_HUBSPOT_USER] },
   { id: "c37", name: "Abigail Turner", initials: "AT", role: "Manufacturing Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [] },
-  { id: "c37a", name: "Desmond Clarke", initials: "DC", role: "Plant Manager", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.NON_QL_DEMAND] },
-  { id: "c37b", name: "Fiona McAllister", initials: "FM", role: "Quality Director", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.THIRD_PARTY_INTENT] },
+  { id: "c37a", name: "Desmond Clarke", initials: "DC", role: "Plant Manager", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.VIEWED_PRICING] },
+  { id: "c37b", name: "Fiona McAllister", initials: "FM", role: "Quality Director", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.ATTENDED_WEBINAR] },
 ];
 
 const company16Contacts = [
-  { id: "c38", name: "Jacob Miller", initials: "JM", role: "VP Healthcare Operations", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.NON_QL_DEMAND, SIGNALS.RECENT_FUNDING] },
-  { id: "c39", name: "Lily Thompson", initials: "LT", role: "Chief Medical Officer", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.THIRD_PARTY_INTENT] },
-  { id: "c39a", name: "Marcus Webb", initials: "MW", role: "Clinical Informatics", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.COMPETITIVE_RENEWAL] },
-  { id: "c39b", name: "Patricia Gomez", initials: "PG", role: "Nursing Informatics Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.MARKETING_HUB_QL] },
+  { id: "c38", name: "Jacob Miller", initials: "JM", role: "VP Healthcare Operations", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.VIEWED_PRICING, SIGNALS.RECENT_HIRE] },
+  { id: "c39", name: "Lily Thompson", initials: "LT", role: "Chief Medical Officer", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.ATTENDED_WEBINAR] },
+  { id: "c39a", name: "Marcus Webb", initials: "MW", role: "Clinical Informatics", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.PAST_HUBSPOT_USER] },
+  { id: "c39b", name: "Patricia Gomez", initials: "PG", role: "Nursing Informatics Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_QL] },
   { id: "c39c", name: "Ian McLeod", initials: "IM", role: "Health IT Director", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [] },
-  { id: "c39d", name: "Christine Ng", initials: "CN", role: "VP Patient Experience", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_FUNDING] },
+  { id: "c39d", name: "Christine Ng", initials: "CN", role: "VP Patient Experience", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_HIRE] },
 ];
 
 const company17Contacts = [
-  { id: "c40", name: "Ava Campbell", initials: "AC", role: "Principal Consultant", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.COMPETITIVE_RENEWAL, SIGNALS.MARKETING_HUB_QL] },
+  { id: "c40", name: "Ava Campbell", initials: "AC", role: "Principal Consultant", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.PAST_HUBSPOT_USER, SIGNALS.RECENT_QL] },
   { id: "c41", name: "Noah Mitchell", initials: "NM", role: "Practice Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [] },
-  { id: "c42", name: "Isabella Parker", initials: "IP", role: "Engagement Manager", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_FUNDING] },
+  { id: "c42", name: "Isabella Parker", initials: "IP", role: "Engagement Manager", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_HIRE] },
 ];
 
 const company18Contacts = [
-  { id: "c43", name: "Evelyn Reed", initials: "ER", role: "COO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.THIRD_PARTY_INTENT, SIGNALS.NON_QL_DEMAND] },
-  { id: "c44", name: "Logan Stewart", initials: "LS", role: "Fleet Operations Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.MARKETING_HUB_QL] },
-  { id: "c44a", name: "Bianca Morales", initials: "BM", role: "Sustainability Manager", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.COMPETITIVE_RENEWAL] },
-  { id: "c44b", name: "Kai Nakamura", initials: "KN", role: "Route Optimization Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_FUNDING] },
+  { id: "c43", name: "Evelyn Reed", initials: "ER", role: "COO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.ATTENDED_WEBINAR, SIGNALS.VIEWED_PRICING] },
+  { id: "c44", name: "Logan Stewart", initials: "LS", role: "Fleet Operations Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_QL] },
+  { id: "c44a", name: "Bianca Morales", initials: "BM", role: "Sustainability Manager", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.PAST_HUBSPOT_USER] },
+  { id: "c44b", name: "Kai Nakamura", initials: "KN", role: "Route Optimization Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_HIRE] },
   { id: "c44c", name: "Wendy Cho", initials: "WC", role: "VP Logistics", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [] },
 ];
 
 const company19Contacts = [
-  { id: "c45", name: "Jack Russell", initials: "JR", role: "CEO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.COMPETITIVE_RENEWAL] },
-  { id: "c46", name: "Aria Bennett", initials: "AB", role: "Product VP", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_FUNDING, SIGNALS.THIRD_PARTY_INTENT] },
-  { id: "c47", name: "Carter Sanders", initials: "CS", role: "Engineering Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.NON_QL_DEMAND] },
+  { id: "c45", name: "Jack Russell", initials: "JR", role: "CEO", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.PAST_HUBSPOT_USER] },
+  { id: "c46", name: "Aria Bennett", initials: "AB", role: "Product VP", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_HIRE, SIGNALS.ATTENDED_WEBINAR] },
+  { id: "c47", name: "Carter Sanders", initials: "CS", role: "Engineering Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.VIEWED_PRICING] },
 ];
 
 const company20Contacts = [
-  { id: "c48", name: "Julian Foster", initials: "JF", role: "VP Marketing", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.MARKETING_HUB_QL, SIGNALS.COMPETITIVE_RENEWAL] },
-  { id: "c49", name: "Penelope Ward", initials: "PW", role: "Brand Director", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_FUNDING] },
-  { id: "c50", name: "Dominic Hayes", initials: "DH", role: "Marketing Analytics Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.THIRD_PARTY_INTENT, SIGNALS.NON_QL_DEMAND] },
+  { id: "c48", name: "Julian Foster", initials: "JF", role: "VP Marketing", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_QL, SIGNALS.PAST_HUBSPOT_USER] },
+  { id: "c49", name: "Penelope Ward", initials: "PW", role: "Brand Director", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.RECENT_HIRE] },
+  { id: "c50", name: "Dominic Hayes", initials: "DH", role: "Marketing Analytics Lead", avatarColor: getRandomColor(), recentTouches: getRandomTouches(), enrolledInSequence: getRandomEnrollment(), signals: [SIGNALS.ATTENDED_WEBINAR, SIGNALS.VIEWED_PRICING] },
 ];
 
 // Task notes content for contextual outreach
@@ -1342,7 +1766,7 @@ const rawProspectingCompanies: Company[] = [
     pvsScore: "High",
     conversionTrigger: "Viewed Pricing Page",
     status: "New",
-    signals: aggregateSignals(company1Contacts),
+    signals: COMPANY_SIGNALS["1"],
     tasks: [
       {
         id: "t1",
@@ -1377,7 +1801,7 @@ const rawProspectingCompanies: Company[] = [
     pvsScore: "High",
     conversionTrigger: "Requested Demo",
     status: "In Progress",
-    signals: aggregateSignals(company2Contacts),
+    signals: COMPANY_SIGNALS["2"],
     tasks: [
       {
         id: "t2",
@@ -1412,7 +1836,7 @@ const rawProspectingCompanies: Company[] = [
     pvsScore: "Medium",
     conversionTrigger: "Downloaded Whitepaper",
     status: "New",
-    signals: aggregateSignals(company3Contacts),
+    signals: COMPANY_SIGNALS["3"],
     tasks: [
       {
         id: "t3",
@@ -1447,7 +1871,7 @@ const rawProspectingCompanies: Company[] = [
     pvsScore: "High",
     conversionTrigger: "Attended Webinar",
     status: "In Progress",
-    signals: aggregateSignals(company4Contacts),
+    signals: COMPANY_SIGNALS["4"],
     tasks: [
       {
         id: "t4",
@@ -1482,7 +1906,7 @@ const rawProspectingCompanies: Company[] = [
     pvsScore: "High",
     conversionTrigger: "Requested Demo",
     status: "Over SLA",
-    signals: aggregateSignals(company5Contacts),
+    signals: COMPANY_SIGNALS["5"],
     tasks: [
       {
         id: "t5",
@@ -1516,7 +1940,7 @@ const rawProspectingCompanies: Company[] = [
     pvsScore: "Medium",
     conversionTrigger: "Viewed Pricing Page",
     status: "In Progress",
-    signals: aggregateSignals(company6Contacts),
+    signals: COMPANY_SIGNALS["6"],
     tasks: [
       {
         id: "t6",
@@ -1550,7 +1974,7 @@ const rawProspectingCompanies: Company[] = [
     pvsScore: "Medium",
     conversionTrigger: "Downloaded Case Study",
     status: "In Progress",
-    signals: aggregateSignals(company7Contacts),
+    signals: COMPANY_SIGNALS["7"],
     tasks: [
       {
         id: "t7",
@@ -1584,7 +2008,7 @@ const rawProspectingCompanies: Company[] = [
     pvsScore: "High",
     conversionTrigger: "Visited Product Page",
     status: "In Progress",
-    signals: aggregateSignals(company8Contacts),
+    signals: COMPANY_SIGNALS["8"],
     tasks: [
       {
         id: "t8",
@@ -1618,7 +2042,7 @@ const rawProspectingCompanies: Company[] = [
     pvsScore: "Medium",
     conversionTrigger: "Signed Up for Trial",
     status: "In Progress",
-    signals: aggregateSignals(company9Contacts),
+    signals: COMPANY_SIGNALS["9"],
     tasks: [
       {
         id: "t9",
@@ -1652,7 +2076,7 @@ const rawProspectingCompanies: Company[] = [
     pvsScore: "High",
     conversionTrigger: "Requested Consultation",
     status: "In Progress",
-    signals: aggregateSignals(company10Contacts),
+    signals: COMPANY_SIGNALS["10"],
     tasks: [
       {
         id: "t10",
@@ -1686,7 +2110,7 @@ const rawProspectingCompanies: Company[] = [
     pvsScore: "High",
     conversionTrigger: "Downloaded Whitepaper",
     status: "In Progress",
-    signals: aggregateSignals(company11Contacts),
+    signals: COMPANY_SIGNALS["11"],
     tasks: [
       {
         id: "t11",
@@ -1720,7 +2144,7 @@ const rawProspectingCompanies: Company[] = [
     pvsScore: "Medium",
     conversionTrigger: "Attended Conference",
     status: "In Progress",
-    signals: aggregateSignals(company12Contacts),
+    signals: COMPANY_SIGNALS["12"],
     tasks: [
       {
         id: "t12",
@@ -1756,7 +2180,7 @@ const rawProspectingCompanies: Company[] = [
     pvsScore: "High",
     conversionTrigger: "Viewed Pricing Page",
     status: "In Progress",
-    signals: aggregateSignals(company13Contacts),
+    signals: COMPANY_SIGNALS["13"],
     tasks: [
       {
         id: "t13a",
@@ -1804,7 +2228,7 @@ const rawProspectingCompanies: Company[] = [
     pvsScore: "Medium",
     conversionTrigger: "Requested Demo",
     status: "In Progress",
-    signals: aggregateSignals(company14Contacts),
+    signals: COMPANY_SIGNALS["14"],
     tasks: [
       {
         id: "t14a",
@@ -1852,7 +2276,7 @@ const rawProspectingCompanies: Company[] = [
     pvsScore: "Medium",
     conversionTrigger: "Visited Product Page",
     status: "In Progress",
-    signals: aggregateSignals(company15Contacts),
+    signals: COMPANY_SIGNALS["15"],
     tasks: [
       {
         id: "t15a",
@@ -1900,7 +2324,7 @@ const rawProspectingCompanies: Company[] = [
     pvsScore: "High",
     conversionTrigger: "Attended Webinar",
     status: "In Progress",
-    signals: aggregateSignals(company16Contacts),
+    signals: COMPANY_SIGNALS["16"],
     tasks: [
       {
         id: "t16a",
@@ -1950,7 +2374,7 @@ const rawProspectingCompanies: Company[] = [
     pvsScore: "Medium",
     conversionTrigger: "Downloaded Case Study",
     status: "In Progress",
-    signals: aggregateSignals(company17Contacts),
+    signals: COMPANY_SIGNALS["17"],
     tasks: [
       {
         id: "t17a",
@@ -2012,7 +2436,7 @@ const rawProspectingCompanies: Company[] = [
     pvsScore: "High",
     conversionTrigger: "Signed Up for Trial",
     status: "In Progress",
-    signals: aggregateSignals(company18Contacts),
+    signals: COMPANY_SIGNALS["18"],
     tasks: [
       {
         id: "t18a",
@@ -2076,7 +2500,7 @@ const rawProspectingCompanies: Company[] = [
     pvsScore: "High",
     conversionTrigger: "Requested Consultation",
     status: "In Progress",
-    signals: aggregateSignals(company19Contacts),
+    signals: COMPANY_SIGNALS["19"],
     tasks: [
       {
         id: "t19a",
@@ -2154,7 +2578,7 @@ const rawProspectingCompanies: Company[] = [
     pvsScore: "Medium",
     conversionTrigger: "Viewed Pricing Page",
     status: "In Progress",
-    signals: aggregateSignals(company20Contacts),
+    signals: COMPANY_SIGNALS["20"],
     tasks: [
       {
         id: "t20a",
@@ -2248,7 +2672,7 @@ const rawProspectingCompanies: Company[] = [
     status: "New",
     priority: "P2",
     hasGeneratedStrategy: false,
-    signals: [SIGNALS.NON_QL_DEMAND],
+    signals: [SIGNALS.VIEWED_PRICING],
     tasks: [],
     touches: {
       contactsReached: { current: 0, total: 3 },
@@ -2258,9 +2682,9 @@ const rawProspectingCompanies: Company[] = [
       deadline: touchDeadlines[0],
     },
     recommendedContacts: [
-      { id: "c21a", name: "Hannah Reeves", initials: "HR", role: "VP Operations", avatarColor: "bg-trellis-blue-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 1, signals: [SIGNALS.NON_QL_DEMAND] },
+      { id: "c21a", name: "Hannah Reeves", initials: "HR", role: "VP Operations", avatarColor: "bg-trellis-blue-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 1, signals: [SIGNALS.VIEWED_PRICING] },
       { id: "c21b", name: "Daniel Park", initials: "DP", role: "Director of Logistics", avatarColor: "bg-trellis-teal-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [] },
-      { id: "c21c", name: "Renata Costa", initials: "RC", role: "Procurement Lead", avatarColor: "bg-trellis-orange-500", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [SIGNALS.THIRD_PARTY_INTENT] },
+      { id: "c21c", name: "Renata Costa", initials: "RC", role: "Procurement Lead", avatarColor: "bg-trellis-orange-500", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [SIGNALS.ATTENDED_WEBINAR] },
     ],
   },
   {
@@ -2273,7 +2697,7 @@ const rawProspectingCompanies: Company[] = [
     status: "New",
     priority: "P2",
     hasGeneratedStrategy: false,
-    signals: [SIGNALS.RECENT_FUNDING],
+    signals: [SIGNALS.RECENT_HIRE],
     tasks: [],
     touches: {
       contactsReached: { current: 0, total: 3 },
@@ -2283,9 +2707,9 @@ const rawProspectingCompanies: Company[] = [
       deadline: touchDeadlines[1],
     },
     recommendedContacts: [
-      { id: "c22a", name: "Owen Caldwell", initials: "OC", role: "Head of Growth", avatarColor: "bg-trellis-green-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [SIGNALS.RECENT_FUNDING] },
+      { id: "c22a", name: "Owen Caldwell", initials: "OC", role: "Head of Growth", avatarColor: "bg-trellis-green-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [SIGNALS.RECENT_HIRE] },
       { id: "c22b", name: "Marisol Vega", initials: "MV", role: "Director of Marketing", avatarColor: "bg-trellis-pink-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [] },
-      { id: "c22c", name: "Theo Nakamura", initials: "TN", role: "Revenue Operations", avatarColor: "bg-trellis-purple-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [SIGNALS.NON_QL_DEMAND] },
+      { id: "c22c", name: "Theo Nakamura", initials: "TN", role: "Revenue Operations", avatarColor: "bg-trellis-purple-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [SIGNALS.VIEWED_PRICING] },
     ],
   },
   {
@@ -2298,7 +2722,7 @@ const rawProspectingCompanies: Company[] = [
     status: "New",
     priority: "P2",
     hasGeneratedStrategy: false,
-    signals: [SIGNALS.MARKETING_HUB_QL, SIGNALS.THIRD_PARTY_INTENT],
+    signals: [SIGNALS.RECENT_QL, SIGNALS.ATTENDED_WEBINAR],
     tasks: [],
     touches: {
       contactsReached: { current: 0, total: 3 },
@@ -2308,8 +2732,8 @@ const rawProspectingCompanies: Company[] = [
       deadline: touchDeadlines[2],
     },
     recommendedContacts: [
-      { id: "c23a", name: "Ines Pereira", initials: "IP", role: "Chief of Staff", avatarColor: "bg-trellis-indigo-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 1, signals: [SIGNALS.MARKETING_HUB_QL] },
-      { id: "c23b", name: "Andre Walters", initials: "AW", role: "VP Marketing", avatarColor: "bg-trellis-magenta-800", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [SIGNALS.THIRD_PARTY_INTENT] },
+      { id: "c23a", name: "Ines Pereira", initials: "IP", role: "Chief of Staff", avatarColor: "bg-trellis-indigo-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 1, signals: [SIGNALS.RECENT_QL] },
+      { id: "c23b", name: "Andre Walters", initials: "AW", role: "VP Marketing", avatarColor: "bg-trellis-magenta-800", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [SIGNALS.ATTENDED_WEBINAR] },
       { id: "c23c", name: "Sasha Petrov", initials: "SP", role: "Director, Demand Gen", avatarColor: "bg-trellis-blue-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [] },
     ],
   },
@@ -2323,7 +2747,7 @@ const rawProspectingCompanies: Company[] = [
     status: "New",
     priority: "P2",
     hasGeneratedStrategy: false,
-    signals: [SIGNALS.COMPETITIVE_RENEWAL],
+    signals: [SIGNALS.PAST_HUBSPOT_USER],
     tasks: [],
     touches: {
       contactsReached: { current: 0, total: 3 },
@@ -2333,9 +2757,9 @@ const rawProspectingCompanies: Company[] = [
       deadline: touchDeadlines[3],
     },
     recommendedContacts: [
-      { id: "c24a", name: "Priscilla Hayes", initials: "PH", role: "Head of E-commerce", avatarColor: "bg-trellis-orange-500", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [SIGNALS.COMPETITIVE_RENEWAL] },
+      { id: "c24a", name: "Priscilla Hayes", initials: "PH", role: "Head of E-commerce", avatarColor: "bg-trellis-orange-500", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [SIGNALS.PAST_HUBSPOT_USER] },
       { id: "c24b", name: "Mateo Alvarez", initials: "MA", role: "VP, Brand", avatarColor: "bg-trellis-green-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [] },
-      { id: "c24c", name: "Lola Bennett", initials: "LB", role: "CRM Manager", avatarColor: "bg-trellis-teal-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [SIGNALS.NON_QL_DEMAND] },
+      { id: "c24c", name: "Lola Bennett", initials: "LB", role: "CRM Manager", avatarColor: "bg-trellis-teal-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [SIGNALS.VIEWED_PRICING] },
     ],
   },
 ];
@@ -2348,7 +2772,7 @@ type PlayCompanySeed = {
   pvs: "High" | "Medium" | "Low";
   trigger: string;
   priority: "P1" | "P2" | "P3" | "P4";
-  signal: SignalType;
+  signal: SignalInstance;
   contacts: Array<[string, string]>;
 };
 
@@ -2394,30 +2818,30 @@ const buildPlayCompany = (seed: PlayCompanySeed): Company => ({
 });
 
 const playCompanySeeds: PlayCompanySeed[] = [
-  { id: "sf-1", name: "Cobalt CRM Group", website: "cobaltcrm.com", industry: "B2B Software", pvs: "High", trigger: "Evaluating CRM alternatives", priority: "P2", signal: SIGNALS.COMPETITIVE_RENEWAL, contacts: [["Dana Mercer", "RevOps Director"], ["Paul Iverson", "Head of Sales"]] },
-  { id: "sf-2", name: "Harbor & Finch", website: "harborfinch.com", industry: "Professional Services", pvs: "Medium", trigger: "Booked a demo", priority: "P2", signal: SIGNALS.MARKETING_HUB_QL, contacts: [["Greta Holm", "VP Marketing"], ["Sam Devlin", "Sales Ops Lead"]] },
-  { id: "sf-3", name: "Westbrook Retail Co.", website: "westbrookretail.com", industry: "Retail", pvs: "Medium", trigger: "Salesforce renewal approaching", priority: "P2", signal: SIGNALS.COMPETITIVE_RENEWAL, contacts: [["Nina Patel", "CRM Manager"], ["Theo Brunner", "Director of Sales"]] },
-  { id: "sf-4", name: "Lumen Software", website: "lumensoftware.io", industry: "Software", pvs: "High", trigger: "Compared pricing", priority: "P2", signal: SIGNALS.NON_QL_DEMAND, contacts: [["Erin Cole", "COO"], ["Raj Malhotra", "RevOps Manager"]] },
-  { id: "sf-5", name: "Tradewind Freight", website: "tradewindfreight.com", industry: "Logistics", pvs: "Medium", trigger: "Visited migration guide", priority: "P2", signal: SIGNALS.THIRD_PARTY_INTENT, contacts: [["Mona Reyes", "VP Revenue"], ["Bill Hartley", "Sales Director"]] },
-  { id: "sf-6", name: "Maple Financial", website: "maplefinancial.com", industry: "Financial Services", pvs: "Medium", trigger: "Requested ROI assessment", priority: "P2", signal: SIGNALS.COMPETITIVE_RENEWAL, contacts: [["Aisha Karim", "Head of Operations"], ["Dan Foley", "CRM Administrator"]] },
-  { id: "aeo-1", name: "Beacon Digital Media", website: "beacondigital.com", industry: "Marketing & Advertising", pvs: "High", trigger: "Downloaded AEO playbook", priority: "P3", signal: SIGNALS.THIRD_PARTY_INTENT, contacts: [["Chloe Adams", "Content Lead"], ["Marco Bianchi", "SEO Manager"]] },
-  { id: "aeo-2", name: "Northstar Content", website: "northstarcontent.com", industry: "Media", pvs: "Medium", trigger: "Read AI search guide", priority: "P3", signal: SIGNALS.NON_QL_DEMAND, contacts: [["Iris Wagner", "Editor in Chief"], ["Leo Park", "Growth Manager"]] },
-  { id: "aeo-3", name: "Prism Analytics Lab", website: "prismanalytics.io", industry: "Data Analytics", pvs: "High", trigger: "Attended AEO webinar", priority: "P3", signal: SIGNALS.MARKETING_HUB_QL, contacts: [["Sara Quinn", "VP Marketing"], ["Tomas Vidal", "Analytics Lead"]] },
-  { id: "aeo-4", name: "Evergreen Publishing", website: "evergreenpub.com", industry: "Publishing", pvs: "Medium", trigger: "Signed up for newsletter", priority: "P3", signal: SIGNALS.NON_QL_DEMAND, contacts: [["Faye Mitchell", "Digital Director"], ["Owen Bradley", "Content Strategist"]] },
-  { id: "aeo-5", name: "Skyline Marketing Group", website: "skylinemktg.com", industry: "Marketing & Advertising", pvs: "Medium", trigger: "Viewed AI content page", priority: "P3", signal: SIGNALS.THIRD_PARTY_INTENT, contacts: [["Hana Sato", "Demand Gen Lead"], ["Eli Roth", "Brand Lead"]] },
-  { id: "aeo-6", name: "Cadence Media", website: "cadencemedia.com", industry: "Media", pvs: "Low", trigger: "Researched competitors", priority: "P3", signal: SIGNALS.NON_QL_DEMAND, contacts: [["Priya Anand", "Head of Content"], ["Jack Doyle", "SEO Specialist"]] },
-  { id: "ent-1", name: "Continental Manufacturing", website: "continentalmfg.com", industry: "Manufacturing", pvs: "High", trigger: "Expansion inquiry", priority: "P2", signal: SIGNALS.COMPETITIVE_RENEWAL, contacts: [["Karl Brandt", "VP IT"], ["Lucia Romano", "Procurement Director"]] },
-  { id: "ent-2", name: "Granite Holdings", website: "graniteholdings.com", industry: "Financial Services", pvs: "High", trigger: "Multi-seat quote request", priority: "P2", signal: SIGNALS.RECENT_FUNDING, contacts: [["Margaret Shaw", "CFO"], ["Devon Pierce", "IT Director"]] },
-  { id: "ent-3", name: "Vanguard Industrial", website: "vanguardindustrial.com", industry: "Industrial Technology", pvs: "Medium", trigger: "Viewed enterprise plan", priority: "P2", signal: SIGNALS.NON_QL_DEMAND, contacts: [["Hugo Vance", "COO"], ["Tara Singh", "Operations Director"]] },
-  { id: "ent-4", name: "Imperial Foods Group", website: "imperialfoods.com", industry: "Food & Beverage", pvs: "Medium", trigger: "Requested security review", priority: "P2", signal: SIGNALS.THIRD_PARTY_INTENT, contacts: [["Rosa Lind", "VP Digital"], ["Neil Carver", "IT Lead"]] },
-  { id: "ent-5", name: "Sovereign Telecom", website: "sovereigntelecom.com", industry: "Telecommunications", pvs: "High", trigger: "Renewal plus expansion", priority: "P2", signal: SIGNALS.COMPETITIVE_RENEWAL, contacts: [["Amir Haddad", "VP Sales"], ["Beth Cromwell", "RevOps Manager"]] },
-  { id: "ent-6", name: "Atlas Aerospace", website: "atlasaerospace.com", industry: "Aerospace", pvs: "High", trigger: "Procurement engaged", priority: "P2", signal: SIGNALS.RECENT_FUNDING, contacts: [["Greg Mason", "Director of Operations"], ["Yuki Tanaka", "Program Manager"]] },
-  { id: "wb-1", name: "Bluebird Boutique", website: "bluebirdboutique.com", industry: "Retail", pvs: "Low", trigger: "Reopened account", priority: "P4", signal: SIGNALS.NON_QL_DEMAND, contacts: [["Ella Frost", "Owner"], ["Marcus Reed", "Store Manager"]] },
-  { id: "wb-2", name: "Corner Cafe Collective", website: "cornercafeco.com", industry: "Hospitality", pvs: "Low", trigger: "Re-engaged via email", priority: "P4", signal: SIGNALS.MARKETING_HUB_QL, contacts: [["Joy Tan", "Founder"], ["Pete Salas", "Operations Lead"]] },
-  { id: "wb-3", name: "Rapid Repair Auto", website: "rapidrepairauto.com", industry: "Automotive Services", pvs: "Low", trigger: "Requested a callback", priority: "P4", signal: SIGNALS.NON_QL_DEMAND, contacts: [["Vince Marino", "Owner"], ["Dana Beck", "Service Manager"]] },
-  { id: "wb-4", name: "Sunny Day Childcare", website: "sunnydaychildcare.com", industry: "Education", pvs: "Low", trigger: "Restarted trial", priority: "P4", signal: SIGNALS.THIRD_PARTY_INTENT, contacts: [["Grace Howell", "Director"], ["Sam Ortiz", "Admin Lead"]] },
-  { id: "wb-5", name: "Peak Fitness Studios", website: "peakfitnessstudios.com", industry: "Health & Fitness", pvs: "Low", trigger: "Viewed pricing again", priority: "P4", signal: SIGNALS.NON_QL_DEMAND, contacts: [["Tyler Quinn", "Owner"], ["Mia Larson", "General Manager"]] },
-  { id: "wb-6", name: "Hometown Hardware", website: "hometownhardware.com", industry: "Retail", pvs: "Low", trigger: "Won-back lead", priority: "P4", signal: SIGNALS.MARKETING_HUB_QL, contacts: [["Roy Becker", "Owner"], ["Lena Voss", "Buyer"]] },
+  { id: "sf-1", name: "Cobalt CRM Group", website: "cobaltcrm.com", industry: "B2B Software", pvs: "High", trigger: "Evaluating CRM alternatives", priority: "P2", signal: SIGNALS.PAST_HUBSPOT_USER, contacts: [["Dana Mercer", "RevOps Director"], ["Paul Iverson", "Head of Sales"]] },
+  { id: "sf-2", name: "Harbor & Finch", website: "harborfinch.com", industry: "Professional Services", pvs: "Medium", trigger: "Booked a demo", priority: "P2", signal: SIGNALS.RECENT_QL, contacts: [["Greta Holm", "VP Marketing"], ["Sam Devlin", "Sales Ops Lead"]] },
+  { id: "sf-3", name: "Westbrook Retail Co.", website: "westbrookretail.com", industry: "Retail", pvs: "Medium", trigger: "Salesforce renewal approaching", priority: "P2", signal: SIGNALS.PAST_HUBSPOT_USER, contacts: [["Nina Patel", "CRM Manager"], ["Theo Brunner", "Director of Sales"]] },
+  { id: "sf-4", name: "Lumen Software", website: "lumensoftware.io", industry: "Software", pvs: "High", trigger: "Compared pricing", priority: "P2", signal: SIGNALS.VIEWED_PRICING, contacts: [["Erin Cole", "COO"], ["Raj Malhotra", "RevOps Manager"]] },
+  { id: "sf-5", name: "Tradewind Freight", website: "tradewindfreight.com", industry: "Logistics", pvs: "Medium", trigger: "Visited migration guide", priority: "P2", signal: SIGNALS.ATTENDED_WEBINAR, contacts: [["Mona Reyes", "VP Revenue"], ["Bill Hartley", "Sales Director"]] },
+  { id: "sf-6", name: "Maple Financial", website: "maplefinancial.com", industry: "Financial Services", pvs: "Medium", trigger: "Requested ROI assessment", priority: "P2", signal: SIGNALS.PAST_HUBSPOT_USER, contacts: [["Aisha Karim", "Head of Operations"], ["Dan Foley", "CRM Administrator"]] },
+  { id: "aeo-1", name: "Beacon Digital Media", website: "beacondigital.com", industry: "Marketing & Advertising", pvs: "High", trigger: "Downloaded AEO playbook", priority: "P3", signal: SIGNALS.ATTENDED_WEBINAR, contacts: [["Chloe Adams", "Content Lead"], ["Marco Bianchi", "SEO Manager"]] },
+  { id: "aeo-2", name: "Northstar Content", website: "northstarcontent.com", industry: "Media", pvs: "Medium", trigger: "Read AI search guide", priority: "P3", signal: SIGNALS.VIEWED_PRICING, contacts: [["Iris Wagner", "Editor in Chief"], ["Leo Park", "Growth Manager"]] },
+  { id: "aeo-3", name: "Prism Analytics Lab", website: "prismanalytics.io", industry: "Data Analytics", pvs: "High", trigger: "Attended AEO webinar", priority: "P3", signal: SIGNALS.RECENT_QL, contacts: [["Sara Quinn", "VP Marketing"], ["Tomas Vidal", "Analytics Lead"]] },
+  { id: "aeo-4", name: "Evergreen Publishing", website: "evergreenpub.com", industry: "Publishing", pvs: "Medium", trigger: "Signed up for newsletter", priority: "P3", signal: SIGNALS.VIEWED_PRICING, contacts: [["Faye Mitchell", "Digital Director"], ["Owen Bradley", "Content Strategist"]] },
+  { id: "aeo-5", name: "Skyline Marketing Group", website: "skylinemktg.com", industry: "Marketing & Advertising", pvs: "Medium", trigger: "Viewed AI content page", priority: "P3", signal: SIGNALS.ATTENDED_WEBINAR, contacts: [["Hana Sato", "Demand Gen Lead"], ["Eli Roth", "Brand Lead"]] },
+  { id: "aeo-6", name: "Cadence Media", website: "cadencemedia.com", industry: "Media", pvs: "Low", trigger: "Researched competitors", priority: "P3", signal: SIGNALS.VIEWED_PRICING, contacts: [["Priya Anand", "Head of Content"], ["Jack Doyle", "SEO Specialist"]] },
+  { id: "ent-1", name: "Continental Manufacturing", website: "continentalmfg.com", industry: "Manufacturing", pvs: "High", trigger: "Expansion inquiry", priority: "P2", signal: SIGNALS.PAST_HUBSPOT_USER, contacts: [["Karl Brandt", "VP IT"], ["Lucia Romano", "Procurement Director"]] },
+  { id: "ent-2", name: "Granite Holdings", website: "graniteholdings.com", industry: "Financial Services", pvs: "High", trigger: "Multi-seat quote request", priority: "P2", signal: SIGNALS.RECENT_HIRE, contacts: [["Margaret Shaw", "CFO"], ["Devon Pierce", "IT Director"]] },
+  { id: "ent-3", name: "Vanguard Industrial", website: "vanguardindustrial.com", industry: "Industrial Technology", pvs: "Medium", trigger: "Viewed enterprise plan", priority: "P2", signal: SIGNALS.VIEWED_PRICING, contacts: [["Hugo Vance", "COO"], ["Tara Singh", "Operations Director"]] },
+  { id: "ent-4", name: "Imperial Foods Group", website: "imperialfoods.com", industry: "Food & Beverage", pvs: "Medium", trigger: "Requested security review", priority: "P2", signal: SIGNALS.ATTENDED_WEBINAR, contacts: [["Rosa Lind", "VP Digital"], ["Neil Carver", "IT Lead"]] },
+  { id: "ent-5", name: "Sovereign Telecom", website: "sovereigntelecom.com", industry: "Telecommunications", pvs: "High", trigger: "Renewal plus expansion", priority: "P2", signal: SIGNALS.PAST_HUBSPOT_USER, contacts: [["Amir Haddad", "VP Sales"], ["Beth Cromwell", "RevOps Manager"]] },
+  { id: "ent-6", name: "Atlas Aerospace", website: "atlasaerospace.com", industry: "Aerospace", pvs: "High", trigger: "Procurement engaged", priority: "P2", signal: SIGNALS.RECENT_HIRE, contacts: [["Greg Mason", "Director of Operations"], ["Yuki Tanaka", "Program Manager"]] },
+  { id: "wb-1", name: "Bluebird Boutique", website: "bluebirdboutique.com", industry: "Retail", pvs: "Low", trigger: "Reopened account", priority: "P4", signal: SIGNALS.VIEWED_PRICING, contacts: [["Ella Frost", "Owner"], ["Marcus Reed", "Store Manager"]] },
+  { id: "wb-2", name: "Corner Cafe Collective", website: "cornercafeco.com", industry: "Hospitality", pvs: "Low", trigger: "Re-engaged via email", priority: "P4", signal: SIGNALS.RECENT_QL, contacts: [["Joy Tan", "Founder"], ["Pete Salas", "Operations Lead"]] },
+  { id: "wb-3", name: "Rapid Repair Auto", website: "rapidrepairauto.com", industry: "Automotive Services", pvs: "Low", trigger: "Requested a callback", priority: "P4", signal: SIGNALS.VIEWED_PRICING, contacts: [["Vince Marino", "Owner"], ["Dana Beck", "Service Manager"]] },
+  { id: "wb-4", name: "Sunny Day Childcare", website: "sunnydaychildcare.com", industry: "Education", pvs: "Low", trigger: "Restarted trial", priority: "P4", signal: SIGNALS.ATTENDED_WEBINAR, contacts: [["Grace Howell", "Director"], ["Sam Ortiz", "Admin Lead"]] },
+  { id: "wb-5", name: "Peak Fitness Studios", website: "peakfitnessstudios.com", industry: "Health & Fitness", pvs: "Low", trigger: "Viewed pricing again", priority: "P4", signal: SIGNALS.VIEWED_PRICING, contacts: [["Tyler Quinn", "Owner"], ["Mia Larson", "General Manager"]] },
+  { id: "wb-6", name: "Hometown Hardware", website: "hometownhardware.com", industry: "Retail", pvs: "Low", trigger: "Won-back lead", priority: "P4", signal: SIGNALS.RECENT_QL, contacts: [["Roy Becker", "Owner"], ["Lena Voss", "Buyer"]] },
 ];
 
 const generatedPlayCompanies: Company[] = playCompanySeeds.map(buildPlayCompany);

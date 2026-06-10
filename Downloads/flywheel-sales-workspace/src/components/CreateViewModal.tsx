@@ -18,6 +18,7 @@ import { TableDataCell } from "@/components/ui/table-data-cell";
 import { AITextarea } from "@/components/ui/ai-textarea";
 import { FormControl } from "@/components/ui/form-control";
 import Tag from "@/components/Tag";
+import { SIGNAL_CATALOG } from "@/data/signals";
 import { prospectingCompanies } from "@/data/prospectingCompanies";
 import { repPersonas, defaultViewerLabel, RepPersona } from "@/data/repPersonas";
 import { Play, PlayFilter, PlayStatus, EnablementMaterial } from "@/data/playData";
@@ -3135,7 +3136,7 @@ const CreateViewModal = ({
       createdBy: initialPlay?.createdBy ?? defaultViewerLabel,
       completionCriteria: `${completionCount} ${completionAction.replace(/-/g, " ")} per ${completionPer}`,
       enablementMaterials,
-      metrics: initialPlay?.metrics ?? { totalCompanies: previewCompanies.length, worked: 0, meetings: 0, target: previewCompanies.length },
+      metrics: initialPlay?.metrics ?? { totalCompanies: previewCompanies.length, worked: 0, meetings: 0, target: previewCompanies.length, contactsEngaged: 0, contactsInPlay: 0, pipelineCreated: 0 },
       status: playStatus,
       owner: initialPlay?.owner ?? defaultViewerLabel,
       geo: initialPlay?.geo,
@@ -3642,14 +3643,15 @@ const CreateViewModal = ({
                 </TableDataCell>
                 <TableDataCell className="flex-1 w-auto">
                   <div className="flex flex-wrap gap-1">
-                    {company.signals.slice(0, 2).map((signal, idx) => (
-                      <Tag
-                        key={idx}
-                        variant={(signal.variant as "green" | "blue" | "yellow" | "orange" | "neutral") || "neutral"}
-                      >
-                        {signal.text}
-                      </Tag>
-                    ))}
+                    {company.signals.slice(0, 2).map((signal, idx) => {
+                      const def = SIGNAL_CATALOG[signal.id];
+                      if (!def) return null;
+                      return (
+                        <Tag key={idx} variant={def.variant}>
+                          {def.label}
+                        </Tag>
+                      );
+                    })}
                     {company.signals.length > 2 && (
                       <span className="text-[var(--color-text-core-subtle)]">
                         +{company.signals.length - 2}
@@ -3804,9 +3806,11 @@ const CreateViewModal = ({
                     </TableDataCell>
                     <TableDataCell className="flex-1 w-auto">
                       <div className="flex flex-wrap gap-1">
-                        {row.signals.slice(0, 2).map((s, idx) => (
-                          <Tag key={idx} variant={(s.variant as "green" | "blue" | "yellow" | "orange" | "neutral") || "neutral"}>{s.text}</Tag>
-                        ))}
+                        {row.signals.slice(0, 2).map((s, idx) => {
+                          const def = SIGNAL_CATALOG[s.id];
+                          if (!def) return null;
+                          return <Tag key={idx} variant={def.variant}>{def.label}</Tag>;
+                        })}
                         {row.signals.length === 0 && <span className="text-[var(--color-text-core-subtle)]">—</span>}
                       </div>
                     </TableDataCell>
