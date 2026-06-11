@@ -1,7 +1,6 @@
 import { Fragment, useState } from "react";
 import { DataWell } from "@/components/ui/data-well";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -11,22 +10,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableToolbar } from "@/components/ui/table-toolbar";
 import {
   ChevronDown,
   ChevronRight,
-  Columns3,
   ExternalLink,
   ListFilter,
-  Search,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { TrellisIcon } from "@/components/ui/trellis-icon";
 import Tag from "@/components/Tag";
+import FilterPill from "@/components/FilterPill";
+import { SIGNAL_LABELS } from "@/data/signals";
 
 interface CustomerContact {
   id: string;
@@ -217,25 +210,18 @@ const FullCustomerBook = () => {
           <FilterPill label="Next renewal date" hasCarat options={["Any", "Next 30 days", "Next 60 days", "Next 90 days"]} />
           <FilterPill label="Total MRR (Local)" hasCarat options={["Any", "< $500", "$500–$2k", "> $2k"]} />
           <FilterPill label="HubSpot Credits Consumption" hasCarat options={["Any", "Low", "Medium", "High"]} />
+          <FilterPill label="Signals" hasCarat options={["All signals", ...SIGNAL_LABELS]} />
           <Button variant="ghost" size="medium" className="border border-transparent heading-50">
             <ListFilter className="h-4 w-4" />
             Advanced filters
           </Button>
-          <Button variant="ghost" size="medium" className="border border-transparent heading-50 whitespace-nowrap">
-            <Columns3 className="h-4 w-4" />
-            Edit columns
-          </Button>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search portals" className="pl-9 rounded-full bg-card" />
-      </div>
-
       {/* Table */}
-      <div className="border border-border bg-card overflow-x-auto">
+      <div className="border border-border bg-card">
+        <TableToolbar searchPlaceholder="Search portals" />
+        <div className="overflow-x-auto">
         <Table className="min-w-[1100px]">
           <TableHeader>
             <TableRow className="bg-[var(--color-specialty-table-header-default)] hover:bg-[var(--color-specialty-table-header-default)] border-[var(--color-border-transitional-core-subtle)]">
@@ -278,7 +264,7 @@ const FullCustomerBook = () => {
                             <ChevronRight className="h-4 w-4" />
                           )}
                         </button>
-                        <Button variant="link" className="body-100 text-text-interactive hover:text-text-interactive-hover p-0 h-auto hover:no-underline">
+                        <Button variant="link" className="body-125 text-text-interactive hover:text-text-interactive-hover p-0 h-auto hover:no-underline">
                           {customer.name}
                         </Button>
                       </div>
@@ -321,7 +307,7 @@ const FullCustomerBook = () => {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex flex-col">
-                            <Button variant="link" className="body-100 text-text-interactive hover:text-text-interactive-hover p-0 h-auto justify-start hover:no-underline">
+                            <Button variant="link" className="body-125 text-text-interactive hover:text-text-interactive-hover p-0 h-auto justify-start hover:no-underline">
                               {contact.name}
                             </Button>
                             {contact.role && (
@@ -357,36 +343,11 @@ const FullCustomerBook = () => {
             })}
           </TableBody>
         </Table>
+        </div>
       </div>
     </div>
   );
 };
 
-
-const FilterPill = ({
-  label,
-  hasCarat,
-  options,
-}: {
-  label: string;
-  hasCarat?: boolean;
-  options?: string[];
-}) => (
-  <DropdownMenu>
-    <DropdownMenuTrigger asChild>
-      <Button variant="ghost" size="medium" className="border border-transparent heading-50">
-        {label}
-        {hasCarat && <TrellisIcon name="downCarat" size={12} />}
-      </Button>
-    </DropdownMenuTrigger>
-    {options && options.length > 0 && (
-      <DropdownMenuContent>
-        {options.map(option => (
-          <DropdownMenuItem key={option}>{option}</DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    )}
-  </DropdownMenu>
-);
 
 export default FullCustomerBook;

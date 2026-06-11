@@ -242,9 +242,12 @@ const buildSignalAngle = (
     case "past-hubspot-user": {
       const hub = rowVal(detail, "Product") ?? "HubSpot";
       const prev = rowVal(detail, "Previously at") ?? "a previous company";
+      // The product (e.g. "Marketing Hub") names a function for the hook — you
+      // work in marketing, not "in Marketing Hub".
+      const fn = /\sHub$/i.test(hub) ? hub.replace(/\sHub$/i, "").toLowerCase() : hub;
       return {
         id: signal.id,
-        hook: `I saw you worked in ${hub} back at ${prev} — figured the context would be useful`,
+        hook: `I saw you worked in ${fn} back at ${prev} — figured the context would be useful`,
         blurbClause: `they already know the product from ${hub} at ${prev}, so there's no education curve`,
         frictionClause: `they know what good looks like and will be quick to spot where their current stack falls short`,
       };
