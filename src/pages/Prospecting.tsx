@@ -9,6 +9,8 @@ import ProspectingSubNav from "@/components/ProspectingSubNav";
 import PlayHeader from "@/components/PlayHeader";
 import { usePlays } from "@/contexts/PlaysContext";
 import { getPlayIdsForCompany, getPlayOutreachForCompany } from "@/data/playData";
+import FilterPill from "@/components/FilterPill";
+import { SIGNAL_LABELS } from "@/data/signals";
 import { DataWell } from "@/components/ui/data-well";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -702,7 +704,9 @@ const Prospecting = () => {
                       <DropdownMenuItem>Finance</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  
+
+                  <FilterPill label="Signals" hasCarat options={["All signals", ...SIGNAL_LABELS]} />
+
                    <Button variant="ghost" size="medium" className="border border-transparent heading-50">
                     <ListFilter className="h-4 w-4" />
                     Advanced Filters
