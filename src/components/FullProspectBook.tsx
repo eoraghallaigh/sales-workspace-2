@@ -1,7 +1,6 @@
 import { Fragment, useState } from "react";
 import { DataWell } from "@/components/ui/data-well";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -11,25 +10,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableToolbar } from "@/components/ui/table-toolbar";
 import {
   ChevronDown,
   ChevronRight,
-  Columns3,
   ExternalLink,
   ListFilter,
-  Search,
   Star,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { TrellisIcon } from "@/components/ui/trellis-icon";
 import Tag from "@/components/Tag";
+import FilterPill from "@/components/FilterPill";
 import { SignalChip } from "@/components/SignalChip";
-import { sig, type SignalInstance } from "@/data/signals";
+import { sig, SIGNAL_LABELS, type SignalInstance } from "@/data/signals";
 
 interface ProspectContact {
   id: string;
@@ -499,27 +491,18 @@ const FullProspectBook = () => {
         <div className="flex items-center gap-2 flex-wrap">
           <FilterPill label="Priority" hasCarat options={["All", "P1", "P2", "P3", "P4"]} />
           <FilterPill label="Industry" hasCarat options={["All industries", "Technology", "Healthcare", "Finance", "Manufacturing", "Media", "Logistics", "Biotech", "E-commerce", "Education"]} />
-          <FilterPill label="ICP fit" hasCarat options={["Any", "High", "Medium", "Low"]} />
-          <FilterPill label="Intent strength" hasCarat options={["Any", "Strong", "Moderate", "Weak"]} />
+          <FilterPill label="Signals" hasCarat options={["All signals", ...SIGNAL_LABELS]} />
           <Button variant="ghost" size="medium" className="border border-transparent heading-50">
             <ListFilter className="h-4 w-4" />
             Advanced filters
           </Button>
-          <Button variant="ghost" size="medium" className="border border-transparent heading-50 whitespace-nowrap">
-            <Columns3 className="h-4 w-4" />
-            Edit columns
-          </Button>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search prospects" className="pl-9 rounded-full bg-card" />
-      </div>
-
       {/* Table */}
-      <div className="border border-border bg-card overflow-x-auto">
+      <div className="border border-border bg-card">
+        <TableToolbar searchPlaceholder="Search prospects" />
+        <div className="overflow-x-auto">
         <Table className="min-w-[1900px]">
           <TableHeader>
             <TableRow className="bg-[var(--color-specialty-table-header-default)] hover:bg-[var(--color-specialty-table-header-default)] border-[var(--color-border-transitional-core-subtle)]">
@@ -531,11 +514,10 @@ const FullProspectBook = () => {
               </TableHead>
               <TableHead className="min-w-[140px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Industry</TableHead>
               <TableHead className="min-w-[170px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Domain</TableHead>
-              <TableHead className="min-w-[240px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Action Guidance</TableHead>
               <TableHead className="min-w-[260px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Intent Signals</TableHead>
-              <TableHead className="min-w-[180px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Recent Conversion</TableHead>
-              <TableHead className="min-w-[160px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Recent Conversion Date</TableHead>
-              <TableHead className="min-w-[150px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Last Activity Date</TableHead>
+              <TableHead className="min-w-[200px] h-11 px-6 py-3 table-header-text align-middle whitespace-nowrap border-r border-[var(--color-border-transitional-core-subtle)]">Recent Conversion</TableHead>
+              <TableHead className="min-w-[230px] h-11 px-6 py-3 table-header-text align-middle whitespace-nowrap border-r border-[var(--color-border-transitional-core-subtle)]">Recent Conversion Date</TableHead>
+              <TableHead className="min-w-[200px] h-11 px-6 py-3 table-header-text align-middle whitespace-nowrap border-r border-[var(--color-border-transitional-core-subtle)]">Last Activity Date</TableHead>
               <TableHead className="min-w-[180px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Next Step</TableHead>
               <TableHead className="min-w-[120px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Rating</TableHead>
               <TableHead className="min-w-[90px] h-11 px-6 py-3 table-header-text align-middle">Priority</TableHead>
@@ -568,7 +550,7 @@ const FullProspectBook = () => {
                             <ChevronRight className="h-4 w-4" />
                           )}
                         </button>
-                        <Button variant="link" className="body-100 text-text-interactive hover:text-text-interactive-hover p-0 h-auto hover:no-underline">
+                        <Button variant="link" className="body-125 text-text-interactive hover:text-text-interactive-hover p-0 h-auto hover:no-underline">
                           {prospect.name}
                         </Button>
                       </div>
@@ -581,12 +563,6 @@ const FullProspectBook = () => {
                         {prospect.domain}
                         <ExternalLink className="h-3 w-3" />
                       </Button>
-                    </td>
-                    <td className="border-b border-border px-4 py-3 align-middle">
-                      <span className="body-100 text-foreground">
-                        <span className="font-medium">{prospect.actionGuidanceCount} action{prospect.actionGuidanceCount === 1 ? "" : "s"}</span>
-                        <span className="text-muted-foreground"> · {prospect.actionGuidanceLabel}</span>
-                      </span>
                     </td>
                     <td className="border-b border-border px-4 py-3 align-middle">
                       <div className="flex flex-wrap gap-1">
@@ -651,9 +627,6 @@ const FullProspectBook = () => {
                         <span className="body-100 text-muted-foreground">—</span>
                       </td>
                       <td className="border-b border-border px-4 py-3 align-middle">
-                        <span className="body-100 text-muted-foreground">—</span>
-                      </td>
-                      <td className="border-b border-border px-4 py-3 align-middle">
                         <div className="flex flex-wrap gap-1">
                           {contact.signals.map(signal => (
                             <Tag key={signal.text} variant={signal.variant === "neutral" ? "neutral" : signal.variant}>
@@ -689,6 +662,7 @@ const FullProspectBook = () => {
             })}
           </TableBody>
         </Table>
+        </div>
       </div>
     </div>
   );
@@ -706,32 +680,6 @@ const StarRating = ({ rating }: { rating: number }) => (
       />
     ))}
   </div>
-);
-
-const FilterPill = ({
-  label,
-  hasCarat,
-  options,
-}: {
-  label: string;
-  hasCarat?: boolean;
-  options?: string[];
-}) => (
-  <DropdownMenu>
-    <DropdownMenuTrigger asChild>
-      <Button variant="ghost" size="medium" className="border border-transparent heading-50">
-        {label}
-        {hasCarat && <TrellisIcon name="downCarat" size={12} />}
-      </Button>
-    </DropdownMenuTrigger>
-    {options && options.length > 0 && (
-      <DropdownMenuContent>
-        {options.map(option => (
-          <DropdownMenuItem key={option}>{option}</DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    )}
-  </DropdownMenu>
 );
 
 export default FullProspectBook;

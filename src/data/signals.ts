@@ -142,6 +142,10 @@ export const SIGNAL_CATALOG: Record<SignalId, SignalDef> = {
 
 export const getSignalDef = (id: SignalId): SignalDef | undefined => SIGNAL_CATALOG[id];
 
+// Every signal's display label, in catalog order — used to populate the
+// "Signals" quick filter on the tables.
+export const SIGNAL_LABELS: string[] = Object.values(SIGNAL_CATALOG).map((d) => d.label);
+
 export const COMPANY_SIGNAL_IDS = (Object.keys(SIGNAL_CATALOG) as SignalId[]).filter(
   (id) => SIGNAL_CATALOG[id].level === "company",
 );
