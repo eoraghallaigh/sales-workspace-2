@@ -31,12 +31,15 @@ import EmailCommunicator from "@/components/EmailCommunicator";
 import ProspectingAgent from "@/components/ProspectingAgent";
 import { OutreachSequenceCard } from "@/components/OutreachSequenceCard";
 import { TouchDots, type TouchStatus } from "@/components/TouchDot";
+import RecentConversionsCard from "@/components/RecentConversionsCard";
+import HubSummaryCard from "@/components/HubSummaryCard";
+import { getRecentConversions, getHubSummary } from "@/data/companyCards";
 
 import { getCompanyStrategy } from "@/data/companyStrategies";
 import { getContactDossier } from "@/data/contactDossier";
 import PlayHeader from "@/components/PlayHeader";
 import { usePlays } from "@/contexts/PlaysContext";
-import { getPlaysForCompany } from "@/data/playData";
+import { getPlaysForCompany, getPlayOutreachForCompany, rankContactsForPlay } from "@/data/playData";
 import { useStrategyAssistant } from "@/contexts/StrategyAssistantContext";
 import {
   getOutreachState,
@@ -272,6 +275,14 @@ const ProspectingStrategy = () => {
     () => getPlaysForCompany(currentCompany?.id ?? "", plays),
     [currentCompany?.id, plays],
   );
+  const recentConversions = useMemo(
+    () => getRecentConversions(currentCompany?.id ?? ""),
+    [currentCompany?.id],
+  );
+  const hubSummary = useMemo(
+    () => getHubSummary(currentCompany?.id ?? ""),
+    [currentCompany?.id],
+  );
 
   // Re-initialize empty-state defaults whenever the current company changes.
   // ?empty=… URL param wins; otherwise read from the company's hasGeneratedStrategy.
@@ -285,6 +296,26 @@ const ProspectingStrategy = () => {
     setIsRunningResearch(false);
     setIsBuildingSequences(false);
   }, [currentCompany?.id, emptyParam]);
+
+  // On landing, expand any sequence email a contact has replied to, so the
+  // reply is visible without the rep having to hunt for it. Existing manual
+  // toggles win (prev spread last), so this only seeds the initial state.
+  useEffect(() => {
+    if (!currentCompany) return;
+    const seed: Record<string, boolean> = {};
+    for (const c of currentCompany.recommendedContacts ?? []) {
+      const { sequence } = getOutreachState(c.id, c.name.split(" ")[0]);
+      if (sequence.kind === "not-enrolled") continue;
+      sequence.statuses.forEach((status, idx) => {
+        if (status.kind === "sent" && status.reply) {
+          seed[`${c.id}-email-${idx}`] = true;
+        }
+      });
+    }
+    if (Object.keys(seed).length > 0) {
+      setExpandedEmails((prev) => ({ ...seed, ...prev }));
+    }
+  }, [currentCompany?.id]);
   const {
     activeVariantByCompany,
     isRewriting,
@@ -294,16 +325,28 @@ const ProspectingStrategy = () => {
   const strategy = getCompanyStrategy(currentCompany?.id)[activeVariantId];
   const isStrategyRewriting = !!isRewriting[currentCompany?.id || ""];
 
+  // Outreach is driven by the company's play: float the play's target personas
+  // (e.g. sales + marketing for Salesforce Switchers) to the top so the default
+  // outreach targets match who the play is meant to reach.
+  const playOutreach = useMemo(
+    () => getPlayOutreachForCompany(currentCompany?.id ?? ""),
+    [currentCompany?.id],
+  );
+  const rankedRecommended = useMemo(
+    () => rankContactsForPlay(currentCompany?.recommendedContacts ?? [], playOutreach),
+    [currentCompany, playOutreach],
+  );
+
   // Get contacts for the current company
-  const baseOutreachTargets = currentCompany?.recommendedContacts?.slice(0, 3) || [];
-  const addedContacts = currentCompany?.recommendedContacts?.filter(c => addedContactIds.has(c.id)) || [];
+  const baseOutreachTargets = rankedRecommended.slice(0, 3);
+  const addedContacts = rankedRecommended.filter(c => addedContactIds.has(c.id));
   const outreachTargets = [...baseOutreachTargets, ...addedContacts].filter(c => !removedContactIds.has(c.id));
 
   // Other contacts: remaining contacts not in outreach targets
   const otherContacts = useMemo(() => {
     const outreachIds = new Set(outreachTargets.map(c => c.id));
-    return (currentCompany?.recommendedContacts || []).filter(c => !outreachIds.has(c.id)).slice(0, 10);
-  }, [currentCompany, addedContactIds]);
+    return rankedRecommended.filter(c => !outreachIds.has(c.id)).slice(0, 10);
+  }, [rankedRecommended, outreachTargets]);
 
   const handleAddToOutreach = useCallback((contactId: string) => {
     setAddedContactIds(prev => new Set(prev).add(contactId));
@@ -1094,6 +1137,7 @@ const ProspectingStrategy = () => {
                         const dossier = getContactDossier(
                           { id: contact.id, name: contact.name, role: contact.role, signals: contact.signals, qlData: contact.qlData },
                           { id: currentCompany.id, name: currentCompany.name, industry: currentCompany.industry },
+                          playOutreach,
                         );
                         return (
                           <div
@@ -1372,6 +1416,12 @@ const ProspectingStrategy = () => {
             {!isNarrow && (
               <div className="flex flex-col gap-4 flex-[4_1_0%] min-w-0">
                 <InfoCard title="Company data" maxHeight="max-h-[640px]" collapsible defaultCollapsed>{companyBody}</InfoCard>
+                <InfoCard title="Hub summary" maxHeight="max-h-[640px]" collapsible defaultCollapsed>
+                  <HubSummaryCard summary={hubSummary} />
+                </InfoCard>
+                <InfoCard title={`Recent conversions (${recentConversions.length})`} maxHeight="max-h-[480px]" collapsible defaultCollapsed>
+                  <RecentConversionsCard conversions={recentConversions} onContactClick={setContactDrawerId} />
+                </InfoCard>
                 <InfoCard title="Activity" maxHeight="max-h-[640px]" collapsible defaultCollapsed>{activityBody}</InfoCard>
                 <InfoCard title="Deals" maxHeight="max-h-[480px]" collapsible defaultCollapsed>{dealsBody}</InfoCard>
                 <InfoCard title="Notes" maxHeight="max-h-[320px]" collapsible defaultCollapsed>{notesBody}</InfoCard>
@@ -1392,6 +1442,7 @@ const ProspectingStrategy = () => {
           ? getContactDossier(
               { id: drawerContact.id, name: drawerContact.name, role: drawerContact.role, signals: drawerContact.signals, qlData: drawerContact.qlData },
               { id: currentCompany.id, name: currentCompany.name, industry: currentCompany.industry },
+              playOutreach,
             )
           : undefined;
         const fallbackContact = drawerContact && {

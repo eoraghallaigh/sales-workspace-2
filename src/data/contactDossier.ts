@@ -13,6 +13,7 @@ import {
   getOutreachState,
   type OutreachState,
 } from "@/data/outreachStates";
+import { type PlayOutreachProfile } from "@/data/playData";
 import {
   resolveSignalDetail,
   type SignalDetail,
@@ -369,6 +370,7 @@ const buildBlurb = (
   contact: DossierContact,
   company: DossierCompany,
   angles: SignalAngle[],
+  play?: PlayOutreachProfile,
 ): string => {
   const firstName = contact.name.split(" ")[0];
   const angle = roleAngle(contact.role);
@@ -380,13 +382,17 @@ const buildBlurb = (
     angles[1] && angles[1].blurbClause !== angles[0]?.blurbClause
       ? ` On top of that, ${angles[1].blurbClause}.`
       : "";
-  return `${lead}${why}${second}`;
+  const playClause = play
+    ? ` ${company.name} is in the ${play.label} play — ${play.framing}.`
+    : "";
+  return `${lead}${why}${second}${playClause}`;
 };
 
 const buildFriction = (
   contact: DossierContact,
   company: DossierCompany,
   angles: SignalAngle[],
+  play?: PlayOutreachProfile,
 ): string => {
   const firstName = contact.name.split(" ")[0];
   const industry = company.industry ? company.industry.toLowerCase() : "their market";
@@ -394,7 +400,8 @@ const buildFriction = (
   const angleClause = angles[0]
     ? ` For ${firstName} specifically, ${angles[0].frictionClause}.`
     : ` ${firstName} hasn't shown a hand yet, so the opening is a sharp, well-researched point of view rather than a pitch.`;
-  return `${base}${angleClause}`;
+  const playClause = play ? ` ${play.frictionFrame}` : "";
+  return `${base}${angleClause}${playClause}`;
 };
 
 const buildConversions = (
@@ -419,6 +426,7 @@ const buildCallBullets = (
   contact: DossierContact,
   company: DossierCompany,
   angles: SignalAngle[],
+  play?: PlayOutreachProfile,
 ): string[] => {
   const angle = roleAngle(contact.role);
   const bulletFor = (a: SignalAngle): string => {
@@ -440,6 +448,13 @@ const buildCallBullets = (
   const bullets = angles.slice(0, 2).map(bulletFor);
   bullets.push(`HubSpot helps ${company.name} ${angle.value}`);
   bullets.push(`Can get a team like ${company.name}'s live in weeks, not quarters`);
+  if (play) {
+    bullets.unshift(
+      play.competitor
+        ? `On ${play.competitor} today — part of the ${play.label} play; lead with the switch case`
+        : `Part of the ${play.label} play — target ${play.personasLabel}`,
+    );
+  }
   return bullets;
 };
 
@@ -447,6 +462,7 @@ const buildCallScript = (
   contact: DossierContact,
   company: DossierCompany,
   angles: SignalAngle[],
+  play?: PlayOutreachProfile,
 ): string => {
   const firstName = contact.name.split(" ")[0];
   const angle = roleAngle(contact.role);
@@ -454,7 +470,9 @@ const buildCallScript = (
     ? `Hi ${firstName} — ${angles[0].hook}.`
     : `Hi ${firstName} — I've been looking at what ${company.name} is building and wanted to reach out directly.`;
   const bridge = `Teams in your seat usually tell me the hard part is less about features and more about pulling everything into one place your team will actually use.`;
-  const value = `That's exactly where we help — we ${angle.value}, and we can get a team like ${company.name}'s live in weeks, not quarters.`;
+  const value = play
+    ? `That's exactly where we help${play.competitor ? `. Unlike ${play.competitor}, we ` : ` — we `}${pick(play.differentiators, hashSeed(contact.id))}, and we can get a team like ${company.name}'s live in weeks, not quarters.`
+    : `That's exactly where we help — we ${angle.value}, and we can get a team like ${company.name}'s live in weeks, not quarters.`;
   const ask = `Worth a quick 15 minutes this week to see if it's a fit?`;
   return `"${opener} ${bridge} ${value} ${ask}"`;
 };
@@ -463,8 +481,13 @@ const buildLinkedIn = (
   contact: DossierContact,
   company: DossierCompany,
   angles: SignalAngle[],
+  play?: PlayOutreachProfile,
 ): string => {
   const firstName = contact.name.split(" ")[0];
+  if (play?.competitor) {
+    const lead = angles[0] ? `${angles[0].hook}. ` : "";
+    return `"Hi ${firstName} — ${lead}I work with ${play.personasLabel} moving off ${play.competitor}; would love to connect and share what we're seeing."`;
+  }
   if (angles[0]) {
     return `"Hi ${firstName} — ${angles[0].hook}. I work with ${company.industry ?? "teams like yours"} on exactly this; would love to connect and share what we're seeing."`;
   }
@@ -475,45 +498,65 @@ const buildEmails = (
   contact: DossierContact,
   company: DossierCompany,
   angles: SignalAngle[],
+  play?: PlayOutreachProfile,
 ): EmailStep[] => {
   const firstName = contact.name.split(" ")[0];
   const angle = roleAngle(contact.role);
+  const seed = hashSeed(contact.id);
   const primary = angles[0];
   const secondary = angles[1];
 
-  const subject1 = primary
-    ? primary.id === "viewed-pricing"
-      ? `Saw ${company.name} comparing options`
-      : primary.id === "recent-ql"
-        ? `Following up on your request`
-        : primary.id === "attended-webinar"
-          ? `Glad you joined the session`
-          : primary.id === "recent-hire"
-            ? `Congrats on the new role at ${company.name}`
-            : `A quick note for your ${company.name} stack`
-    : `Helping ${company.name} consolidate the GTM stack`;
+  const subject1 = play
+    ? play.emailSubject.replace("{company}", company.name)
+    : primary
+      ? primary.id === "viewed-pricing"
+        ? `Saw ${company.name} comparing options`
+        : primary.id === "recent-ql"
+          ? `Following up on your request`
+          : primary.id === "attended-webinar"
+            ? `Glad you joined the session`
+            : primary.id === "recent-hire"
+              ? `Congrats on the new role at ${company.name}`
+              : `A quick note for your ${company.name} stack`
+      : `Helping ${company.name} consolidate the GTM stack`;
 
-  const open1 = primary
-    ? `${primary.hook}.`
-    : `I've been researching ${company.name} and how teams in ${company.industry ?? "your space"} are scaling go-to-market.`;
+  // Open on the contact's strongest intent signal when there is one, then bring
+  // in the play's angle — so the email is both personal and on-message.
+  const open1 = play
+    ? primary
+      ? `${primary.hook}. ${play.emailOpener}`
+      : play.emailOpener
+    : primary
+      ? `${primary.hook}.`
+      : `I've been researching ${company.name} and how teams in ${company.industry ?? "your space"} are scaling go-to-market.`;
+
+  const bridge1 = play
+    ? `Most ${play.personasLabel} I talk to${play.competitor ? ` on ${play.competitor}` : ""} are trying to ${pick(play.differentiators, seed)}. We do exactly that.`
+    : `Most ${angle.peers} I talk to are trying to ${angle.value}. We do exactly that, and the teams that switch usually feel it first in time saved every week.`;
 
   const email1: EmailStep = {
     subject: subject1,
-    body: `Hi ${firstName},\n\n${open1}\n\nMost ${angle.peers} I talk to are trying to ${angle.value}. We do exactly that, and the teams that switch usually feel it first in time saved every week.\n\nWould you be open to a quick 15 minutes to see whether it's a fit for ${company.name}?`,
+    body: `Hi ${firstName},\n\n${open1}\n\n${bridge1}\n\nWould you be open to a quick 15 minutes to see whether it's a fit for ${company.name}?`,
   };
 
-  const proof = secondary
-    ? `It connects to the other thing I noticed — ${secondary.blurbClause}.`
-    : `A ${company.industry ?? "similar"} team your size recently consolidated three tools into one and cut their reps' admin time by roughly a third.`;
+  const proof = play
+    ? play.proofPoint
+    : secondary
+      ? `It connects to the other thing I noticed — ${secondary.blurbClause}.`
+      : `A ${company.industry ?? "similar"} team your size recently consolidated three tools into one and cut their reps' admin time by roughly a third.`;
 
   const email2: EmailStep = {
     subject: `One more reason it's worth a look, ${firstName}`,
     body: `Hi ${firstName},\n\nFollowing up on my last note. ${proof}\n\nI put together a short before/after of what a move would look like for a team like ${company.name}'s — happy to walk you through it. Does later this week work?`,
   };
 
+  const closer = play?.competitor
+    ? `If moving off ${play.competitor} isn't a priority this quarter`
+    : `If consolidating ${company.name}'s stack and giving your team back time isn't a priority this quarter`;
+
   const email3: EmailStep = {
     subject: `Should I close the loop, ${firstName}?`,
-    body: `Hi ${firstName},\n\nI know things get busy, so I'll keep this short. If consolidating ${company.name}'s stack and giving your team back time isn't a priority this quarter, no problem at all — just let me know and I'll stop reaching out.\n\nIf it is worth a look, I'm happy to share the analysis either way.`,
+    body: `Hi ${firstName},\n\nI know things get busy, so I'll keep this short. ${closer}, no problem at all — just let me know and I'll stop reaching out.\n\nIf it is worth a look, I'm happy to share the analysis either way.`,
   };
 
   return [email1, email2, email3];
@@ -525,6 +568,7 @@ const DOSSIER_OVERRIDES: Record<string, Partial<ContactDossier>> = {};
 export const getContactDossier = (
   contact: DossierContact,
   company: DossierCompany,
+  play?: PlayOutreachProfile,
 ): ContactDossier => {
   const seed = hashSeed(contact.id);
   const owner: SignalOwner = {
@@ -537,8 +581,8 @@ export const getContactDossier = (
   const angles = orderedAngles(contact, owner);
 
   const generated: ContactDossier = {
-    blurb: buildBlurb(contact, company, angles),
-    primaryFriction: buildFriction(contact, company, angles),
+    blurb: buildBlurb(contact, company, angles, play),
+    primaryFriction: buildFriction(contact, company, angles, play),
     conversions: buildConversions(angles, seed),
     activity: [
       ...outboundActivity(getOutreachState(contact.id, contact.name.split(" ")[0])),
@@ -546,10 +590,10 @@ export const getContactDossier = (
         .map((a) => a.inboundActivity)
         .filter((a): a is DossierActivityItem => a !== undefined),
     ],
-    callScript: buildCallScript(contact, company, angles),
-    callBullets: buildCallBullets(contact, company, angles),
-    linkedInMessage: buildLinkedIn(contact, company, angles),
-    emails: buildEmails(contact, company, angles),
+    callScript: buildCallScript(contact, company, angles, play),
+    callBullets: buildCallBullets(contact, company, angles, play),
+    linkedInMessage: buildLinkedIn(contact, company, angles, play),
+    emails: buildEmails(contact, company, angles, play),
   };
 
   return { ...generated, ...DOSSIER_OVERRIDES[contact.id] };
