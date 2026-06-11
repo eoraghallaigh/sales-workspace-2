@@ -112,7 +112,7 @@ const CompaniesTableView = ({
               </TableHead>
               <TableHead className={`min-w-[140px] ${headerCellClass}`}>Industry</TableHead>
               <TableHead className={`min-w-[100px] ${headerCellClass}`}>PVS</TableHead>
-              <TableHead className={`min-w-[260px] ${headerCellClass}`}>Why now</TableHead>
+              <TableHead className={`min-w-[260px] ${headerCellClass}`}>Signals</TableHead>
               <TableHead className={`min-w-[160px] ${headerCellClass}`}>Contacts</TableHead>
               {!currentPlayId && (
                 <TableHead className={`min-w-[180px] ${headerCellClass}`}>Touches</TableHead>
@@ -152,7 +152,7 @@ const CompaniesTableView = ({
                       <div className="flex flex-col min-w-0">
                         <Button
                           variant="link"
-                          className="body-100 text-text-interactive hover:text-text-interactive-hover p-0 h-auto justify-start hover:no-underline"
+                          className="body-125 text-text-interactive hover:text-text-interactive-hover p-0 h-auto justify-start hover:no-underline"
                           onClick={() => (onNameClick ?? onCompanyClick)?.(company.id)}
                         >
                           {company.name}
