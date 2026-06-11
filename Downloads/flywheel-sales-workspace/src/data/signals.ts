@@ -44,6 +44,9 @@ export interface SignalDetailRow {
 // The resolved content of a signal's hover popover.
 export interface SignalDetail {
   headline?: string;
+  // A plain-text sentence weaving the specific facts together, for popovers
+  // that read as prose rather than a label/value table.
+  narrative?: string;
   rows: SignalDetailRow[];
   footnote?: string;
 }
@@ -213,12 +216,15 @@ const generateDetail = (id: SignalId, owner?: SignalOwner): SignalDetail => {
     case "new-hire": {
       const name = pick(EXEC_NAMES, seed);
       const role = pick(EXEC_ROLES, seed, 1);
+      const joined = pick(HIRE_DATES, seed, 2);
+      const prev = pick(PREV_COMPANIES, seed, 3);
       return {
         headline: `${name} joined as ${role}`,
+        narrative: `${name} joined as ${role} ${joined}, previously at ${prev}.`,
         rows: [
-          { label: "Joined", value: pick(HIRE_DATES, seed, 2) },
+          { label: "Joined", value: joined },
           { label: "Role", value: role },
-          { label: "Previously at", value: pick(PREV_COMPANIES, seed, 3) },
+          { label: "Previously at", value: prev },
         ],
         footnote: "Source: LinkedIn",
       };
@@ -226,13 +232,16 @@ const generateDetail = (id: SignalId, owner?: SignalOwner): SignalDetail => {
     case "funding-round": {
       const round = pick(FUNDING_ROUNDS, seed);
       const amount = pick(FUNDING_AMOUNTS, seed, 1);
+      const announced = pick(FUNDING_DATES, seed, 2);
+      const investor = pick(FUNDING_INVESTORS, seed, 3);
       return {
         headline: `Raised ${amount} ${round}`,
+        narrative: `Raised a ${amount} ${round} round on ${announced}, led by ${investor}.`,
         rows: [
           { label: "Round", value: round },
           { label: "Amount", value: amount },
-          { label: "Announced", value: pick(FUNDING_DATES, seed, 2) },
-          { label: "Lead investor", value: pick(FUNDING_INVESTORS, seed, 3) },
+          { label: "Announced", value: announced },
+          { label: "Lead investor", value: investor },
         ],
         footnote: "Source: Crunchbase",
       };
@@ -243,6 +252,7 @@ const generateDetail = (id: SignalId, owner?: SignalOwner): SignalDetail => {
       const pct = pick(SURGE_PCTS, seed, 2);
       return {
         headline: `${count} open roles, up ${pct} this quarter`,
+        narrative: `${count} open roles right now — up ${pct} versus last quarter, concentrated in ${dept}.`,
         rows: [
           { label: "Open roles", value: count },
           { label: "Concentrated in", value: dept },
@@ -253,83 +263,101 @@ const generateDetail = (id: SignalId, owner?: SignalOwner): SignalDetail => {
     }
     case "tech-stack-change": {
       const pair = pick(TECH_PAIRS, seed);
+      const when = pick(TECH_DATES, seed, 1);
       return {
         headline: `Adopted ${pair.added}, replacing ${pair.replaced}`,
+        narrative: `Adopted ${pair.added}, replacing ${pair.replaced} for ${pair.category.toLowerCase()}, ${when}.`,
         rows: [
           { label: "Added", value: pair.added },
           { label: "Replaced", value: pair.replaced },
           { label: "Category", value: pair.category },
-          { label: "When", value: pick(TECH_DATES, seed, 1) },
+          { label: "When", value: when },
         ],
         footnote: "Source: BuiltWith",
       };
     }
     case "former-customer": {
       const product = pick(CUSTOMER_PRODUCTS, seed);
+      const active = pick(CUSTOMER_PERIODS, seed, 1);
+      const reason = pick(CUSTOMER_REASONS, seed, 2);
       return {
         headline: `Previously a ${product} customer`,
+        narrative: `Previously used ${product} (${active}) but ${reason}.`,
         rows: [
           { label: "Product", value: product },
-          { label: "Active", value: pick(CUSTOMER_PERIODS, seed, 1) },
-          { label: "Churned", value: pick(CUSTOMER_REASONS, seed, 2) },
+          { label: "Active", value: active },
+          { label: "Churned", value: reason },
         ],
         footnote: "Source: CRM history",
       };
     }
     case "viewed-pricing": {
       const views = pick(PRICING_VIEWS, seed);
+      const last = pick(PRICING_WHEN, seed, 1);
+      const pages = pick(PRICING_PAGES, seed, 2);
       return {
         headline: `Viewed pricing ${views} times`,
+        narrative: `Viewed the pricing page ${views} times, most recently ${last} (${pages}).`,
         rows: [
           { label: "Views", value: views },
-          { label: "Last viewed", value: pick(PRICING_WHEN, seed, 1) },
-          { label: "Pages", value: pick(PRICING_PAGES, seed, 2) },
+          { label: "Last viewed", value: last },
+          { label: "Pages", value: pages },
         ],
         footnote: "Source: web analytics",
       };
     }
     case "past-hubspot-user": {
       const hub = pick(HUBS, seed);
+      const when = pick(HUB_YEARS, seed, 1);
+      const prev = pick(PREV_COMPANIES, seed, 2);
       return {
-        headline: `Used ${hub} ${pick(HUB_YEARS, seed, 1)}`,
+        headline: `Used ${hub} ${when}`,
+        narrative: `Knows ${hub} from a previous role at ${prev}.`,
         rows: [
           { label: "Product", value: hub },
-          { label: "When", value: pick(HUB_YEARS, seed, 1) },
-          { label: "Previously at", value: pick(PREV_COMPANIES, seed, 2) },
+          { label: "When", value: when },
+          { label: "Previously at", value: prev },
         ],
         footnote: "Source: product history",
       };
     }
     case "recent-ql": {
       const trigger = pick(QL_TRIGGERS, seed);
+      const occurred = pick(QL_DATES, seed, 1);
       return {
         headline: trigger,
+        narrative: `${trigger} ${occurred}.`,
         rows: [
           { label: "Trigger", value: trigger },
-          { label: "Occurred", value: pick(QL_DATES, seed, 1) },
+          { label: "Occurred", value: occurred },
         ],
         footnote: "Marketing-qualified lead",
       };
     }
     case "attended-webinar": {
       const title = pick(WEBINAR_TITLES, seed);
+      const date = pick(WEBINAR_DATES, seed, 1);
       return {
         headline: `Attended "${title}"`,
+        narrative: `Attended the "${title}" webinar on ${date}.`,
         rows: [
           { label: "Webinar", value: title },
-          { label: "Date", value: pick(WEBINAR_DATES, seed, 1) },
+          { label: "Date", value: date },
         ],
         footnote: "Source: webinar registration",
       };
     }
     case "recent-hire": {
       const role = owner?.role ?? pick(EXEC_ROLES, seed);
+      const joined = pick(HIRE_DATES, seed, 1);
+      const prev = pick(PREV_COMPANIES, seed, 2);
       return {
         headline: `Joined as ${role}`,
+        narrative: `Joined as ${role} ${joined}, previously at ${prev}.`,
         rows: [
           { label: "Role", value: role },
-          { label: "Joined", value: pick(HIRE_DATES, seed, 1) },
-          { label: "Previously at", value: pick(PREV_COMPANIES, seed, 2) },
+          { label: "Joined", value: joined },
+          { label: "Previously at", value: prev },
         ],
         footnote: "Source: LinkedIn",
       };

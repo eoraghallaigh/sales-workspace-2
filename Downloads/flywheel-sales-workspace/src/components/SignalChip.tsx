@@ -7,15 +7,32 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import {
+  resolveSignalDetail,
   SIGNAL_CATALOG,
+  type SignalDetail,
   type SignalInstance,
   type SignalOwner,
 } from "@/data/signals";
 
-const DetailBody = ({ title, summary }: { title: string; summary: string }) => (
+// Renders the record-specific detail for a signal as a plain-text sentence
+// (who/what/how much/when), falling back to the headline or catalog summary.
+const DetailBody = ({
+  title,
+  detail,
+  summary,
+}: {
+  title: string;
+  detail: SignalDetail;
+  summary: string;
+}) => (
   <div className="px-4 py-3.5">
     <p className="heading-100 text-foreground">{title}</p>
-    <p className="body-100 text-muted-foreground mt-1">{summary}</p>
+    <p className="body-100 text-muted-foreground mt-1">
+      {detail.narrative ?? detail.headline ?? summary}
+    </p>
+    {detail.footnote && (
+      <p className="detail-200 text-muted-foreground mt-2.5">{detail.footnote}</p>
+    )}
   </div>
 );
 
@@ -25,9 +42,11 @@ interface SignalChipProps {
   className?: string;
 }
 
-export const SignalChip = ({ signal, className }: SignalChipProps) => {
+export const SignalChip = ({ signal, owner, className }: SignalChipProps) => {
   const def = SIGNAL_CATALOG[signal.id];
   if (!def) return null;
+
+  const detail = resolveSignalDetail(signal, owner);
 
   return (
     <HoverCard openDelay={120} closeDelay={80}>
@@ -48,7 +67,7 @@ export const SignalChip = ({ signal, className }: SignalChipProps) => {
         sideOffset={8}
         className="w-[280px] p-0"
       >
-        <DetailBody title={def.label} summary={def.summary} />
+        <DetailBody title={def.label} detail={detail} summary={def.summary} />
       </HoverCardContent>
     </HoverCard>
   );
@@ -108,13 +127,19 @@ export const ContactSignalsHoverCard = ({
             contact.signals.map((signal, idx) => {
               const def = SIGNAL_CATALOG[signal.id];
               if (!def) return null;
+              const detail = resolveSignalDetail(signal, {
+                kind: "contact",
+                id: contact.id,
+                name: contact.name,
+                role: contact.role,
+              });
               return (
                 <div key={`${signal.id}-${idx}`} className="flex flex-col gap-1">
                   <span className="inline-flex">
                     <Tag variant={def.variant}>{def.label}</Tag>
                   </span>
                   <span className="detail-200 text-muted-foreground">
-                    {def.summary}
+                    {detail.narrative ?? detail.headline ?? def.summary}
                   </span>
                 </div>
               );
