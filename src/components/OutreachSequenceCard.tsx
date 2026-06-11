@@ -106,7 +106,7 @@ const renderCallMeta = (s: CallState, isEnrolled: boolean) => {
     return (
       <span className="detail-200 text-muted-foreground flex items-center gap-1.5">
         <TrellisIcon name="clock" size={12} className="text-muted-foreground" />
-        Task created when enrolled
+        Due: Tomorrow
       </span>
     );
   }
@@ -134,7 +134,7 @@ const renderLinkedInMeta = (s: LinkedInState, isEnrolled: boolean) => {
     return (
       <span className="detail-200 text-muted-foreground flex items-center gap-1.5">
         <TrellisIcon name="clock" size={12} className="text-muted-foreground" />
-        Task created when enrolled
+        Due: Tomorrow
       </span>
     );
   }

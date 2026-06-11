@@ -265,10 +265,6 @@ export const companyStrategies: Record<string, CompanyStrategy> = {
   },
   "3": {
     default: {
-      // Full, unabridged research output — printed inline on the strategy page to
-      // contrast with the TL;DR treatment used elsewhere. summaryBullets are not shown
-      // for this company (showFullResearch hides the condensed view + AI button).
-      showFullResearch: true,
       summary:
         "Advanced Satellite Communications is a 35-year-old commercial technology systems integrator (satellite TV + integrated security) in Livonia, MI — a net-new P1 with a fresh inbound signal getting single-threaded email outreach.",
       summaryBullets: [

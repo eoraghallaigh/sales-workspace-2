@@ -8,7 +8,7 @@ import WorkspaceHeader from "@/components/WorkspaceHeader";
 import ProspectingSubNav from "@/components/ProspectingSubNav";
 import PlayHeader from "@/components/PlayHeader";
 import { usePlays } from "@/contexts/PlaysContext";
-import { getPlayIdsForCompany } from "@/data/playData";
+import { getPlayIdsForCompany, getPlayOutreachForCompany } from "@/data/playData";
 import { DataWell } from "@/components/ui/data-well";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -433,6 +433,7 @@ const Prospecting = () => {
     return getContactDossier(
       { id: rc.id, name: rc.name, role: rc.role, signals: rc.signals, qlData: rc.qlData },
       { id: company.id, name: company.name, industry: company.industry },
+      getPlayOutreachForCompany(company.id),
     );
   }, [selectedContactId, companiesWithCalculatedStatus]);
 
@@ -568,7 +569,7 @@ const Prospecting = () => {
 
               {/* Play Header - shown when a play is active */}
               {!expandedPanelCompanyId && activePlay && (
-                <PlayHeader play={activePlay} />
+                <PlayHeader play={activePlay} defaultOpen />
               )}
 
               {/* Play metrics - data wells, matching the other views' position/style */}

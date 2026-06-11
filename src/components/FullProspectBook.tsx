@@ -18,6 +18,7 @@ import {
   ExternalLink,
   ListFilter,
   Search,
+  Star,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -43,9 +44,15 @@ interface ProspectRow {
   id: string;
   name: string;
   domain: string;
+  industry: string;
   actionGuidanceCount: number;
   actionGuidanceLabel: string;
   signals: SignalInstance[];
+  recentConversion: string;
+  recentConversionDate: string;
+  lastActivityDate: string;
+  nextStep: string;
+  rating: number;
   priority: "P1" | "P2" | "P3" | "P4";
   contacts: ProspectContact[];
 }
@@ -55,9 +62,15 @@ const prospects: ProspectRow[] = [
     id: "northwind-labs",
     name: "Northwind Labs",
     domain: "northwindlabs.com",
+    industry: "Technology",
     actionGuidanceCount: 1,
     actionGuidanceLabel: "Recent Series B announced",
     signals: [sig("funding-round"), sig("recent-ql")],
+    recentConversion: "Requested a demo",
+    recentConversionDate: "Jun 9, 2026",
+    lastActivityDate: "Jun 10, 2026",
+    nextStep: "Call Alex Hsu",
+    rating: 5,
     priority: "P1",
     contacts: [
       {
@@ -87,9 +100,15 @@ const prospects: ProspectRow[] = [
     id: "lattice-studios",
     name: "Lattice Studios",
     domain: "latticestudios.io",
+    industry: "Media",
     actionGuidanceCount: 2,
     actionGuidanceLabel: "Active competitor renewal window",
     signals: [sig("former-customer"), sig("viewed-pricing")],
+    recentConversion: "Viewed pricing page",
+    recentConversionDate: "Jun 7, 2026",
+    lastActivityDate: "Jun 8, 2026",
+    nextStep: "Re-engage before renewal",
+    rating: 4,
     priority: "P1",
     contacts: [],
   },
@@ -97,9 +116,15 @@ const prospects: ProspectRow[] = [
     id: "harborline-co",
     name: "Harborline Co.",
     domain: "harborline.co",
+    industry: "Logistics",
     actionGuidanceCount: 1,
     actionGuidanceLabel: "Multiple non-QL demand signals",
     signals: [sig("viewed-pricing")],
+    recentConversion: "Pricing page view",
+    recentConversionDate: "Jun 3, 2026",
+    lastActivityDate: "Jun 5, 2026",
+    nextStep: "Send follow-up email",
+    rating: 3,
     priority: "P2",
     contacts: [],
   },
@@ -107,9 +132,15 @@ const prospects: ProspectRow[] = [
     id: "carbon-six",
     name: "Carbon Six",
     domain: "carbonsix.ai",
+    industry: "Technology",
     actionGuidanceCount: 1,
     actionGuidanceLabel: "Inbound demo request",
     signals: [sig("recent-ql")],
+    recentConversion: "Inbound demo request",
+    recentConversionDate: "Jun 8, 2026",
+    lastActivityDate: "Jun 8, 2026",
+    nextStep: "Enroll in sequence",
+    rating: 4,
     priority: "P2",
     contacts: [],
   },
@@ -117,9 +148,15 @@ const prospects: ProspectRow[] = [
     id: "verdantbio",
     name: "VerdantBio",
     domain: "verdantbio.com",
+    industry: "Biotech",
     actionGuidanceCount: 1,
     actionGuidanceLabel: "Hiring sales leadership",
     signals: [sig("hiring-surge")],
+    recentConversion: "—",
+    recentConversionDate: "—",
+    lastActivityDate: "May 30, 2026",
+    nextStep: "Research decision makers",
+    rating: 3,
     priority: "P3",
     contacts: [],
   },
@@ -127,11 +164,275 @@ const prospects: ProspectRow[] = [
     id: "skyline-finance",
     name: "Skyline Finance",
     domain: "skylinefinance.com",
+    industry: "Finance",
     actionGuidanceCount: 1,
     actionGuidanceLabel: "Inbound contact form submission",
     signals: [sig("viewed-pricing")],
+    recentConversion: "Contact form submission",
+    recentConversionDate: "May 28, 2026",
+    lastActivityDate: "May 29, 2026",
+    nextStep: "Qualify fit on first call",
+    rating: 2,
     priority: "P3",
     contacts: [],
+  },
+  {
+    id: "meridian-health",
+    name: "Meridian Health",
+    domain: "meridianhealth.io",
+    industry: "Healthcare",
+    actionGuidanceCount: 2,
+    actionGuidanceLabel: "New marketing leader hired",
+    signals: [sig("new-hire"), sig("attended-webinar")],
+    recentConversion: "Webinar registration",
+    recentConversionDate: "Jun 6, 2026",
+    lastActivityDate: "Jun 9, 2026",
+    nextStep: "Call new VP of Marketing",
+    rating: 5,
+    priority: "P1",
+    contacts: [
+      {
+        id: "dana-cole",
+        name: "Dana Cole",
+        role: "VP, Marketing",
+        initials: "DC",
+        avatarColor: "bg-trellis-teal-600",
+        signals: [
+          { variant: "green", text: "Primary Contact" },
+          { variant: "neutral", text: "Marketing - Executive" },
+        ],
+      },
+      {
+        id: "sam-reyes",
+        name: "Sam Reyes",
+        role: "Head of RevOps",
+        initials: "SR",
+        avatarColor: "bg-trellis-teal-600",
+        signals: [
+          { variant: "neutral", text: "Operations - Influencer" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "atlas-manufacturing",
+    name: "Atlas Manufacturing",
+    domain: "atlasmfg.com",
+    industry: "Manufacturing",
+    actionGuidanceCount: 1,
+    actionGuidanceLabel: "Free trial in progress",
+    signals: [sig("recent-ql"), sig("tech-stack-change")],
+    recentConversion: "Free trial signup",
+    recentConversionDate: "Jun 5, 2026",
+    lastActivityDate: "Jun 7, 2026",
+    nextStep: "Multi-thread to operations",
+    rating: 4,
+    priority: "P1",
+    contacts: [],
+  },
+  {
+    id: "quill-co",
+    name: "Quill & Co",
+    domain: "quillco.com",
+    industry: "E-commerce",
+    actionGuidanceCount: 1,
+    actionGuidanceLabel: "Comparing solutions",
+    signals: [sig("viewed-pricing")],
+    recentConversion: "Downloaded pricing guide",
+    recentConversionDate: "Jun 2, 2026",
+    lastActivityDate: "Jun 4, 2026",
+    nextStep: "Send case study",
+    rating: 3,
+    priority: "P2",
+    contacts: [],
+  },
+  {
+    id: "beacon-analytics",
+    name: "Beacon Analytics",
+    domain: "beaconanalytics.ai",
+    industry: "Technology",
+    actionGuidanceCount: 1,
+    actionGuidanceLabel: "Repeat website visits",
+    signals: [sig("recent-ql")],
+    recentConversion: "Inbound demo request",
+    recentConversionDate: "Jun 4, 2026",
+    lastActivityDate: "Jun 6, 2026",
+    nextStep: "Enroll in sequence",
+    rating: 4,
+    priority: "P2",
+    contacts: [],
+  },
+  {
+    id: "cedar-grove-health",
+    name: "Cedar Grove Health",
+    domain: "cedargrove.org",
+    industry: "Healthcare",
+    actionGuidanceCount: 1,
+    actionGuidanceLabel: "Early-stage research",
+    signals: [sig("viewed-pricing")],
+    recentConversion: "Ebook download",
+    recentConversionDate: "May 26, 2026",
+    lastActivityDate: "May 31, 2026",
+    nextStep: "Nurture with content",
+    rating: 3,
+    priority: "P3",
+    contacts: [],
+  },
+  {
+    id: "pinnacle-capital",
+    name: "Pinnacle Capital",
+    domain: "pinnaclecapital.com",
+    industry: "Finance",
+    actionGuidanceCount: 1,
+    actionGuidanceLabel: "Pricing inquiry submitted",
+    signals: [sig("recent-ql")],
+    recentConversion: "Pricing inquiry",
+    recentConversionDate: "Jun 1, 2026",
+    lastActivityDate: "Jun 3, 2026",
+    nextStep: "Confirm budget authority",
+    rating: 4,
+    priority: "P2",
+    contacts: [],
+  },
+  {
+    id: "forge-robotics",
+    name: "Forge Robotics",
+    domain: "forgerobotics.io",
+    industry: "Manufacturing",
+    actionGuidanceCount: 2,
+    actionGuidanceLabel: "Funding + inbound demo",
+    signals: [sig("funding-round"), sig("recent-ql")],
+    recentConversion: "Requested a demo",
+    recentConversionDate: "Jun 9, 2026",
+    lastActivityDate: "Jun 9, 2026",
+    nextStep: "Book discovery call",
+    rating: 5,
+    priority: "P1",
+    contacts: [
+      {
+        id: "marcus-lin",
+        name: "Marcus Lin",
+        role: "Chief Operating Officer",
+        initials: "ML",
+        avatarColor: "bg-trellis-blue-600",
+        signals: [
+          { variant: "green", text: "Primary Contact" },
+          { variant: "neutral", text: "Operations - Decision Maker" },
+        ],
+      },
+      {
+        id: "tara-webb",
+        name: "Tara Webb",
+        role: "VP, Sales",
+        initials: "TW",
+        avatarColor: "bg-trellis-blue-600",
+        signals: [
+          { variant: "neutral", text: "Sales - Influencer" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "brightwave-media",
+    name: "Brightwave Media",
+    domain: "brightwave.tv",
+    industry: "Media",
+    actionGuidanceCount: 1,
+    actionGuidanceLabel: "Low engagement",
+    signals: [sig("hiring-surge")],
+    recentConversion: "—",
+    recentConversionDate: "—",
+    lastActivityDate: "May 20, 2026",
+    nextStep: "Monitor for intent",
+    rating: 2,
+    priority: "P4",
+    contacts: [],
+  },
+  {
+    id: "northstar-logistics",
+    name: "Northstar Logistics",
+    domain: "northstarlogistics.com",
+    industry: "Logistics",
+    actionGuidanceCount: 1,
+    actionGuidanceLabel: "Inbound form submission",
+    signals: [sig("viewed-pricing")],
+    recentConversion: "Contact form submission",
+    recentConversionDate: "May 27, 2026",
+    lastActivityDate: "May 29, 2026",
+    nextStep: "Qualify on first call",
+    rating: 3,
+    priority: "P3",
+    contacts: [],
+  },
+  {
+    id: "helix-therapeutics",
+    name: "Helix Therapeutics",
+    domain: "helixtx.com",
+    industry: "Biotech",
+    actionGuidanceCount: 1,
+    actionGuidanceLabel: "Webinar attendee",
+    signals: [sig("attended-webinar"), sig("hiring-surge")],
+    recentConversion: "Webinar registration",
+    recentConversionDate: "Jun 3, 2026",
+    lastActivityDate: "Jun 5, 2026",
+    nextStep: "Share webinar follow-up",
+    rating: 4,
+    priority: "P2",
+    contacts: [],
+  },
+  {
+    id: "summit-education",
+    name: "Summit Education",
+    domain: "summitedu.org",
+    industry: "Education",
+    actionGuidanceCount: 1,
+    actionGuidanceLabel: "Content engagement",
+    signals: [sig("viewed-pricing")],
+    recentConversion: "Ebook download",
+    recentConversionDate: "May 24, 2026",
+    lastActivityDate: "May 28, 2026",
+    nextStep: "Nurture with content",
+    rating: 3,
+    priority: "P3",
+    contacts: [],
+  },
+  {
+    id: "vantage-software",
+    name: "Vantage Software",
+    domain: "vantagesoft.com",
+    industry: "Technology",
+    actionGuidanceCount: 2,
+    actionGuidanceLabel: "Active trial + former customer",
+    signals: [sig("former-customer"), sig("recent-ql")],
+    recentConversion: "Free trial signup",
+    recentConversionDate: "Jun 7, 2026",
+    lastActivityDate: "Jun 8, 2026",
+    nextStep: "Reach out to trial owner",
+    rating: 5,
+    priority: "P1",
+    contacts: [
+      {
+        id: "jordan-pike",
+        name: "Jordan Pike",
+        role: "Chief Marketing Officer",
+        initials: "JP",
+        avatarColor: "bg-trellis-orange-500",
+        signals: [
+          { variant: "green", text: "Primary Contact" },
+          { variant: "blue", text: "Past HubSpot User" },
+        ],
+      },
+      {
+        id: "riley-chen",
+        name: "Riley Chen",
+        role: "Director, Marketing Ops",
+        initials: "RC",
+        avatarColor: "bg-trellis-orange-500",
+        signals: [
+          { variant: "neutral", text: "Operations - Influencer" },
+        ],
+      },
+    ],
   },
 ];
 
@@ -197,7 +498,7 @@ const FullProspectBook = () => {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <FilterPill label="Priority" hasCarat options={["All", "P1", "P2", "P3", "P4"]} />
-          <FilterPill label="Industry" hasCarat options={["All industries", "Technology", "Healthcare", "Finance", "Manufacturing"]} />
+          <FilterPill label="Industry" hasCarat options={["All industries", "Technology", "Healthcare", "Finance", "Manufacturing", "Media", "Logistics", "Biotech", "E-commerce", "Education"]} />
           <FilterPill label="ICP fit" hasCarat options={["Any", "High", "Medium", "Low"]} />
           <FilterPill label="Intent strength" hasCarat options={["Any", "Strong", "Moderate", "Weak"]} />
           <Button variant="ghost" size="medium" className="border border-transparent heading-50">
@@ -219,19 +520,25 @@ const FullProspectBook = () => {
 
       {/* Table */}
       <div className="border border-border bg-card overflow-x-auto">
-        <Table className="min-w-[1100px]">
+        <Table className="min-w-[1900px]">
           <TableHeader>
             <TableRow className="bg-[var(--color-specialty-table-header-default)] hover:bg-[var(--color-specialty-table-header-default)] border-[var(--color-border-transitional-core-subtle)]">
               <TableHead className="w-12 h-11 px-6 py-3 sticky left-0 z-20 bg-[var(--color-specialty-table-header-default)] table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
                 <Checkbox />
               </TableHead>
-              <TableHead className="sticky left-12 z-20 bg-[var(--color-specialty-table-header-default)] min-w-[260px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
+              <TableHead className="sticky left-12 z-20 bg-[var(--color-specialty-table-header-default)] min-w-[240px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
                 Company
               </TableHead>
-              <TableHead className="min-w-[180px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Domain</TableHead>
+              <TableHead className="min-w-[140px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Industry</TableHead>
+              <TableHead className="min-w-[170px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Domain</TableHead>
               <TableHead className="min-w-[240px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Action Guidance</TableHead>
-              <TableHead className="min-w-[280px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Intent Signals</TableHead>
-              <TableHead className="min-w-[100px] h-11 px-6 py-3 table-header-text align-middle">Priority</TableHead>
+              <TableHead className="min-w-[260px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Intent Signals</TableHead>
+              <TableHead className="min-w-[180px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Recent Conversion</TableHead>
+              <TableHead className="min-w-[160px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Recent Conversion Date</TableHead>
+              <TableHead className="min-w-[150px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Last Activity Date</TableHead>
+              <TableHead className="min-w-[180px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Next Step</TableHead>
+              <TableHead className="min-w-[120px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Rating</TableHead>
+              <TableHead className="min-w-[90px] h-11 px-6 py-3 table-header-text align-middle">Priority</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -267,6 +574,9 @@ const FullProspectBook = () => {
                       </div>
                     </td>
                     <td className="border-b border-border px-4 py-3 align-middle">
+                      <span className="body-100 text-foreground">{prospect.industry}</span>
+                    </td>
+                    <td className="border-b border-border px-4 py-3 align-middle">
                       <Button variant="link" className="body-100 text-text-interactive hover:text-text-interactive-hover p-0 h-auto hover:no-underline inline-flex items-center gap-1">
                         {prospect.domain}
                         <ExternalLink className="h-3 w-3" />
@@ -290,6 +600,25 @@ const FullProspectBook = () => {
                       </div>
                     </td>
                     <td className="border-b border-border px-4 py-3 align-middle">
+                      <span className={prospect.recentConversion === "—" ? "body-100 text-muted-foreground" : "body-100 text-foreground"}>
+                        {prospect.recentConversion}
+                      </span>
+                    </td>
+                    <td className="border-b border-border px-4 py-3 align-middle">
+                      <span className={prospect.recentConversionDate === "—" ? "body-100 text-muted-foreground" : "body-100 text-foreground"}>
+                        {prospect.recentConversionDate}
+                      </span>
+                    </td>
+                    <td className="border-b border-border px-4 py-3 align-middle">
+                      <span className="body-100 text-foreground">{prospect.lastActivityDate}</span>
+                    </td>
+                    <td className="border-b border-border px-4 py-3 align-middle">
+                      <span className="body-100 text-foreground">{prospect.nextStep}</span>
+                    </td>
+                    <td className="border-b border-border px-4 py-3 align-middle">
+                      <StarRating rating={prospect.rating} />
+                    </td>
+                    <td className="border-b border-border px-4 py-3 align-middle">
                       <span className="body-100 text-foreground">{prospect.priority}</span>
                     </td>
                   </TableRow>
@@ -306,7 +635,7 @@ const FullProspectBook = () => {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex flex-col">
-                            <Button variant="link" className="body-100 text-text-interactive hover:text-text-interactive-hover p-0 h-auto justify-start hover:no-underline">
+                            <Button variant="link" className="body-125 text-text-interactive hover:text-text-interactive-hover p-0 h-auto justify-start hover:no-underline">
                               {contact.name}
                             </Button>
                             {contact.role && (
@@ -319,9 +648,10 @@ const FullProspectBook = () => {
                         <span className="body-100 text-muted-foreground">—</span>
                       </td>
                       <td className="border-b border-border px-4 py-3 align-middle">
-                        <Button variant="secondary-alt" size="small" className="heading-50">
-                          Enroll in sequence
-                        </Button>
+                        <span className="body-100 text-muted-foreground">—</span>
+                      </td>
+                      <td className="border-b border-border px-4 py-3 align-middle">
+                        <span className="body-100 text-muted-foreground">—</span>
                       </td>
                       <td className="border-b border-border px-4 py-3 align-middle">
                         <div className="flex flex-wrap gap-1">
@@ -331,6 +661,23 @@ const FullProspectBook = () => {
                             </Tag>
                           ))}
                         </div>
+                      </td>
+                      <td className="border-b border-border px-4 py-3 align-middle">
+                        <span className="body-100 text-muted-foreground">—</span>
+                      </td>
+                      <td className="border-b border-border px-4 py-3 align-middle">
+                        <span className="body-100 text-muted-foreground">—</span>
+                      </td>
+                      <td className="border-b border-border px-4 py-3 align-middle">
+                        <span className="body-100 text-muted-foreground">—</span>
+                      </td>
+                      <td className="border-b border-border px-4 py-3 align-middle">
+                        <Button variant="secondary-alt" size="small" className="heading-50">
+                          Enroll in sequence
+                        </Button>
+                      </td>
+                      <td className="border-b border-border px-4 py-3 align-middle">
+                        <span className="body-100 text-muted-foreground">—</span>
                       </td>
                       <td className="border-b border-border px-4 py-3 align-middle">
                         <span className="body-100 text-muted-foreground">—</span>
@@ -347,6 +694,19 @@ const FullProspectBook = () => {
   );
 };
 
+
+const StarRating = ({ rating }: { rating: number }) => (
+  <div className="flex items-center gap-0.5" aria-label={`${rating} out of 5`}>
+    {[1, 2, 3, 4, 5].map(n => (
+      <Star
+        key={n}
+        className={`h-3.5 w-3.5 ${
+          n <= rating ? "fill-current text-[#eab308]" : "text-trellis-neutral-300"
+        }`}
+      />
+    ))}
+  </div>
+);
 
 const FilterPill = ({
   label,
