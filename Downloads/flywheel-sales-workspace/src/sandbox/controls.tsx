@@ -130,6 +130,60 @@ export const EnumSelect = ({
   </Field>
 );
 
+export interface IconOption {
+  value: string;
+  label: string;
+  icon: ReactNode;
+}
+
+export const IconSegmentedControl = ({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: IconOption[];
+  onChange: (v: string) => void;
+}) => {
+  const known = options.some((o) => o.value === value);
+  return (
+    <Field label={`${label}${value ? ` — ${value}` : ""}`}>
+      <div className="flex flex-wrap gap-1">
+        {!known && value && (
+          <span
+            title={`Current: ${value} (no preset)`}
+            className="flex h-8 items-center rounded border border-[#FF4800] bg-[#FF4800]/10 px-2 text-[11px] font-medium text-[#FF4800]"
+          >
+            {value}
+          </span>
+        )}
+        {options.map((o) => {
+          const active = o.value === value;
+          return (
+            <button
+              key={o.value}
+              type="button"
+              title={o.label}
+              aria-label={o.label}
+              aria-pressed={active}
+              onClick={() => onChange(o.value)}
+              className={`flex h-8 w-8 items-center justify-center rounded border transition-colors ${
+                active
+                  ? "border-[#FF4800] bg-[#FF4800]/10 text-[#FF4800]"
+                  : "border-slate-300 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+              }`}
+            >
+              {o.icon}
+            </button>
+          );
+        })}
+      </div>
+    </Field>
+  );
+};
+
 export const ColorSelect = ({
   label,
   value,
