@@ -21,10 +21,13 @@ import {
   CollapsibleSection,
   ColorSelect,
   EnumSelect,
+  IconOption,
+  IconSegmentedControl,
   NumberControl,
   RangeControl,
   TokenSelect,
 } from "./controls";
+import { AlignIcon, DirectionIcon, JustifyIcon, WrapIcon } from "./flexIcons";
 import { BUTTON_VARIANT_NAMES } from "./buttonVariants";
 
 export interface StashItem {
@@ -68,6 +71,32 @@ const enumOptions = (values: string[], current: string): { value: string; label:
   const merged = current && !values.includes(current) ? [current, ...values] : values;
   return merged.map((v) => ({ value: v, label: v }));
 };
+
+const DIRECTION_ICON_OPTIONS: IconOption[] = FLEX_DIRECTION_OPTIONS.map((v) => ({
+  value: v,
+  label: v,
+  icon: <DirectionIcon value={v} />,
+}));
+
+const WRAP_ICON_OPTIONS: IconOption[] = WRAP_OPTIONS.map((v) => ({
+  value: v,
+  label: v,
+  icon: <WrapIcon value={v} />,
+}));
+
+const justifyIconOptions = (mainVertical: boolean): IconOption[] =>
+  JUSTIFY_OPTIONS.map((v) => ({
+    value: v,
+    label: v,
+    icon: <JustifyIcon value={v} mainVertical={mainVertical} />,
+  }));
+
+const alignIconOptions = (mainVertical: boolean): IconOption[] =>
+  ALIGN_OPTIONS.map((v) => ({
+    value: v,
+    label: v,
+    icon: <AlignIcon value={v} mainVertical={mainVertical} />,
+  }));
 
 const HEADER_H = 36;
 
@@ -317,28 +346,28 @@ const SandboxPanel = ({
             options={enumOptions(FLEX_DISPLAY_OPTIONS, original.display)}
             onChange={set("display")}
           />
-          <EnumSelect
+          <IconSegmentedControl
             label="Direction"
             value={state.flexDirection}
-            options={enumOptions(FLEX_DIRECTION_OPTIONS, original.flexDirection)}
+            options={DIRECTION_ICON_OPTIONS}
             onChange={set("flexDirection")}
           />
-          <EnumSelect
+          <IconSegmentedControl
             label="Justify content (main axis)"
             value={state.justifyContent}
-            options={enumOptions(JUSTIFY_OPTIONS, original.justifyContent)}
+            options={justifyIconOptions(state.flexDirection.startsWith("column"))}
             onChange={set("justifyContent")}
           />
-          <EnumSelect
+          <IconSegmentedControl
             label="Align items (cross axis)"
             value={state.alignItems}
-            options={enumOptions(ALIGN_OPTIONS, original.alignItems)}
+            options={alignIconOptions(state.flexDirection.startsWith("column"))}
             onChange={set("alignItems")}
           />
-          <EnumSelect
+          <IconSegmentedControl
             label="Wrap"
             value={state.flexWrap}
-            options={enumOptions(WRAP_OPTIONS, original.flexWrap)}
+            options={WRAP_ICON_OPTIONS}
             onChange={set("flexWrap")}
           />
         </>
