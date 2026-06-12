@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import InspectorPanel, { Crumb } from "./InspectorPanel";
+import SpacingOverlay from "./SpacingOverlay";
 import { inspectElement } from "./inspect";
 import { getElementSource } from "../sandbox/fiber";
 
@@ -52,6 +53,7 @@ const Inspector = () => {
   const [active, setActive] = useState(false);
   const [hovered, setHovered] = useState<HTMLElement | null>(null);
   const [selected, setSelected] = useState<HTMLElement | null>(null);
+  const [showSpacing, setShowSpacing] = useState(true);
   const [, forceTick] = useState(0);
 
   const selectedRef = useRef<HTMLElement | null>(null);
@@ -154,6 +156,7 @@ const Inspector = () => {
   return (
     <>
       {hoveredRect && <Box rect={hoveredRect} color={HOVER_COLOR} filled />}
+      {selected && showSpacing && <SpacingOverlay element={selected} />}
       {selectedRect && <Box rect={selectedRect} color={SELECT_COLOR} />}
 
       <div
@@ -163,6 +166,20 @@ const Inspector = () => {
       >
         <span className="inline-block h-2 w-2 rounded-full" style={{ background: HOVER_COLOR }} />
         Inspect mode
+        {selected && (
+          <button
+            type="button"
+            onClick={() => setShowSpacing((prev) => !prev)}
+            className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+            style={{
+              background: showSpacing ? "#0BA5A5" : "transparent",
+              color: showSpacing ? "#fff" : "#94a3b8",
+              border: `1px solid ${showSpacing ? "#0BA5A5" : "#475569"}`,
+            }}
+          >
+            Spacing
+          </button>
+        )}
         <span className="font-normal text-slate-400">
           {selected ? "Esc to deselect · ⌃I to exit" : "click an element · Esc to exit"}
         </span>
