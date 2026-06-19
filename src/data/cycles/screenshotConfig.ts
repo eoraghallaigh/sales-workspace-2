@@ -20,6 +20,7 @@ export const captureRoutes: CaptureRoute[] = [
   { path: "/prospecting/strategy/1?empty=research", name: "prospecting-strategy-empty-research" },
   { path: "/prospecting/strategy/1?empty=sequences", name: "prospecting-strategy-empty-sequences" },
   { path: "/plays", name: "plays" },
+  { path: "/plays/new", name: "play-creation" },
   { path: "/power-hour", name: "power-hour" },
   { path: "/sales-workspace", name: "sales-workspace" },
   { path: "/deals", name: "deals" },

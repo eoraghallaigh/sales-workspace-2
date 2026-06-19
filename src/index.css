@@ -46,16 +46,16 @@
 
 :root {
   /* ── Theme: typeface ──────────────────────────────────────────
-   * Routed token so the whole app can swap fonts by theme. Default
-   * (transitional) = Lexend Deca; [data-trellis-theme="alpha"] below
-   * overrides to HubSpot Sans. Consumed by body, the typography
-   * utility classes (tailwind plugin), and the --typography-* tokens. */
-  --trellis-font-sans: 'Lexend Deca', Helvetica, Arial, sans-serif;
+   * Routed token so the whole app can swap fonts by theme. Production
+   * now uses HubSpot Sans (Trellis Alpha); the alpha block below keeps
+   * the same value. Consumed by body, the typography utility classes
+   * (tailwind plugin), and the --typography-* tokens. */
+  --trellis-font-sans: 'HubSpot Sans', Helvetica, Arial, sans-serif;
 
   /* ── Theme: control shape (radius) ────────────────────────────
    * Semantic radii routed so component shape swaps by theme.
-   * Transitional defaults here; alpha overrides in the block below. */
-  --radius-button: 4px;
+   * Production now uses the Alpha fully-rounded (pill) button. */
+  --radius-button: 9999px;
   --radius-control: 4px;   /* text inputs, selects */
   --radius-card: 8px;      /* large surfaces / cards */
   --radius-popover: 6px;   /* popovers, dropdowns */
@@ -229,7 +229,7 @@
   --borderradius-0: 0;
   --borderradius-100: 4;
   --borderradius-200: 4;
-  --borderradius-300: 8;
+  --borderradius-300: 16;
   --borderradius-400: 16;
   --borderradius-full: 999999;
   --borderradius-transitionalcomponent: 4;
@@ -326,11 +326,11 @@
   --color-text-secondary-disabled: #8A8A8A;
   --color-text-tertiary-default: #141414;
   --color-text-tertiary-disabled: #8A8A8A;
-  --color-text-interactive-default: #006162;
+  --color-text-interactive-default: #141414;
   --color-text-interactive-onfilldefault: #FFFFFF;
-  --color-text-interactive-defaulthover: #00494B;
+  --color-text-interactive-defaulthover: #4D4D4D;
   --color-text-interactive-onfillhover: #E6E6E6;
-  --color-text-interactive-defaultpressed: #033637;
+  --color-text-interactive-defaultpressed: #000000;
   --color-text-interactive-onfillpressed: #B3B3B3;
   --color-text-interactive-defaultdisabled: #8A8A8A;
   --color-text-interactive-onfill: #FFFFFF;
@@ -462,7 +462,7 @@
   --color-fill-transitional-tabs-pressed: #F5F5F5;
 
   /* Specialty Colors */
-  --color-specialty-table-header-default: #F5F3F2;
+  --color-specialty-table-header-default: #FFFFFF;
   --color-specialty-table-header-hover: #EFEDEB;
   --color-specialty-table-header-pressed: #E7E5E4;
   --color-specialty-table-zebra-stripe-default: #F5F5F5;
