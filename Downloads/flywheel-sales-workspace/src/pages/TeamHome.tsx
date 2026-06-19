@@ -1,20 +1,10 @@
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
-import { MarkdownDoc } from "@/components/about/MarkdownDoc";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
-import { cn } from "@/lib/utils";
 import { cycles } from "@/data/cycles";
-
-import businessGoalsMd from "../../../../docs/business-goals.md?raw";
-import customerFeedbackMd from "../../../../docs/customer-feedback.md?raw";
-import metricsMd from "../../../../docs/metrics.md?raw";
-import personasMd from "../../../../docs/personas.md?raw";
-import designPrinciplesMd from "../../../../docs/design-principles.md?raw";
+import { aboutDocs } from "@/data/aboutDocs";
 
 const TEAM_NAME = "Flywheel Prospecting";
 const TEAM_MISSION =
@@ -252,157 +242,6 @@ const CYCLE_STATUS_VARIANT: Record<
   Past: "status-gray",
 };
 
-type TileCardProps = {
-  id: string;
-  title: string;
-  preview: string;
-  side: "left" | "right";
-  children: ReactNode;
-};
-
-const MODAL_EASE = [0.16, 1, 0.3, 1] as const;
-const OPEN_DURATION = 0.32;
-const CLOSE_DURATION = 0.22;
-const BACKDROP_OPEN = 0.28;
-const BACKDROP_CLOSE = 0.18;
-const CONTENT_FADE = 0.16;
-
-const TileCard = ({ id, title, preview, side, children }: TileCardProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const layoutId = `tile-${id}`;
-  const hoverX = side === "left" ? 4 : -4;
-
-  return (
-    <DialogPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
-      <section
-        id={id}
-        aria-labelledby={`${id}-heading`}
-        className="scroll-mt-12"
-      >
-        <motion.button
-          layoutId={layoutId}
-          type="button"
-          onClick={() => setIsOpen(true)}
-          whileHover={{
-            y: -4,
-            x: hoverX,
-            transition: { duration: 0.18, ease: MODAL_EASE },
-          }}
-          style={{ borderRadius: 8 }}
-          transition={{ duration: CLOSE_DURATION, ease: MODAL_EASE }}
-          className={cn(
-            "group w-full border border-border bg-card shadow-100",
-            "flex items-start justify-between gap-3 px-6 py-5 text-left",
-            "hover:shadow-300 transition-shadow duration-200",
-            isOpen && "invisible",
-          )}
-        >
-          <div className="flex flex-col gap-1 min-w-0">
-            <h2 id={`${id}-heading`} className="heading-400 text-foreground">
-              {title}
-            </h2>
-            <p className="body-100 text-muted-foreground line-clamp-2">
-              {preview}
-            </p>
-          </div>
-          <span className="flex items-center gap-1.5 detail-100 text-muted-foreground shrink-0 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            Expand
-            <TrellisIcon name="expand" size={12} />
-          </span>
-        </motion.button>
-      </section>
-
-      <AnimatePresence>
-        {isOpen ? (
-          <DialogPrimitive.Portal forceMount>
-            <DialogPrimitive.Overlay asChild forceMount>
-              <motion.div
-                initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
-                animate={{
-                  opacity: 1,
-                  backdropFilter: "blur(12px)",
-                  transition: { duration: BACKDROP_OPEN, ease: MODAL_EASE },
-                }}
-                exit={{
-                  opacity: 0,
-                  backdropFilter: "blur(0px)",
-                  transition: { duration: BACKDROP_CLOSE, ease: MODAL_EASE },
-                }}
-                style={{ willChange: "backdrop-filter, opacity" }}
-                className="fixed inset-0 z-50 bg-background/40"
-              />
-            </DialogPrimitive.Overlay>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-8 pointer-events-none">
-              <DialogPrimitive.Content
-                asChild
-                forceMount
-                aria-describedby={undefined}
-              >
-                <motion.div
-                  layoutId={layoutId}
-                  transition={{ duration: OPEN_DURATION, ease: MODAL_EASE }}
-                  style={{ borderRadius: 12 }}
-                  className={cn(
-                    "about-doc pointer-events-auto",
-                    "w-full max-w-7xl max-h-[85vh]",
-                    "flex flex-col border border-border bg-card shadow-2xl",
-                    "overflow-hidden focus:outline-none",
-                  )}
-                >
-                  <motion.header
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{
-                      duration: CONTENT_FADE,
-                      delay: 0.1,
-                      ease: MODAL_EASE,
-                    }}
-                    className="flex items-start justify-between gap-4 px-8 pt-7 pb-5 border-b border-border"
-                  >
-                    <div className="flex flex-col gap-1 min-w-0">
-                      <DialogPrimitive.Title className="heading-400 text-foreground">
-                        {title}
-                      </DialogPrimitive.Title>
-                      <p className="body-100 text-muted-foreground">
-                        {preview}
-                      </p>
-                    </div>
-                    <DialogPrimitive.Close
-                      className="rounded-md p-1.5 text-muted-foreground hover:text-foreground hover:bg-fill-tertiary/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      aria-label="Close"
-                    >
-                      <X className="h-4 w-4" />
-                    </DialogPrimitive.Close>
-                  </motion.header>
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{
-                      opacity: 1,
-                      transition: {
-                        duration: CONTENT_FADE,
-                        delay: 0.1,
-                        ease: MODAL_EASE,
-                      },
-                    }}
-                    exit={{
-                      opacity: 0,
-                      transition: { duration: 0.1, ease: MODAL_EASE },
-                    }}
-                    className="flex-1 overflow-y-auto px-8 py-6"
-                  >
-                    {children}
-                  </motion.div>
-                </motion.div>
-              </DialogPrimitive.Content>
-            </div>
-          </DialogPrimitive.Portal>
-        ) : null}
-      </AnimatePresence>
-    </DialogPrimitive.Root>
-  );
-};
-
 const PeopleRow = () => (
   <div className="flex flex-col gap-3">
     <ul className="flex flex-wrap justify-evenly gap-2">
@@ -563,52 +402,47 @@ const TeamHome = () => {
               </ul>
             </section>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-              <TileCard
-                id="business-goals"
-                title="Business goals"
-                preview="OKRs, target outcomes, and how this team's work ladders up to Flywheel."
-                side="left"
-              >
-                <MarkdownDoc source={businessGoalsMd} />
-              </TileCard>
-
-              <TileCard
-                id="user-research"
-                title="User research"
-                preview="Themes and quotes from rep interviews — what's working, what's broken, what they want next."
-                side="right"
-              >
-                <MarkdownDoc source={customerFeedbackMd} />
-              </TileCard>
-
-              <TileCard
-                id="metrics"
-                title="Metrics & KPIs"
-                preview="What we track for adoption, engagement, and pipeline impact."
-                side="left"
-              >
-                <MarkdownDoc source={metricsMd} />
-              </TileCard>
-
-              <TileCard
-                id="personas"
-                title="Personas"
-                preview="SDRs vs Growth Specialists — different jobs, different daily contexts."
-                side="right"
-              >
-                <MarkdownDoc source={personasMd} />
-              </TileCard>
-
-              <TileCard
-                id="design-principles"
-                title="Design principles"
-                preview="The non-negotiables we use to make UI decisions in the workspace."
-                side="left"
-              >
-                <MarkdownDoc source={designPrinciplesMd} />
-              </TileCard>
-          </div>
+            <section
+              id="team-context"
+              aria-labelledby="team-context-heading"
+              className="scroll-mt-12 rounded-lg border border-border bg-card p-6 shadow-100"
+            >
+              <header className="mb-4">
+                <h2
+                  id="team-context-heading"
+                  className="heading-400 text-foreground"
+                >
+                  Team context
+                </h2>
+              </header>
+              <ul className="flex flex-col divide-y divide-border">
+                {aboutDocs.map((doc) => (
+                  <li key={doc.slug}>
+                    <Link
+                      to={`/about/${doc.slug}`}
+                      className="group flex items-center gap-3 py-3 first:pt-0 last:pb-0 mt-5 mb-5"
+                    >
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[var(--color-fill-surface-default)]">
+                        <TrellisIcon name={doc.icon} size={18} />
+                      </span>
+                      <span className="flex flex-col gap-0.5 min-w-0 flex-1">
+                        <span className="heading-100 text-foreground group-hover:text-text-interactive transition-colors">
+                          {doc.title}
+                        </span>
+                        <span className="body-100 text-muted-foreground truncate">
+                          {doc.description}
+                        </span>
+                      </span>
+                      <TrellisIcon
+                        name="right"
+                        size={14}
+                        className="shrink-0 opacity-40 group-hover:opacity-100 transition-opacity"
+                      />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
         </div>
       </main>
     </div>
