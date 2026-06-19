@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef, Fragment } from "react";
-import { X, Plus, Trash2, Copy, Search, Check, Hash, Calendar, Type, ChevronDown, ArrowUpDown, Loader2, Sparkles, FileText, Swords, MessageSquareText, Video, File as FileIcon, Link as LinkIcon } from "lucide-react";
+import { Plus, Trash2, Copy, Search, Check, Hash, Calendar, ChevronDown, ArrowUpDown, Loader2, Sparkles, Link as LinkIcon } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import PlayHeader from "@/components/PlayHeader";
+import aeoMicrositePreview from "@/assets/microsite-aeo-preview.png";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -10,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { Select, SelectAnchor, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SelectAnchor } from "@/components/ui/select";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { TableHeaderCell } from "@/components/ui/table-header-cell";
@@ -85,6 +87,110 @@ const DATE_CONDITIONS = ["is equal to", "is before", "is after", "is between", "
 
 // Boolean conditions
 const BOOLEAN_CONDITIONS = ["is true", "is false"];
+
+// Segments are named company lists built elsewhere in the app and selected here.
+const PLAY_SEGMENTS: string[] = [
+  "DMD | AEO Unaware - Pageviews | Retro Stamping",
+  "LKR | EMEA en | Fall Spotlight August Masterclass and GD 2026 | Attendees",
+  "EMEA France (FR) | NB Trigger Program | FW:Intent Score 51-100 (test - re enrollment)",
+  "AMER | SMB Inbound | Pricing Page Visitors 30d | Q3 2026",
+  "APAC ANZ | Outbound | Salesforce Renewal 90d | Tier 1 Accounts",
+  "DACH (DE) | Webinar Followup | Marketing Hub Trial Expired | August 2026",
+  "NORAM | Install Base | Single Hub Users 500+ FTE | Expansion",
+  "UKI | NB Trigger Program | Hiring Signals - RevOps | Intent 70+",
+  "LATAM (ES) | Reengagement | Churned SMB 6mo | New Pricing",
+  "EMEA Benelux | Event Driven | INBOUND 2026 Registrants | MQL",
+  "AMER Enterprise | ABM | Funding Round Series B+ | Net New",
+];
+
+// Faked metadata shown for each optional enablement link as it's added, so the
+// banner shows a title + short description like the live plays page does.
+const FAKE_LINK_MATERIALS: { type: EnablementMaterial["type"]; title: string; description: string }[] = [
+  { type: "battle-card", title: "Competitive battle card", description: "Key differentiators, objection handling, and pricing comparison." },
+  { type: "talk-track", title: "Discovery talk track", description: "Recommended discovery questions and positioning for first calls." },
+  { type: "case-study", title: "Customer case study", description: "Proof point showing measurable ROI for a similar account." },
+  { type: "one-pager", title: "Product one-pager", description: "Key features, pricing tiers, and ideal customer profile." },
+];
+
+// --- Segment preview (fake) -------------------------------------------------
+// Segments are fake, so we fabricate the "filters" that define each list plus a
+// set of owned companies. Everything is derived deterministically from the
+// segment name so the preview stays stable across renders.
+interface SegmentColumn {
+  key: string;
+  label: string;
+}
+interface SegmentCompanyRow {
+  id: string;
+  name: string;
+  ownerId: string | null;
+  values: Record<string, string>;
+}
+interface SegmentPreview {
+  columns: SegmentColumn[];
+  rows: SegmentCompanyRow[];
+}
+
+// Candidate "filter" columns a segment list could be defined by.
+const SEGMENT_COLUMN_POOL: { key: string; label: string; values: string[] }[] = [
+  { key: "region", label: "Region", values: ["AMER", "EMEA", "APAC", "LATAM", "ANZ", "DACH", "UKI"] },
+  { key: "employees", label: "Employees", values: ["11–50", "51–200", "201–500", "501–1k", "1k–5k", "5k+"] },
+  { key: "lifecycle", label: "Lifecycle stage", values: ["Lead", "MQL", "SQL", "Opportunity", "Customer"] },
+  { key: "pageviews", label: "Pageviews (30d)", values: ["120", "340", "512", "880", "1,240", "2,015"] },
+  { key: "intent", label: "Intent score", values: ["12", "37", "51", "64", "78", "92"] },
+  { key: "crm", label: "CRM system", values: ["Salesforce", "HubSpot", "Zoho", "Pipedrive", "None"] },
+  { key: "lastActivity", label: "Last activity", values: ["2d ago", "6d ago", "2w ago", "1mo ago", "3mo ago"] },
+  { key: "mrr", label: "MRR", values: ["$0", "$1.2k", "$3.4k", "$5.8k", "$9.1k", "$14k"] },
+  { key: "trial", label: "Trial status", values: ["Active", "Expired", "None"] },
+  { key: "industry", label: "Industry", values: ["SaaS", "Retail", "Healthcare", "Finance", "Manufacturing", "Media"] },
+  { key: "funding", label: "Funding stage", values: ["Seed", "Series A", "Series B", "Series C+", "Public"] },
+];
+
+const SEGMENT_COMPANY_NAMES = [
+  "Zenith Dynamics", "Apex Solutions", "Vanguard Tech", "Nexus Industries",
+  "Catalyst Group", "Pinnacle Systems", "Horizon Labs", "Summit Digital",
+  "Aurora Enterprises", "Quantum Works", "Stellar Corp", "Vertex Partners",
+  "Nova Ventures", "Prism Technologies", "Eclipse Holdings", "Frontier Group",
+  "Beacon Analytics", "Stratos Inc", "Meridian Co", "Cypher Solutions",
+  "Lumen Systems", "Orbit Labs", "Crestline Group", "Ironwood Co",
+];
+
+// Owners cycle through the View-as reps (+ unassigned), so each rep owns a
+// meaningful slice of every segment.
+const SEGMENT_OWNER_IDS: (string | null)[] = ["jamie-carter", "lea-dubois", "priya-shah", null];
+
+const hashString = (s: string): number => {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+};
+
+const buildSegmentPreview = (segment: string): SegmentPreview => {
+  if (!segment) return { columns: [], rows: [] };
+  const seed = hashString(segment);
+  const poolLen = SEGMENT_COLUMN_POOL.length;
+  const columns: SegmentColumn[] = [0, 3, 6, 9].map((offset) => {
+    const c = SEGMENT_COLUMN_POOL[(seed + offset) % poolLen];
+    return { key: c.key, label: c.label };
+  });
+  const rowCount = 12 + (seed % 9); // 12–20 companies
+  const rows: SegmentCompanyRow[] = Array.from({ length: rowCount }, (_, i) => {
+    const rseed = hashString(`${segment}:${i}`);
+    const values: Record<string, string> = {};
+    columns.forEach((col, ci) => {
+      const pool = SEGMENT_COLUMN_POOL.find((p) => p.key === col.key)!;
+      values[col.key] = pool.values[(rseed + ci * 5) % pool.values.length];
+    });
+    return {
+      id: `${segment}-${i}`,
+      name: SEGMENT_COMPANY_NAMES[(seed + i * 7) % SEGMENT_COMPANY_NAMES.length],
+      ownerId: SEGMENT_OWNER_IDS[i % SEGMENT_OWNER_IDS.length],
+      values,
+    };
+  });
+  return { columns, rows };
+};
+
 const ALL_FILTERS: FilterItem[] = [{
   id: "abm-priority-score-apac",
   name: "ABM Priority Score [APAC]",
@@ -2584,8 +2690,8 @@ const CreateViewModal = ({
     id: "group-2",
     filters: []
   }]);
-  const [viewName, setViewName] = useState("Play name");
-  const [viewDescription, setViewDescription] = useState("Play description");
+  const [viewName, setViewName] = useState("");
+  const [viewDescription, setViewDescription] = useState("");
   const [editingFilter, setEditingFilter] = useState<{
     groupId: string;
     filterId: string;
@@ -2599,7 +2705,7 @@ const CreateViewModal = ({
   const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null);
   const [previewCompanies, setPreviewCompanies] = useState(prospectingCompanies.slice(0, 10));
   const [filterVersion, setFilterVersion] = useState(0);
-  const [view, setView] = useState<"landing" | "agent" | "wizard">("landing");
+  const [view, setView] = useState<"landing" | "agent" | "wizard">("wizard");
   const [filterPromptText, setFilterPromptText] = useState("");
 
   // Agent chat state
@@ -2692,7 +2798,52 @@ const CreateViewModal = ({
 
   // Settings step state
   const [expiryDate, setExpiryDate] = useState<Date | undefined>(undefined);
+  const [launchDate, setLaunchDate] = useState<Date | undefined>(undefined);
+  const [selectedSegment, setSelectedSegment] = useState<string>("");
+  const [segmentOpen, setSegmentOpen] = useState(false);
+  const [segmentSearchQuery, setSegmentSearchQuery] = useState("");
+  const [heroLink, setHeroLink] = useState("");
+  const [enablementLinks, setEnablementLinks] = useState<string[]>(["", "", "", ""]);
+  // Per-link preview loading: each link "fetches" a preview (spinner) for 5–10s
+  // once its field is blurred with text, then shows its content.
+  const [heroLoading, setHeroLoading] = useState(false);
+  const [heroReady, setHeroReady] = useState(false);
+  const [linkLoading, setLinkLoading] = useState<boolean[]>([false, false, false, false]);
+  const [linkReady, setLinkReady] = useState<boolean[]>([false, false, false, false]);
+  const previewTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
+  const segmentPreview = buildSegmentPreview(selectedSegment);
+  const segmentRows = previewRep
+    ? segmentPreview.rows.filter((r) => r.ownerId === previewRep.id)
+    : segmentPreview.rows;
+
+  const previewDelay = () => 5000 + Math.random() * 5000; // 5–10s
+
+  const startHeroPreview = () => {
+    if (!heroLink.trim() || heroReady || heroLoading) return;
+    setHeroLoading(true);
+    clearTimeout(previewTimers.current.hero);
+    previewTimers.current.hero = setTimeout(() => {
+      setHeroLoading(false);
+      setHeroReady(true);
+    }, previewDelay());
+  };
+
+  const startLinkPreview = (i: number) => {
+    if (!enablementLinks[i]?.trim() || linkReady[i] || linkLoading[i]) return;
+    setLinkLoading((prev) => prev.map((v, idx) => (idx === i ? true : v)));
+    clearTimeout(previewTimers.current[`link-${i}`]);
+    previewTimers.current[`link-${i}`] = setTimeout(() => {
+      setLinkLoading((prev) => prev.map((v, idx) => (idx === i ? false : v)));
+      setLinkReady((prev) => prev.map((v, idx) => (idx === i ? true : v)));
+    }, previewDelay());
+  };
+
+  // Clear any pending preview timers on unmount.
+  useEffect(() => {
+    const timers = previewTimers.current;
+    return () => Object.values(timers).forEach((t) => clearTimeout(t));
+  }, []);
   const [playBasis, setPlayBasis] = useState<"companies" | "portals" | "contacts">("companies");
   const [completionAction, setCompletionAction] = useState<string>("add-to-sequence");
   const [completionCount, setCompletionCount] = useState<number>(1);
@@ -2705,15 +2856,38 @@ const CreateViewModal = ({
       setViewName(initialPlay.label);
       setViewDescription(initialPlay.description);
       setExpiryDate(initialPlay.endDate ? new Date(initialPlay.endDate) : undefined);
+      setLaunchDate(initialPlay.startDate ? new Date(initialPlay.startDate) : undefined);
+      setSelectedSegment(initialPlay.marketSegment?.[0] ?? "");
       setEnablementMaterials(initialPlay.enablementMaterials);
+      const materialLinks = initialPlay.enablementMaterials.map((m) => m.description);
+      setHeroLink(materialLinks[0] ?? "");
+      setEnablementLinks([
+        materialLinks[1] ?? "",
+        materialLinks[2] ?? "",
+        materialLinks[3] ?? "",
+        materialLinks[4] ?? "",
+      ]);
+      // Existing links already have previews — show them without the spinner.
+      setHeroLoading(false);
+      setHeroReady(!!materialLinks[0]?.trim());
+      setLinkLoading([false, false, false, false]);
+      setLinkReady([1, 2, 3, 4].map((n) => !!materialLinks[n]?.trim()));
       setSelectedTeams(initialPlay.teams ?? []);
       setPlayStatus(initialPlay.status);
       setFilterGroups([{ id: "group-1", filters: [] }, { id: "group-2", filters: [] }]);
     } else {
-      setViewName("Play name");
-      setViewDescription("Play description");
+      setViewName("");
+      setViewDescription("");
       setExpiryDate(undefined);
+      setLaunchDate(undefined);
+      setSelectedSegment("");
       setEnablementMaterials([]);
+      setHeroLink("");
+      setEnablementLinks(["", "", "", ""]);
+      setHeroLoading(false);
+      setHeroReady(false);
+      setLinkLoading([false, false, false, false]);
+      setLinkReady([false, false, false, false]);
       setSelectedTeams([]);
       setPlayStatus("draft");
     }
@@ -3004,7 +3178,7 @@ const CreateViewModal = ({
       const timer = setTimeout(() => {
         regeneratePreviewData();
         setIsTableLoading(false);
-      }, 2000);
+      }, 700);
       return () => clearTimeout(timer);
     }
   }, [isTableLoading, filterVersion, regeneratePreviewData]);
@@ -3121,8 +3295,19 @@ const CreateViewModal = ({
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "") + `-${Date.now().toString(36).slice(-4)}`;
-    const startDate = initialPlay?.startDate ?? new Date().toISOString().slice(0, 10);
+    const startDate = (launchDate ?? (initialPlay ? new Date(initialPlay.startDate) : new Date())).toISOString().slice(0, 10);
     const endDate = (expiryDate ?? (initialPlay ? new Date(initialPlay.endDate) : new Date(Date.now() + 1000 * 60 * 60 * 24 * 60))).toISOString().slice(0, 10);
+    // Enablement materials are derived from the hero link + optional links.
+    const linkValues = [heroLink, ...enablementLinks].map((l) => l.trim());
+    const derivedEnablement: EnablementMaterial[] = linkValues
+      .map((url, idx) => ({ url, idx }))
+      .filter((x) => x.url.length > 0)
+      .map((x) => ({
+        id: x.idx === 0 ? "em-hero" : `em-link-${x.idx}`,
+        title: x.idx === 0 ? "Enablement hero" : `Enablement link ${x.idx}`,
+        type: "one-pager" as const,
+        description: x.url,
+      }));
     // In edit mode, preserve filters the user didn't change (modal can't yet reverse-map PlayFilter → ActiveFilter)
     const filters = editedFilters.length > 0
       ? editedFilters
@@ -3135,16 +3320,16 @@ const CreateViewModal = ({
       endDate,
       createdBy: initialPlay?.createdBy ?? defaultViewerLabel,
       completionCriteria: `${completionCount} ${completionAction.replace(/-/g, " ")} per ${completionPer}`,
-      enablementMaterials,
+      enablementMaterials: derivedEnablement,
       metrics: initialPlay?.metrics ?? { totalCompanies: previewCompanies.length, worked: 0, meetings: 0, target: previewCompanies.length, contactsEngaged: 0, contactsInPlay: 0, pipelineCreated: 0 },
       status: playStatus,
       owner: initialPlay?.owner ?? defaultViewerLabel,
       geo: initialPlay?.geo,
-      marketSegment: initialPlay?.marketSegment,
+      marketSegment: selectedSegment ? [selectedSegment] : initialPlay?.marketSegment,
       teams: selectedTeams.length > 0 ? selectedTeams : undefined,
       filters,
     };
-  }, [filterGroups, viewName, viewDescription, expiryDate, completionAction, completionCount, completionPer, enablementMaterials, previewCompanies.length, selectedTeams, playStatus, initialPlay]);
+  }, [filterGroups, viewName, viewDescription, launchDate, expiryDate, selectedSegment, completionAction, completionCount, completionPer, heroLink, enablementLinks, previewCompanies.length, selectedTeams, playStatus, initialPlay]);
   const handleAddFilterToGroup = (filter: FilterItem, groupId: string) => {
     const newFilter: ActiveFilter = {
       id: `${filter.id}-${Date.now()}`,
@@ -3568,7 +3753,8 @@ const CreateViewModal = ({
     return filter.value || "(not set)";
   };
 
-  // Shared preview table renderer — used by filters, columns, and settings steps
+  // Shared preview table renderer — columns are the segment's defining filters,
+  // rows are the segment's companies (optionally filtered to the View-as rep).
   const renderPreviewTable = () => (
     <div className="overflow-x-auto relative">
       {/* Loading Overlay */}
@@ -3576,7 +3762,7 @@ const CreateViewModal = ({
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--color-fill-surface-default)]/60 backdrop-blur-[2px] rounded-lg">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-[var(--color-fill-brand-default)]" />
-            <span className="body-100 text-[var(--color-text-core-subtle)]">Applying filters...</span>
+            <span className="body-100 text-[var(--color-text-core-subtle)]">Loading companies...</span>
           </div>
         </div>
       )}
@@ -3590,80 +3776,50 @@ const CreateViewModal = ({
                   <ArrowUpDown className="h-3 w-3" />
                 </button>
               </TableHeaderCell>
-              <TableHeaderCell className="flex-1 w-auto">
-                <button className="flex items-center gap-2">
-                  Industry
-                  <ArrowUpDown className="h-3 w-3" />
-                </button>
-              </TableHeaderCell>
-              <TableHeaderCell className="flex-1 w-auto">
-                <button className="flex items-center gap-2">
-                  PVS Score
-                  <ArrowUpDown className="h-3 w-3" />
-                </button>
-              </TableHeaderCell>
-              <TableHeaderCell className="flex-1 w-auto">
-                <button className="flex items-center gap-2">
-                  Signals
-                  <ArrowUpDown className="h-3 w-3" />
-                </button>
-              </TableHeaderCell>
+              {segmentPreview.columns.map((col) => (
+                <TableHeaderCell key={col.key} className="flex-1 w-auto">
+                  <button className="flex items-center gap-2">
+                    {col.label}
+                    <ArrowUpDown className="h-3 w-3" />
+                  </button>
+                </TableHeaderCell>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {previewCompanies.map((company) => (
-              <tr key={company.id} className="flex transition-colors hover:bg-[var(--color-fill-secondary-hover)]">
-                <TableDataCell className="w-[260px]">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-6 w-6">
-                      <AvatarFallback className="text-xs bg-[var(--color-fill-secondary-subtle)]">
-                        {company.name.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="body-125 text-[var(--color-text-core-default)]">
-                      {company.name}
-                    </span>
-                  </div>
-                </TableDataCell>
+            {segmentRows.length === 0 ? (
+              <tr className="flex">
                 <TableDataCell className="flex-1 w-auto">
                   <span className="text-[var(--color-text-core-subtle)]">
-                    {company.industry || "—"}
+                    No companies in this segment{previewRep ? ` for ${previewRep.name}` : ""}.
                   </span>
-                </TableDataCell>
-                <TableDataCell className="flex-1 w-auto">
-                  <span className={
-                    company.pvsScore === "High"
-                      ? "text-[var(--color-text-success-default)]"
-                      : company.pvsScore === "Medium"
-                      ? "text-[var(--color-text-warning-default)]"
-                      : "text-[var(--color-text-core-subtle)]"
-                  }>
-                    {company.pvsScore || "—"}
-                  </span>
-                </TableDataCell>
-                <TableDataCell className="flex-1 w-auto">
-                  <div className="flex flex-wrap gap-1">
-                    {company.signals.slice(0, 2).map((signal, idx) => {
-                      const def = SIGNAL_CATALOG[signal.id];
-                      if (!def) return null;
-                      return (
-                        <Tag key={idx} variant={def.variant}>
-                          {def.label}
-                        </Tag>
-                      );
-                    })}
-                    {company.signals.length > 2 && (
-                      <span className="text-[var(--color-text-core-subtle)]">
-                        +{company.signals.length - 2}
-                      </span>
-                    )}
-                    {company.signals.length === 0 && (
-                      <span className="text-[var(--color-text-core-subtle)]">—</span>
-                    )}
-                  </div>
                 </TableDataCell>
               </tr>
-            ))}
+            ) : (
+              segmentRows.map((company) => (
+                <tr key={company.id} className="flex transition-colors hover:bg-[var(--color-fill-secondary-hover)]">
+                  <TableDataCell className="w-[260px]">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-6 w-6">
+                        <AvatarFallback className="text-xs bg-[var(--color-fill-secondary-subtle)]">
+                          {company.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="body-125 text-[var(--color-text-core-default)]">
+                        {company.name}
+                      </span>
+                    </div>
+                  </TableDataCell>
+                  {segmentPreview.columns.map((col) => (
+                    <TableDataCell key={col.key} className="flex-1 w-auto">
+                      <span className="text-[var(--color-text-core-default)]">
+                        {company.values[col.key] ?? "—"}
+                      </span>
+                    </TableDataCell>
+                  ))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -3716,33 +3872,54 @@ const CreateViewModal = ({
           </PopoverContent>
         </Popover>
       </div>
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="heading-200 text-[var(--color-text-core-default)]">{viewName}</span>
-          <button className="p-1 hover:bg-[var(--color-fill-secondary-hover)] rounded">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M11.333 2.00001C11.5081 1.82491 11.7169 1.68602 11.9473 1.59126C12.1777 1.4965 12.4251 1.44772 12.6751 1.44772C12.925 1.44772 13.1724 1.4965 13.4028 1.59126C13.6332 1.68602 13.842 1.82491 14.0171 2.00001C14.1922 2.17511 14.3311 2.38391 14.4259 2.6143C14.5206 2.8447 14.5694 3.09211 14.5694 3.34201C14.5694 3.59192 14.5206 3.83933 14.4259 4.06972C14.3311 4.30012 14.1922 4.50892 14.0171 4.68401L5.00008 13.701L1.33341 14.667L2.30008 11.0003L11.333 2.00001Z" stroke="currentColor" strokeWidth="1.33" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-text-core-subtle)]"/>
-            </svg>
-          </button>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="body-100 text-[var(--color-text-core-subtle)]">{viewDescription}</span>
-          <button className="p-1 hover:bg-[var(--color-fill-secondary-hover)] rounded">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M11.333 2.00001C11.5081 1.82491 11.7169 1.68602 11.9473 1.59126C12.1777 1.4965 12.4251 1.44772 12.6751 1.44772C12.925 1.44772 13.1724 1.4965 13.4028 1.59126C13.6332 1.68602 13.842 1.82491 14.0171 2.00001C14.1922 2.17511 14.3311 2.38391 14.4259 2.6143C14.5206 2.8447 14.5694 3.09211 14.5694 3.34201C14.5694 3.59192 14.5206 3.83933 14.4259 4.06972C14.3311 4.30012 14.1922 4.50892 14.0171 4.68401L5.00008 13.701L1.33341 14.667L2.30008 11.0003L11.333 2.00001Z" stroke="currentColor" strokeWidth="1.33" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-text-core-subtle)]"/>
-            </svg>
-          </button>
-        </div>
-      </div>
     </>
   );
 
+  // Live play-explanation banner — reuses the same PlayHeader component as the
+  // plays page, fed a Play built live from the form. The hero link becomes the
+  // microsite card with a (faked) preview image; each optional link becomes a
+  // titled enablement material.
+  const renderPlayBanner = () => {
+    const heroTrimmed = heroLink.trim();
+    // A link contributes to the banner once it's loading or ready (after blur).
+    const heroShown = !!heroTrimmed && (heroLoading || heroReady);
+    const materials: EnablementMaterial[] = enablementLinks
+      .map((url, i) => ({ url: url.trim(), i }))
+      .filter((x) => x.url && (linkLoading[x.i] || linkReady[x.i]))
+      .map((x) => {
+        const fake = FAKE_LINK_MATERIALS[x.i % FAKE_LINK_MATERIALS.length];
+        return { id: `em-link-${x.i}`, title: fake.title, type: fake.type, description: fake.description };
+      });
+    const loadingMaterialIds = enablementLinks
+      .map((_, i) => i)
+      .filter((i) => linkLoading[i])
+      .map((i) => `em-link-${i}`);
+    const startDate = (launchDate ?? new Date()).toISOString().slice(0, 10);
+    const endDate = (expiryDate ?? new Date(Date.now() + 1000 * 60 * 60 * 24 * 60)).toISOString().slice(0, 10);
+    const previewPlay: Play = {
+      id: "preview",
+      label: viewName.trim() || "Untitled play",
+      description: viewDescription.trim() || "Add a description to explain this play to reps.",
+      startDate,
+      endDate,
+      createdBy: defaultViewerLabel,
+      completionCriteria: "",
+      enablementMaterials: materials,
+      micrositeUrl: heroShown ? heroTrimmed : undefined,
+      micrositeTitle: heroReady ? `${viewName.trim() || "Play"} playbook` : undefined,
+      micrositeDescription: heroReady ? "Messaging, positioning, and resources to run this play." : undefined,
+      micrositePreview: heroReady ? aeoMicrositePreview : undefined,
+      metrics: { totalCompanies: 0, worked: 0, meetings: 0, target: 0, contactsEngaged: 0, contactsInPlay: 0, pipelineCreated: 0 },
+      status: "draft",
+      owner: defaultViewerLabel,
+    };
+    return <PlayHeader play={previewPlay} defaultOpen loadingMicrosite={heroLoading} loadingMaterialIds={loadingMaterialIds} />;
+  };
+
   // Shared results count
   const renderResultsCount = () => {
-    const total = prospectingCompanies.length;
-    const visible = previewRep
-      ? Math.max(1, Math.round(previewCompanies.length * previewRep.matchRatio))
-      : previewCompanies.length;
+    const total = segmentPreview.rows.length;
+    const visible = segmentRows.length;
     return (
       <div className="mt-4">
         <span className="body-100 text-[var(--color-text-core-subtle)]">
@@ -4029,21 +4206,24 @@ const CreateViewModal = ({
     }
   };
 
+  const canSavePlay = Boolean(selectedSegment && selectedTeams.length > 0 && viewName.trim() && viewDescription.trim() && launchDate && heroLink.trim());
+
+  const handleSavePlay = () => {
+    if (!canSavePlay) return;
+    if (onSave) onSave(buildPlay());
+    onClose();
+  };
+
   const wizardFooter = (
-    <div className="border-t border-[var(--color-border-container-default)] p-3 flex flex-col gap-2">
+    <div className="border-t border-[var(--color-border-container-default)] p-3 flex justify-start">
       <Button
-        onClick={handleWizardContinue}
-        className="w-full h-10 rounded-[4px] bg-[var(--color-fill-primary-default)] hover:bg-[var(--color-fill-primary-hover)] text-[var(--color-text-primary-default)]"
+        variant="primary"
+        size="medium"
+        onClick={handleSavePlay}
+        disabled={!canSavePlay}
       >
-        {currentStep === "columns" ? "Save play" : "Continue"}
+        {initialPlay ? "Save play" : "Create play"}
       </Button>
-      <button
-        type="button"
-        onClick={() => setView("agent")}
-        className="inline-flex items-center justify-center gap-2 px-[13px] py-[1px] rounded-[4px] border border-transparent heading-50 text-[var(--color-specialty-text-interactive-alt-default)] hover:bg-[var(--color-fill-secondary-hover)] transition-colors mx-auto"
-      >
-        Switch to agent mode
-      </button>
     </div>
   );
 
@@ -4557,88 +4737,57 @@ const CreateViewModal = ({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
           >
-            {wizardStepperBar}
             <ScrollArea className="flex-1">
               <div className="p-6 space-y-6 divide-y divide-[var(--color-border-container-default)] [&>div:not(:first-child)]:pt-6">
-                {/* Based on Section - FIRST */}
-                <FormControl label="Based on">
-                  <RadioGroup value={playBasis} onValueChange={(v) => setPlayBasis(v as "companies" | "portals" | "contacts")} className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <RadioGroupItem value="companies" id="basis-companies" />
-                      <Label htmlFor="basis-companies" className="body-200 text-[var(--color-text-core-default)] cursor-pointer">Companies</Label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <RadioGroupItem value="contacts" id="basis-contacts" />
-                      <Label htmlFor="basis-contacts" className="body-200 text-[var(--color-text-core-default)] cursor-pointer">Contacts</Label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <RadioGroupItem value="portals" id="basis-portals" />
-                      <Label htmlFor="basis-portals" className="body-200 text-[var(--color-text-core-default)] cursor-pointer">Portals</Label>
-                    </div>
-                  </RadioGroup>
-                </FormControl>
-
-                {/* Completion Criteria Section */}
-                <FormControl label="Completion criteria">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Select value={completionAction} onValueChange={setCompletionAction}>
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="z-[9999]">
-                        <SelectItem value="add-to-sequence">Add to a sequence</SelectItem>
-                        <SelectItem value="cold-call">Cold Call</SelectItem>
-                        <SelectItem value="log-email">Log an email</SelectItem>
-                        <SelectItem value="log-meeting">Log a meeting</SelectItem>
-                        <SelectItem value="log-linkedin">Log a linkedin message</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <input
-                      type="number"
-                      min={1}
-                      value={completionCount}
-                      onChange={(e) => setCompletionCount(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-16 h-10 rounded-[3px] border border-[var(--color-border-core-default,#8A8A8A)] bg-[var(--color-fill-field-default,#FFF)] body-200 text-[var(--color-text-core-default)] text-center px-2"
-                    />
-                    <span className="body-100 text-[var(--color-text-core-default)]">time per</span>
-                    <Select value={completionPer} onValueChange={(v) => setCompletionPer(v as "company" | "contact")}>
-                      <SelectTrigger className="w-[120px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="z-[9999]">
-                        <SelectItem value="company">Company</SelectItem>
-                        <SelectItem value="contact">Contact</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </FormControl>
-
-                {/* Expiry Date Section */}
-                <FormControl label="Expiry date">
-                  <Popover>
+                {/* Segment */}
+                <FormControl label="Segment" required>
+                  <Popover open={segmentOpen} onOpenChange={setSegmentOpen}>
                     <PopoverTrigger asChild>
-                      <SelectAnchor
-                        placeholder="Select expiry date"
-                        trailingIcon={<TrellisIcon name="date" size={16} />}
-                      >
-                        {expiryDate ? format(expiryDate, "PPP") : null}
+                      <SelectAnchor placeholder="Select a segment…">
+                        {selectedSegment || null}
                       </SelectAnchor>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-[var(--color-fill-surface-default)] border border-[var(--color-border-core-subtle)] rounded-[4px] z-[100]" align="start">
-                      <CalendarComponent
-                        mode="single"
-                        selected={expiryDate}
-                        onSelect={setExpiryDate}
-                        disabled={(date) => date < new Date()}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
+                    <PopoverContent
+                      className="w-[var(--radix-popover-trigger-width)] p-0 bg-[var(--color-fill-surface-default,#FFF)] border border-[var(--color-border-core-subtle)] rounded-[4px] shadow-lg z-[9999]"
+                      align="start"
+                      sideOffset={4}
+                    >
+                      <div className="p-2 border-b border-[var(--color-border-core-default)]">
+                        <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-[var(--color-fill-surface-recessed)]">
+                          <Search className="h-3.5 w-3.5 text-[var(--color-text-core-subtle)]" />
+                          <input
+                            type="text"
+                            placeholder="Search segments..."
+                            value={segmentSearchQuery}
+                            onChange={(e) => setSegmentSearchQuery(e.target.value)}
+                            className="flex-1 bg-transparent body-75 text-[var(--color-text-core-default)] placeholder:text-[var(--color-text-core-subtle)] outline-none"
+                          />
+                        </div>
+                      </div>
+                      <ScrollArea className="max-h-[300px]">
+                        <div className="p-1">
+                          {PLAY_SEGMENTS.filter((s) => s.toLowerCase().includes(segmentSearchQuery.toLowerCase())).map((seg) => (
+                            <button
+                              key={seg}
+                              type="button"
+                              onClick={() => { setSelectedSegment(seg); setSegmentOpen(false); setSegmentSearchQuery(""); triggerTableReload(); }}
+                              className={`w-full flex items-center gap-2 px-2 py-2 rounded text-left body-100 text-[var(--color-text-core-default)] hover:bg-[var(--color-fill-secondary-hover)] ${selectedSegment === seg ? "bg-[var(--color-fill-secondary-subtle)]" : ""}`}
+                            >
+                              <Check className={`h-3.5 w-3.5 shrink-0 ${selectedSegment === seg ? "opacity-100 text-[var(--color-text-brand-default)]" : "opacity-0"}`} />
+                              <span className="flex-1 min-w-0 truncate">{seg}</span>
+                            </button>
+                          ))}
+                          {PLAY_SEGMENTS.filter((s) => s.toLowerCase().includes(segmentSearchQuery.toLowerCase())).length === 0 && (
+                            <p className="px-2 py-3 body-75 text-[var(--color-text-core-subtle)]">No segments match.</p>
+                          )}
+                        </div>
+                      </ScrollArea>
                     </PopoverContent>
                   </Popover>
                 </FormControl>
 
-                {/* Access Section */}
-                <FormControl label="Access">
+                {/* Sales team */}
+                <FormControl label="Sales team" required>
                   <Popover>
                     <PopoverTrigger asChild>
                       <SelectAnchor placeholder="Select teams…">
@@ -4683,70 +4832,113 @@ const CreateViewModal = ({
                   </Popover>
                 </FormControl>
 
-                {/* Enablement Materials Section */}
-                <FormControl label="Enablement materials">
-                  <div className="space-y-2 mb-3">
-                    {enablementMaterials.length === 0 ? (
-                      <p className="body-75 text-[var(--color-text-core-subtle)]">No materials added yet.</p>
-                    ) : (
-                      enablementMaterials.map(m => {
-                        const Icon = m.type === "case-study" ? FileText : m.type === "battle-card" ? Swords : m.type === "talk-track" ? MessageSquareText : m.type === "video" ? Video : FileIcon;
-                        return (
-                          <div key={m.id} className="flex items-center gap-2 p-2 rounded-[4px] border border-[var(--color-border-core-subtle)]">
-                            <Icon className="h-4 w-4 text-[var(--color-text-core-subtle)] shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <div className="body-100 text-[var(--color-text-core-default)] truncate">{m.title}</div>
-                              <div className="body-75 text-[var(--color-text-core-subtle)] truncate">{m.description}</div>
-                            </div>
-                            <button onClick={() => handleRemoveEnablementMaterial(m.id)} className="p-1 rounded hover:bg-[var(--color-fill-secondary-hover)]">
-                              <Trash2 className="h-3.5 w-3.5 text-[var(--color-text-core-subtle)]" />
-                            </button>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                  <div className="space-y-2">
+                {/* Play name */}
+                <FormControl label="Play name" required>
+                  <Input
+                    placeholder="e.g. Salesforce Switchers"
+                    value={viewName}
+                    onChange={(e) => setViewName(e.target.value)}
+                  />
+                </FormControl>
+
+                {/* Play description */}
+                <FormControl label="Play description" required>
+                  <textarea
+                    placeholder="What is this play about, and how should reps approach it?"
+                    value={viewDescription}
+                    onChange={(e) => setViewDescription(e.target.value)}
+                    rows={4}
+                    className="w-full rounded-[3px] border border-[var(--color-border-core-default,#8A8A8A)] bg-[var(--color-fill-field-default,#FFF)] body-200 text-[var(--color-text-core-default)] placeholder:text-[var(--color-text-core-subtle)] px-3 py-2 resize-y outline-none focus:border-[var(--color-border-interactive-default)]"
+                  />
+                </FormControl>
+
+                {/* Launch date */}
+                <FormControl label="Launch date" required>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <SelectAnchor
+                        placeholder="Select launch date"
+                        trailingIcon={<TrellisIcon name="date" size={16} />}
+                      >
+                        {launchDate ? format(launchDate, "PPP") : null}
+                      </SelectAnchor>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-[var(--color-fill-surface-default)] border border-[var(--color-border-core-subtle)] rounded-[4px] z-[100]" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={launchDate}
+                        onSelect={setLaunchDate}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </FormControl>
+
+                {/* Expiry Date Section */}
+                <FormControl label="Expiry date" helpText="Optional">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <SelectAnchor
+                        placeholder="Select expiry date"
+                        trailingIcon={<TrellisIcon name="date" size={16} />}
+                      >
+                        {expiryDate ? format(expiryDate, "PPP") : null}
+                      </SelectAnchor>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-[var(--color-fill-surface-default)] border border-[var(--color-border-core-subtle)] rounded-[4px] z-[100]" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={expiryDate}
+                        onSelect={setExpiryDate}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </FormControl>
+
+                {/* Enablement hero link */}
+                <FormControl label="Enablement hero link" required>
+                  <div className="relative">
+                    <LinkIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--color-text-core-subtle)]" />
                     <Input
-                      placeholder="Title (e.g. Migration Case Study)"
-                      value={newMaterialTitle}
-                      onChange={(e) => setNewMaterialTitle(e.target.value)}
+                      placeholder="https://"
+                      value={heroLink}
+                      onChange={(e) => {
+                        setHeroLink(e.target.value);
+                        setHeroReady(false);
+                        setHeroLoading(false);
+                        clearTimeout(previewTimers.current.hero);
+                      }}
+                      onBlur={startHeroPreview}
+                      className="pl-8"
                     />
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <LinkIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--color-text-core-subtle)]" />
-                        <Input
-                          placeholder="URL"
-                          value={newMaterialUrl}
-                          onChange={(e) => setNewMaterialUrl(e.target.value)}
-                          className="pl-8"
-                        />
-                      </div>
-                      <Select value={newMaterialType} onValueChange={(v) => setNewMaterialType(v as EnablementMaterial["type"])}>
-                        <SelectTrigger className="w-[140px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="z-[9999]">
-                          <SelectItem value="case-study">Case study</SelectItem>
-                          <SelectItem value="one-pager">One-pager</SelectItem>
-                          <SelectItem value="talk-track">Talk track</SelectItem>
-                          <SelectItem value="battle-card">Battle card</SelectItem>
-                          <SelectItem value="video">Video</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleAddEnablementMaterial}
-                      disabled={!newMaterialTitle.trim()}
-                      className="w-full h-9 rounded-[4px]"
-                    >
-                      <Plus className="h-3.5 w-3.5 mr-1" />
-                      Add material
-                    </Button>
                   </div>
                 </FormControl>
+
+                {/* Enablement links 1–4 */}
+                {enablementLinks.map((link, idx) => (
+                  <FormControl key={`enablement-link-${idx}`} label={`Enablement link ${idx + 1}`} helpText="Optional">
+                    <div className="relative">
+                      <LinkIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--color-text-core-subtle)]" />
+                      <Input
+                        placeholder="https://"
+                        value={link}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setEnablementLinks((prev) => prev.map((l, i) => (i === idx ? val : l)));
+                          setLinkReady((prev) => prev.map((v, i) => (i === idx ? false : v)));
+                          setLinkLoading((prev) => prev.map((v, i) => (i === idx ? false : v)));
+                          clearTimeout(previewTimers.current[`link-${idx}`]);
+                        }}
+                        onBlur={() => startLinkPreview(idx)}
+                        className="pl-8"
+                      />
+                    </div>
+                  </FormControl>
+                ))}
               </div>
             </ScrollArea>
             {wizardFooter}
@@ -4756,9 +4948,9 @@ const CreateViewModal = ({
 
         {dragHandleColumn}
 
-        {/* Persistent right pane — skeleton until the user has sent an agent prompt or added a filter */}
+        {/* Persistent right pane — skeleton until a segment is selected, then the segment's companies */}
         <div className="flex-1 flex flex-col bg-[var(--color-fill-surface-recessed)] overflow-y-auto">
-          {!(chatMessages.some(m => m.role === "user") || filterGroups.some(g => g.filters.length > 0)) ? (
+          {!(selectedSegment && selectedTeams.length > 0) ? (
             renderSkeletonPreview()
           ) : (
             <div className="py-6 pr-12">
@@ -4769,6 +4961,7 @@ const CreateViewModal = ({
                 : (
                   <>
                     {renderPreviewHeader()}
+                    {renderPlayBanner()}
                     {renderPreviewTable()}
                     {renderResultsCount()}
                   </>

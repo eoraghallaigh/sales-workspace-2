@@ -5,6 +5,27 @@ import type { IterationEntry } from "../types";
 // Each entry's `id` matches the folder name under public/about/iterations/.
 export const q2c2Iterations: IterationEntry[] = [
   {
+    id: "2026-06-19-teamhome-layout-tweaks",
+    date: "2026-06-19",
+    label: "teamhome-layout-tweaks",
+    whatChanged: [
+      "Play creation is now a single-section form (Segment, Sales team, Play name, Play description, Launch date, Expiry date, Enablement hero link + 4 optional links) — the multi-step Filters/Columns wizard and stepper are gone.",
+      "A live preview pane shows the segment's companies once a Segment and Sales team are selected, with a \"View as\" dropdown to see the list as a specific rep (only the companies they own).",
+      "The preview table's columns reflect the filters that define each segment.",
+      "A play-explanation banner above the table reuses the plays-page component and fills in live as you type — the hero link loads a preview image and each extra link loads a title and description after a brief spinner.",
+    ],
+    why: [
+      "The old filters/columns wizard was heavier than reps needed; one form is faster to fill and easier to reason about.",
+      "Seeing the targeted companies — and previewing as a specific rep — makes the play's audience tangible before launch.",
+      "Reusing the real play banner shows reps exactly what their play will look like once live.",
+    ],
+    prUrl: "https://github.com/eoraghallaigh_hubspot/flywheel-sales-workspace/pull/21",
+    commitment: "plays",
+    screenshots: [
+      { src: "/about/iterations/2026-06-19-teamhome-layout-tweaks/play-creation.png", alt: "play-creation screenshot" },
+    ],
+  },
+  {
     id: "2026-06-10-intent-signals-chips-popover",
     date: "2026-06-10",
     label: "intent-signals-chips-popover",
