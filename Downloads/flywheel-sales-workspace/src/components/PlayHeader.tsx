@@ -1,13 +1,17 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, FileText, Swords, MessageSquareText, Video, File, Calendar, ExternalLink, Megaphone } from "lucide-react";
+import { ChevronDown, FileText, Swords, MessageSquareText, Video, File, Calendar, ExternalLink, Megaphone, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Play, EnablementMaterial } from "@/data/playData";
 
 interface PlayHeaderProps {
   play: Play;
   defaultOpen?: boolean;
+  // When set, the hero microsite card shows a loading spinner instead of its preview.
+  loadingMicrosite?: boolean;
+  // Material ids whose row should render as a loading spinner instead of content.
+  loadingMaterialIds?: string[];
 }
 
 const materialIcon = (type: EnablementMaterial["type"]) => {
@@ -25,7 +29,7 @@ const formatDate = (dateStr: string) => {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 };
 
-const PlayHeader = ({ play, defaultOpen = false }: PlayHeaderProps) => {
+const PlayHeader = ({ play, defaultOpen = false, loadingMicrosite = false, loadingMaterialIds = [] }: PlayHeaderProps) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   const endDate = new Date(play.endDate);
@@ -39,7 +43,18 @@ const PlayHeader = ({ play, defaultOpen = false }: PlayHeaderProps) => {
         <span className="detail-100 text-muted-foreground">({play.enablementMaterials.length})</span>
       </div>
       <div className="grid grid-cols-2 gap-6">
-        {play.micrositeUrl && (
+        {play.micrositeUrl && loadingMicrosite && (
+          <div className="flex flex-col rounded-200 border border-core-subtle overflow-hidden">
+            <div className="h-40 flex items-center justify-center border-b border-core-subtle bg-[#F5F5F5]">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+            <div className="flex flex-col gap-2 p-3">
+              <div className="h-3 w-2/3 rounded bg-[#EBEBEB] animate-pulse" />
+              <div className="h-2.5 w-full rounded bg-[#EBEBEB] animate-pulse" />
+            </div>
+          </div>
+        )}
+        {play.micrositeUrl && !loadingMicrosite && (
           <a
             href={play.micrositeUrl}
             target="_blank"
@@ -75,20 +90,30 @@ const PlayHeader = ({ play, defaultOpen = false }: PlayHeaderProps) => {
         )}
 
         <div className="flex flex-col gap-4">
-          {play.enablementMaterials.map(material => (
-            <button
-              key={material.id}
-              className="flex items-start gap-2.5 w-full text-left px-2 py-2 rounded hover:bg-accent/50 transition-colors group"
-            >
-              <span className="flex-shrink-0 mt-1">{materialIcon(material.type)}</span>
-              <div className="min-w-0 flex-1">
-                <span className="link-100 text-text-interactive group-hover:text-text-interactive-hover transition-colors block">
-                  {material.title}
-                </span>
-                <span className="detail-100 text-muted-foreground block">{material.description}</span>
+          {play.enablementMaterials.map(material =>
+            loadingMaterialIds.includes(material.id) ? (
+              <div key={material.id} className="flex items-start gap-2.5 w-full px-2 py-2">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground flex-shrink-0 mt-1" />
+                <div className="min-w-0 flex-1 flex flex-col gap-1.5">
+                  <div className="h-3 w-1/2 rounded bg-[#EBEBEB] animate-pulse" />
+                  <div className="h-2.5 w-3/4 rounded bg-[#EBEBEB] animate-pulse" />
+                </div>
               </div>
-            </button>
-          ))}
+            ) : (
+              <button
+                key={material.id}
+                className="flex items-start gap-2.5 w-full text-left px-2 py-2 rounded hover:bg-accent/50 transition-colors group"
+              >
+                <span className="flex-shrink-0 mt-1">{materialIcon(material.type)}</span>
+                <div className="min-w-0 flex-1">
+                  <span className="link-100 text-text-interactive group-hover:text-text-interactive-hover transition-colors block">
+                    {material.title}
+                  </span>
+                  <span className="detail-100 text-muted-foreground block">{material.description}</span>
+                </div>
+              </button>
+            )
+          )}
         </div>
       </div>
     </>
