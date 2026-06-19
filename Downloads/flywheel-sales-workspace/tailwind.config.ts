@@ -358,8 +358,8 @@ const config: Config = {
       borderRadius: {
         '0': '0px',
         '100': '4px',
-        '200': '4px', 
-        '300': '8px',
+        '200': '4px',
+        '300': '16px',
         '400': '16px',
         'full': '999999px',
         'transitional-component': '4px',
