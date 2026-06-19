@@ -25,6 +25,8 @@ import ProspectingStrategy from "./pages/ProspectingStrategy";
 import HoverPreviewDemo from "./pages/HoverPreviewDemo";
 import OutreachStates from "./pages/OutreachStates";
 import TeamHome from "./pages/TeamHome";
+import AboutDoc from "./pages/AboutDoc";
+import ResearchReport from "./pages/ResearchReport";
 import CyclePage from "./pages/CyclePage";
 import MotionSandbox from "./pages/MotionSandbox";
 import Plays from "./pages/Plays";
@@ -47,6 +49,8 @@ const App = () => (
           <PlaysProvider>
           <Routes>
             <Route path="/" element={<TeamHome />} />
+            <Route path="/about/:docSlug" element={<AboutDoc />} />
+            <Route path="/research/:reportSlug" element={<ResearchReport />} />
             <Route path="/motion-sandbox" element={<MotionSandbox />} />
             <Route path="/:cycleSlug" element={<CyclePage />} />
             <Route path="/:cycleSlug/summary" element={<Summary />} />
