@@ -134,6 +134,19 @@ export function getOutreachState(
       };
     case "c6": // David Lee — pristine
       return pristine;
+    case "c8": // Michael O'Brien — already enrolled under another play's sequence
+      return {
+        call: { kind: "not-attempted" },
+        linkedin: { kind: "not-sent" },
+        sequence: {
+          kind: "active",
+          statuses: [
+            { kind: "sent", sentAt: "Apr 26", opens: 2, clicks: 1 },
+            { kind: "scheduled", sendsAt: "Tue Apr 30, 9:00am" },
+            { kind: "scheduled", sendsAt: "Mon May 5, 9:00am" },
+          ],
+        },
+      };
     case "c9": // James Wilson — connected call, sequence ended
       return {
         call: { kind: "connected", at: "this morning", durationMin: 18 },

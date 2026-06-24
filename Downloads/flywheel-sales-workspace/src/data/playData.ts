@@ -404,6 +404,54 @@ export const getPlayOutreachForCompany = (
   return undefined;
 };
 
+// When a company belongs to several plays, the detail page opens on the most
+// recently created one. We use startDate as the recency proxy (dates are
+// ISO yyyy-mm-dd, so a string sort is chronological).
+export const getMostRecentPlayId = (
+  companyId: string,
+  allPlays: Play[],
+): string | undefined => {
+  const companyPlays = getPlaysForCompany(companyId, allPlays);
+  if (companyPlays.length === 0) return undefined;
+  return [...companyPlays].sort((a, b) =>
+    b.startDate.localeCompare(a.startDate),
+  )[0].id;
+};
+
+// A contact can be in only one active sequence at a time (global rule), so an
+// enrollment is "owned" by the play it was started under. This lets the detail
+// page disclose, when viewing another play, that a target is already being
+// worked elsewhere — which is why they can't be enrolled here.
+export const sequenceEnrollmentPlay: Record<string, string> = {
+  c8: "salesforce-switchers",
+};
+
+export const getEnrollmentPlayId = (contactId: string): string | undefined =>
+  sequenceEnrollmentPlay[contactId];
+
+// Per-contact play eligibility. A contact eligible for more than one of their
+// company's active plays gets a play selector on their sequence, letting the rep
+// choose which play's email sequence to enroll them in. Contacts not listed here
+// default to a single play (no selector).
+export const contactPlayEligibility: Record<string, string[]> = {
+  // Fusion Technologies (company 13) — Enterprise Expansion + Salesforce Switchers.
+  // Brandon overlaps both; the others split, so each play has a distinct contact set.
+  c32: ["enterprise-expansion", "salesforce-switchers"], // Brandon Lee — both (overlap)
+  c32a: ["enterprise-expansion"], // Ingrid Larsen — Enterprise Expansion
+  c32b: ["salesforce-switchers"], // Amir Farouk — Salesforce Switchers
+  c32c: ["enterprise-expansion"], // Sandra Kim — Enterprise Expansion
+  c32d: ["salesforce-switchers"], // Troy Anderson — Salesforce Switchers
+};
+
+export const getEligiblePlayIdsForContact = (
+  contactId: string,
+  companyPlayIds: string[],
+): string[] => {
+  const eligible = contactPlayEligibility[contactId];
+  if (!eligible) return companyPlayIds.slice(0, 1);
+  return companyPlayIds.filter((id) => eligible.includes(id));
+};
+
 const matchesPlayRole = (role: string, profile: PlayOutreachProfile): boolean => {
   const r = role.toLowerCase();
   return profile.targetRoleKeywords.some((k) => r.includes(k));

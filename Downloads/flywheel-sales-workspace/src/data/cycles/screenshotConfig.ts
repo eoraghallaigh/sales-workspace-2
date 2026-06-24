@@ -15,6 +15,7 @@ export const captureRoutes: CaptureRoute[] = [
   { path: "/prospecting?view=full-prospect-book", name: "full-prospect-book" },
   { path: "/prospecting?view=full-customer-book", name: "full-customer-book" },
   { path: "/prospecting/strategy/1", name: "prospecting-strategy" },
+  { path: "/prospecting/strategy/13", name: "prospecting-strategy-multi-play" },
   { path: "/prospecting/strategy/3", name: "prospecting-strategy-full-research" },
   { path: "/prospecting/strategy/1?empty=both", name: "prospecting-strategy-empty-both" },
   { path: "/prospecting/strategy/1?empty=research", name: "prospecting-strategy-empty-research" },

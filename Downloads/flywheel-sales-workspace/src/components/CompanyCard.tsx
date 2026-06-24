@@ -259,6 +259,20 @@ const CompanyCard = ({
     void sequenceId;
   };
 
+  const handleCreateCallTask = () => {
+    const count = selectedContactIds.size;
+    if (count === 0) return;
+    const label =
+      count === 1
+        ? contacts.find((c) => selectedContactIds.has(c.id))?.name ??
+          `${count} contact`
+        : `${count} contacts`;
+    toast.success(
+      `Created call task${count !== 1 ? "s" : ""} for ${label}`,
+    );
+    setSelectedContactIds(new Set());
+  };
+
   const getStatusBadgeVariant = (): {
     label: string;
     variant: "status-orange" | "status-blue" | "status-yellow" | "status-green" | "status-gray";
@@ -409,6 +423,14 @@ const CompanyCard = ({
                 size={14}
                 className="ml-1 brightness-0 invert"
               />
+            </Button>
+            <Button
+              variant="secondary"
+              size="small"
+              onClick={handleCreateCallTask}
+            >
+              Create Call Task ({selectedContactIds.size})
+              <TrellisIcon name="tasks" size={14} className="ml-1" />
             </Button>
             <Button
               variant="secondary"
