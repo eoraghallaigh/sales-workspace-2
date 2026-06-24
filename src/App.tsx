@@ -2,7 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { currentCycleSlug } from "@/data/cycles";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { TourProvider } from "@/contexts/TourContext";
 import { VariantProvider } from "@/contexts/VariantContext";
@@ -24,10 +25,6 @@ import PlayHeaderSandbox from "./pages/PlayHeaderSandbox";
 import ProspectingStrategy from "./pages/ProspectingStrategy";
 import HoverPreviewDemo from "./pages/HoverPreviewDemo";
 import OutreachStates from "./pages/OutreachStates";
-import TeamHome from "./pages/TeamHome";
-import AboutDoc from "./pages/AboutDoc";
-import ResearchReport from "./pages/ResearchReport";
-import CyclePage from "./pages/CyclePage";
 import MotionSandbox from "./pages/MotionSandbox";
 import Plays from "./pages/Plays";
 import PlayBuilder from "./pages/PlayBuilder";
@@ -48,11 +45,9 @@ const App = () => (
           <StrategyAssistantProvider>
           <PlaysProvider>
           <Routes>
-            <Route path="/" element={<TeamHome />} />
-            <Route path="/about/:docSlug" element={<AboutDoc />} />
-            <Route path="/research/:reportSlug" element={<ResearchReport />} />
+            <Route path="/" element={<Navigate to={`/${currentCycleSlug}/summary`} replace />} />
             <Route path="/motion-sandbox" element={<MotionSandbox />} />
-            <Route path="/:cycleSlug" element={<CyclePage />} />
+            <Route path="/:cycleSlug" element={<Navigate to="summary" replace />} />
             <Route path="/:cycleSlug/summary" element={<Summary />} />
             <Route path="/:cycleSlug/design-system" element={<DesignSystem />} />
             <Route path="/data-well-sandbox" element={<DataWellSandbox />} />

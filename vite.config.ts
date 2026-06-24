@@ -8,10 +8,6 @@ export default defineConfig(() => ({
   server: {
     host: "::",
     port: 8080,
-    fs: {
-      // Allow ?raw imports from the workspace's docs/ folder (two levels up).
-      allow: [path.resolve(__dirname, '../..')],
-    },
   },
   plugins: [react()],
   resolve: {

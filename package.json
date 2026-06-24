@@ -10,8 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "postbuild": "cp dist/index.html dist/404.html",
-    "deploy": "npm run build && gh-pages -d dist -b gh-pages",
-    "capture": "node scripts/capture-screenshots.mjs"
+    "deploy": "npm run build && gh-pages -d dist -b gh-pages"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
