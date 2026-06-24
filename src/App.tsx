@@ -3,7 +3,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { currentCycleSlug } from "@/data/cycles";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { TourProvider } from "@/contexts/TourContext";
 import { VariantProvider } from "@/contexts/VariantContext";
@@ -45,30 +44,27 @@ const App = () => (
           <StrategyAssistantProvider>
           <PlaysProvider>
           <Routes>
-            <Route path="/" element={<Navigate to={`/${currentCycleSlug}/summary`} replace />} />
+            <Route path="/" element={<Navigate to="/summary" replace />} />
             <Route path="/motion-sandbox" element={<MotionSandbox />} />
-            <Route path="/:cycleSlug" element={<Navigate to="summary" replace />} />
-            <Route path="/:cycleSlug/summary" element={<Summary />} />
-            <Route path="/:cycleSlug/design-system" element={<DesignSystem />} />
+            <Route path="/summary" element={<Summary />} />
+            <Route path="/design-system" element={<DesignSystem />} />
             <Route path="/data-well-sandbox" element={<DataWellSandbox />} />
-            <Route path="/:cycleSlug/data-well-sandbox" element={<DataWellSandbox />} />
             <Route path="/play-box-sandbox" element={<PlayHeaderSandbox />} />
-            <Route path="/:cycleSlug/play-box-sandbox" element={<PlayHeaderSandbox />} />
-            <Route path="/:cycleSlug/prospecting" element={<Prospecting />} />
-            <Route path="/:cycleSlug/prospecting/play/:playId" element={<Prospecting />} />
-            <Route path="/:cycleSlug/plays" element={<Plays />} />
-            <Route path="/:cycleSlug/plays/new" element={<PlayBuilder />} />
-            <Route path="/:cycleSlug/plays/:playId/edit" element={<PlayBuilder />} />
-            <Route path="/:cycleSlug/prospecting/strategy/:companyId" element={<ProspectingStrategy />} />
-            <Route path="/:cycleSlug/power-hour" element={<PowerHour />} />
-            <Route path="/:cycleSlug/power-hour/review" element={<PowerHourReview />} />
-            <Route path="/:cycleSlug/sales-workspace" element={<SalesWorkspace />} />
-            <Route path="/:cycleSlug/deals" element={<Deals />} />
-            <Route path="/:cycleSlug/agents" element={<Agents />} />
-            <Route path="/:cycleSlug/agents/:agentId" element={<AgentDetail />} />
-            <Route path="/:cycleSlug/dashboard" element={<Dashboard />} />
-            <Route path="/:cycleSlug/hover-preview" element={<HoverPreviewDemo />} />
-            <Route path="/:cycleSlug/outreach-states" element={<OutreachStates />} />
+            <Route path="/prospecting" element={<Prospecting />} />
+            <Route path="/prospecting/play/:playId" element={<Prospecting />} />
+            <Route path="/plays" element={<Plays />} />
+            <Route path="/plays/new" element={<PlayBuilder />} />
+            <Route path="/plays/:playId/edit" element={<PlayBuilder />} />
+            <Route path="/prospecting/strategy/:companyId" element={<ProspectingStrategy />} />
+            <Route path="/power-hour" element={<PowerHour />} />
+            <Route path="/power-hour/review" element={<PowerHourReview />} />
+            <Route path="/sales-workspace" element={<SalesWorkspace />} />
+            <Route path="/deals" element={<Deals />} />
+            <Route path="/agents" element={<Agents />} />
+            <Route path="/agents/:agentId" element={<AgentDetail />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/hover-preview" element={<HoverPreviewDemo />} />
+            <Route path="/outreach-states" element={<OutreachStates />} />
           </Routes>
           <GuidedTour />
           {import.meta.env.DEV && <DesignMode />}

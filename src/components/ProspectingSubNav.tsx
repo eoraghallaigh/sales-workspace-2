@@ -79,14 +79,14 @@ const ProspectingSubNav = ({
 }: ProspectingSubNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { cyclePath, cycleSlug } = useCyclePath();
+  const { cyclePath } = useCyclePath();
   const { playId } = useParams();
   const { plays } = usePlays();
   const { theme } = useTheme();
   const isAlpha = theme === "alpha";
   const [searchParams] = useSearchParams();
   const viewParam = searchParams.get("view");
-  const isPowerHourRoute = location.pathname.startsWith(`/${cycleSlug}/power-hour`);
+  const isPowerHourRoute = location.pathname.startsWith("/power-hour");
   const defaultItem = playId || viewParam || (isPowerHourRoute ? "" : "p1-now");
   const playIds = plays.map(c => c.id);
   const [activeItem, setActiveItemState] = useState(defaultItem);
