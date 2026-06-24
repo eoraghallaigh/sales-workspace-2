@@ -5,6 +5,29 @@ import type { IterationEntry } from "../types";
 // Each entry's `id` matches the folder name under public/about/iterations/.
 export const q2c2Iterations: IterationEntry[] = [
   {
+    id: "2026-06-24-adjust-tag-padding-height",
+    date: "2026-06-24",
+    label: "adjust-tag-padding-height",
+    whatChanged: [
+      "Pulled the play selector out of the company strategy card into an inline line above it — \"This company is eligible for multiple plays. Showing the prospecting strategy for [play ⌄]\" — using a ghost-styled dropdown.",
+      "The play banner shows the play name as its collapsible title again (reverted from \"Playbook\"), with a \"Prospecting Play\" eyebrow badge.",
+      "The active play now appears as an orange badge chip beside the \"Outreach targets\" heading on multi-play companies.",
+      "Switching plays now fades the targets list — the animate-fade-in class was referenced across the app but never actually defined, so it had been a no-op everywhere.",
+      "Tightened the play banner padding and removed the redundant \"Enablement materials\" sub-header.",
+    ],
+    why: [
+      "Putting the selector inside the banner made it look like only that banner's content changed; pulling it out and naming it in a sentence makes clear the whole strategy is scoped to the chosen play.",
+      "A visible transition on switch reassures the rep that the targets and sequences actually changed.",
+      "Reverting the title to the play name keeps it consistent with the single-play and list-page banners.",
+    ],
+    prUrl: "https://github.com/eoraghallaigh_hubspot/flywheel-sales-workspace/pull/23",
+    commitment: "plays",
+    screenshots: [
+      { src: "/about/iterations/2026-06-24-adjust-tag-padding-height/prospecting-strategy-multi-play.png", alt: "prospecting-strategy-multi-play screenshot" },
+      { src: "/about/iterations/2026-06-24-adjust-tag-padding-height/prospecting-strategy.png", alt: "prospecting-strategy screenshot" },
+    ],
+  },
+  {
     id: "2026-06-19-teamhome-layout-tweaks",
     date: "2026-06-19",
     label: "teamhome-layout-tweaks",

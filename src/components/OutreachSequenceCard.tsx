@@ -9,6 +9,7 @@ import {
   Undo2,
   Redo2,
   ChevronDown,
+  Megaphone,
 } from "lucide-react";
 import {
   DndContext,
@@ -32,6 +33,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
@@ -840,7 +847,7 @@ const SortableRow = ({
       <div ref={setNodeRef} style={style}>
         <Collapsible open={isExpanded} onOpenChange={onToggle}>
           <CollapsibleTrigger asChild>
-            <div className="flex items-start gap-2 cursor-pointer text-left -mx-2 px-2 py-3 rounded-[4px] hover:bg-[var(--color-fill-surface-recessed)] transition-colors">
+            <div className="flex items-center gap-2 cursor-pointer text-left -mx-2 px-2 pt-5 pb-5 rounded-[4px] hover:bg-[var(--color-fill-surface-recessed)] transition-colors">
               {draggable ? (
                 <button
                   type="button"
@@ -1079,6 +1086,10 @@ const SortableRow = ({
 
 export type OutreachSequenceCardProps = {
   contact: { id: string; name: string; initials: string; avatarColor: string };
+  // When this contact is already enrolled in a different play's sequence, the
+  // owning play's label — shown as a chip above the sequence to explain why the
+  // sequence here belongs to another play (one active enrollment per contact).
+  playProvenanceLabel?: string;
   callBullets: string[];
   onCallBulletChange: (idx: number, value: string) => void;
   call: CallState;
@@ -1087,8 +1098,12 @@ export type OutreachSequenceCardProps = {
   defaultCallScript: string;
   defaultLinkedInMessage: string;
   emailTemplates: Array<{ subject: string; body: string }>;
-  isExpanded: boolean;
-  onToggleExpanded: () => void;
+  // Eligible plays for this contact. When more than one, a play selector renders
+  // next to the sequence header so the rep can pick which play's email sequence
+  // to enroll the contact in.
+  playOptions?: Array<{ id: string; label: string }>;
+  selectedPlayId?: string;
+  onSelectPlay?: (playId: string) => void;
   expandedTouches: Record<string, boolean>;
   onToggleTouch: (id: string) => void;
   getCallScript: () => string;
@@ -1116,14 +1131,16 @@ const buildDefaultOrder = (contactId: string): string[] => [
 
 export const OutreachSequenceCard = ({
   contact,
+  playProvenanceLabel,
   callBullets,
   onCallBulletChange,
   call,
   linkedin,
   sequence,
   emailTemplates,
-  isExpanded,
-  onToggleExpanded,
+  playOptions,
+  selectedPlayId,
+  onSelectPlay,
   expandedTouches,
   onToggleTouch,
   getCallScript,
@@ -1218,22 +1235,44 @@ export const OutreachSequenceCard = ({
 
   return (
     <div>
+      {playProvenanceLabel && (
+        <Badge variant="orange" className="gap-1 mb-2">
+          <Megaphone className="h-3 w-3" />
+          Part of {playProvenanceLabel} play
+        </Badge>
+      )}
       <div className="overflow-hidden">
-        <Collapsible open={isExpanded} onOpenChange={onToggleExpanded}>
-          <div className="flex flex-wrap items-center gap-2 py-3">
-            <CollapsibleTrigger className="flex items-center gap-2">
-              <ChevronDown
-                className={`h-4 w-4 text-muted-foreground transition-transform ${
-                  isExpanded ? "" : "-rotate-90"
-                }`}
-              />
-              <span className="heading-50 text-foreground">5-touch sequence</span>
-            </CollapsibleTrigger>
-            {mutedAttribution}
-            <div className="flex-1" />
-            {status !== null && renderStatusBadgeStack(status, sequence, localOverride)}
-          </div>
-          <CollapsibleContent className="pb-0">
+        <div className="flex flex-wrap items-center gap-2 py-3">
+          <span className="heading-50 text-foreground">5-touch sequence</span>
+          {playOptions && playOptions.length > 1 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="small"
+                  className="border border-transparent detail-200 h-auto px-2 py-0.5 gap-1 text-muted-foreground hover:text-foreground"
+                >
+                  {playOptions.find((o) => o.id === selectedPlayId)?.label ?? "Select play"}
+                  <TrellisIcon name="downCarat" size={10} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {playOptions.map((option) => (
+                  <DropdownMenuItem
+                    key={option.id}
+                    onClick={() => onSelectPlay?.(option.id)}
+                  >
+                    {option.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          <div className="flex-1" />
+          {mutedAttribution}
+          {status !== null && renderStatusBadgeStack(status, sequence, localOverride)}
+        </div>
+          <div className="pb-0">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -1245,7 +1284,7 @@ export const OutreachSequenceCard = ({
                   className={
                     isEnrolled
                       ? ""
-                      : "divide-y divide-[var(--color-border-core-subtle)] border-y border-[var(--color-border-core-subtle)]"
+                      : "divide-y divide-[var(--color-border-core-subtle)] border-y border-[var(--color-border-core-subtle)] mb-6"
                   }
                 >
                   {orderedTouches.map((t, idx) => (
@@ -1329,8 +1368,7 @@ export const OutreachSequenceCard = ({
               )}
               </div>
             </div>
-          </CollapsibleContent>
-        </Collapsible>
+          </div>
       </div>
       <RegenerateSequenceModal
         open={isRegenerateOpen}

@@ -12,6 +12,9 @@ interface PlayHeaderProps {
   loadingMicrosite?: boolean;
   // Material ids whose row should render as a loading spinner instead of content.
   loadingMaterialIds?: string[];
+  // Compact mode (company strategy view): shows the play name as the header with
+  // the dates in the body, instead of the standalone red badge + large title.
+  compact?: boolean;
 }
 
 const materialIcon = (type: EnablementMaterial["type"]) => {
@@ -29,19 +32,23 @@ const formatDate = (dateStr: string) => {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 };
 
-const PlayHeader = ({ play, defaultOpen = false, loadingMicrosite = false, loadingMaterialIds = [] }: PlayHeaderProps) => {
+const PlayHeader = ({ play, defaultOpen = false, loadingMicrosite = false, loadingMaterialIds = [], compact = false }: PlayHeaderProps) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   const endDate = new Date(play.endDate);
   const today = new Date();
   const daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
 
+  const playDateLine = (p: Play) => {
+    const days = Math.max(
+      0,
+      Math.ceil((new Date(p.endDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
+    );
+    return `Ends ${formatDate(p.endDate)} · ${days} days remaining`;
+  };
+
   const enablementSection = (
     <>
-      <div className="flex items-center gap-2 mb-3">
-        <span className="heading-50 text-foreground">Enablement materials</span>
-        <span className="detail-100 text-muted-foreground">({play.enablementMaterials.length})</span>
-      </div>
       <div className="grid grid-cols-2 gap-6">
         {play.micrositeUrl && loadingMicrosite && (
           <div className="flex flex-col rounded-200 border border-core-subtle overflow-hidden">
@@ -120,31 +127,51 @@ const PlayHeader = ({ play, defaultOpen = false, loadingMicrosite = false, loadi
   );
 
   return (
-    <Card className="relative overflow-hidden bg-gradient-to-b from-[#FFF4EF] to-card border border-[#F6CDBC] rounded shadow-200 px-10 pt-6 pb-8 mb-8">
+    <Card className="relative overflow-hidden bg-gradient-to-b from-[#FFF4EF] to-card border border-[#F6CDBC] rounded shadow-200 pr-6 pl-6 pt-6 pb-6 mb-8">
       <div className="absolute inset-x-0 top-0 h-1 trellis-gradient-hero" />
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex flex-col gap-4">
+        {compact ? (
+          <div className="flex flex-col gap-2">
             <Badge variant="red" className="gap-1 self-start">
               <Megaphone className="h-3 w-3" />
               <span className="uppercase tracking-wide">Prospecting Play</span>
             </Badge>
-            <CollapsibleTrigger className="flex items-center gap-2 group text-left">
-              <ChevronDown className={`h-5 w-5 text-muted-foreground flex-shrink-0 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
-              <h3 className="heading-300 text-foreground">{play.label}</h3>
+            <CollapsibleTrigger className="flex items-center gap-2 group">
+              <ChevronDown className={`h-4 w-4 text-muted-foreground flex-shrink-0 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
+              <h3 className="heading-200 text-foreground">{play.label}</h3>
             </CollapsibleTrigger>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="detail-100 text-muted-foreground">
-              {formatDate(play.startDate)} – {formatDate(play.endDate)}
-            </span>
-            <span className="detail-100 text-muted-foreground">·</span>
-            <span className="detail-100 text-muted-foreground">{daysRemaining} days remaining</span>
+        ) : (
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-4">
+              <Badge variant="red" className="gap-1 self-start">
+                <Megaphone className="h-3 w-3" />
+                <span className="uppercase tracking-wide">Prospecting Play</span>
+              </Badge>
+              <CollapsibleTrigger className="flex items-center gap-2 group text-left">
+                <ChevronDown className={`h-5 w-5 text-muted-foreground flex-shrink-0 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
+                <h3 className="heading-300 text-foreground">{play.label}</h3>
+              </CollapsibleTrigger>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="detail-100 text-muted-foreground">
+                {formatDate(play.startDate)} – {formatDate(play.endDate)}
+              </span>
+              <span className="detail-100 text-muted-foreground">·</span>
+              <span className="detail-100 text-muted-foreground">{daysRemaining} days remaining</span>
+            </div>
           </div>
-        </div>
+        )}
         <CollapsibleContent>
-          <p className="body-100 text-foreground leading-relaxed mt-3 mb-6">{play.description}</p>
+          <p className={`body-100 text-foreground leading-relaxed ${compact ? "mt-4 mb-2" : "mt-3 mb-6"}`}>
+            {play.description}
+          </p>
+          {compact && (
+            <p className="detail-100 text-muted-foreground font-normal mb-6">
+              {playDateLine(play)}
+            </p>
+          )}
           {enablementSection}
         </CollapsibleContent>
       </Collapsible>

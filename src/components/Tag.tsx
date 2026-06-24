@@ -32,7 +32,7 @@ const Tag = ({ children, variant = "neutral", className }: TagProps) => {
 
   return (
     <div
-      className={cn("heading-25 text-[var(--color-text-core-default)] inline-flex items-center px-3 py-1", className)}
+      className={cn("heading-25 text-[var(--color-text-core-default)] inline-flex items-center px-2 py-0 h-[24px]", className)}
       style={{
         borderRadius: 'var(--borderRadius-transitional-full-0, 999999px)',
         ...variantStyles[variant]
