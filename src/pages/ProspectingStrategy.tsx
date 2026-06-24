@@ -15,6 +15,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from "@/components/ui/dropdown-menu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import { ResearchSectionBody } from "@/components/ResearchSectionBody";
@@ -39,7 +46,7 @@ import { getCompanyStrategy } from "@/data/companyStrategies";
 import { getContactDossier } from "@/data/contactDossier";
 import PlayHeader from "@/components/PlayHeader";
 import { usePlays } from "@/contexts/PlaysContext";
-import { getPlaysForCompany, getPlayOutreachForCompany, rankContactsForPlay } from "@/data/playData";
+import { getPlaysForCompany, getPlayOutreachForCompany, rankContactsForPlay, getMostRecentPlayId, getEnrollmentPlayId, getEligiblePlayIdsForContact, PLAY_OUTREACH } from "@/data/playData";
 import { useStrategyAssistant } from "@/contexts/StrategyAssistantContext";
 import {
   getOutreachState,
@@ -166,7 +173,6 @@ const ProspectingStrategy = () => {
   const { cyclePath } = useCyclePath();
   const [selectedContactIndex, setSelectedContactIndex] = useState(0);
   const [activeTab, setActiveTab] = useState("strategy");
-  const [expandedOutreach, setExpandedOutreach] = useState<Record<string, boolean>>({});
   const [expandedEmails, setExpandedEmails] = useState<Record<string, boolean>>({});
   const [editedContent, setEditedContent] = useState<Record<string, string>>({});
   const [addedContactIds, setAddedContactIds] = useState<Set<string>>(new Set());
@@ -275,6 +281,22 @@ const ProspectingStrategy = () => {
     () => getPlaysForCompany(currentCompany?.id ?? "", plays),
     [currentCompany?.id, plays],
   );
+  const companyPlayIds = useMemo(() => companyPlays.map((p) => p.id), [companyPlays]);
+  // Multi-play companies get a play selector; the whole strategy view is scoped
+  // to the selected play. Default to the most recently created play. A user
+  // selection is only honoured while it belongs to the current company, so
+  // navigating to another company falls back to that company's default.
+  const [selectedPlayId, setSelectedPlayId] = useState<string | undefined>(undefined);
+  const resolvedPlayId = useMemo(() => {
+    if (selectedPlayId && companyPlays.some((p) => p.id === selectedPlayId)) {
+      return selectedPlayId;
+    }
+    return getMostRecentPlayId(currentCompany?.id ?? "", plays);
+  }, [selectedPlayId, companyPlays, currentCompany?.id, plays]);
+  const selectedPlay = useMemo(
+    () => companyPlays.find((p) => p.id === resolvedPlayId) ?? companyPlays[0],
+    [companyPlays, resolvedPlayId],
+  );
   const recentConversions = useMemo(
     () => getRecentConversions(currentCompany?.id ?? ""),
     [currentCompany?.id],
@@ -319,9 +341,14 @@ const ProspectingStrategy = () => {
   const {
     activeVariantByCompany,
     isRewriting,
-    revertVariant,
   } = useStrategyAssistant();
-  const activeVariantId = activeVariantByCompany[currentCompany?.id || ""] || "default";
+  // The selected play drives which research variant shows, so the company
+  // research itself changes as the rep switches plays (the Salesforce Switchers
+  // play surfaces the displacement research). A manual strategy-assistant
+  // rewrite still wins if one has been set.
+  const playResearchVariant =
+    resolvedPlayId === "salesforce-switchers" ? "salesforce-displacement" : "default";
+  const activeVariantId = activeVariantByCompany[currentCompany?.id || ""] || playResearchVariant;
   const strategy = getCompanyStrategy(currentCompany?.id)[activeVariantId];
   const isStrategyRewriting = !!isRewriting[currentCompany?.id || ""];
 
@@ -329,24 +356,34 @@ const ProspectingStrategy = () => {
   // (e.g. sales + marketing for Salesforce Switchers) to the top so the default
   // outreach targets match who the play is meant to reach.
   const playOutreach = useMemo(
-    () => getPlayOutreachForCompany(currentCompany?.id ?? ""),
-    [currentCompany?.id],
+    () =>
+      (resolvedPlayId ? PLAY_OUTREACH[resolvedPlayId] : undefined) ??
+      getPlayOutreachForCompany(currentCompany?.id ?? ""),
+    [resolvedPlayId, currentCompany?.id],
   );
   const rankedRecommended = useMemo(
     () => rankContactsForPlay(currentCompany?.recommendedContacts ?? [], playOutreach),
     [currentCompany, playOutreach],
   );
+  // Each play has its own contact set (with overlap). When a company runs more
+  // than one play, scope the contacts to those eligible for the selected play.
+  const playScopedContacts = useMemo(() => {
+    if (companyPlayIds.length <= 1) return rankedRecommended;
+    return rankedRecommended.filter((c) =>
+      getEligiblePlayIdsForContact(c.id, companyPlayIds).includes(resolvedPlayId ?? ""),
+    );
+  }, [rankedRecommended, companyPlayIds, resolvedPlayId]);
 
   // Get contacts for the current company
-  const baseOutreachTargets = rankedRecommended.slice(0, 3);
-  const addedContacts = rankedRecommended.filter(c => addedContactIds.has(c.id));
+  const baseOutreachTargets = playScopedContacts.slice(0, 3);
+  const addedContacts = playScopedContacts.filter(c => addedContactIds.has(c.id));
   const outreachTargets = [...baseOutreachTargets, ...addedContacts].filter(c => !removedContactIds.has(c.id));
 
   // Other contacts: remaining contacts not in outreach targets
   const otherContacts = useMemo(() => {
     const outreachIds = new Set(outreachTargets.map(c => c.id));
-    return rankedRecommended.filter(c => !outreachIds.has(c.id)).slice(0, 10);
-  }, [rankedRecommended, outreachTargets]);
+    return playScopedContacts.filter(c => !outreachIds.has(c.id)).slice(0, 10);
+  }, [playScopedContacts, outreachTargets]);
 
   const handleAddToOutreach = useCallback((contactId: string) => {
     setAddedContactIds(prev => new Set(prev).add(contactId));
@@ -406,16 +443,6 @@ const ProspectingStrategy = () => {
       case "Unworked P1":return "Unworked";
       default:return status;
     }
-  };
-
-  const toggleOutreach = (contactId: string, section: string) => {
-    const key = `${contactId}-${section}`;
-    setExpandedOutreach((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  const isOutreachExpanded = (contactId: string, section: string) => {
-    const key = `${contactId}-${section}`;
-    return expandedOutreach[key] ?? (section === "call" || section === "sequence");
   };
 
   if (!currentCompany) return null;
@@ -574,7 +601,6 @@ const ProspectingStrategy = () => {
 
         return sections.map((section) => (
           <div key={section.label} className="mb-8">
-            <h3 className="heading-200 text-foreground mb-4">{section.label}</h3>
             <div className="space-y-3">
               {section.items.map((item) => {
                 const isOpen = expandedEmails[item.id] ?? false;
@@ -988,21 +1014,32 @@ const ProspectingStrategy = () => {
 
           {/* Strategy content */}
           <div onScroll={(e) => setCondensed(e.currentTarget.scrollTop > 48)} className={`flex-1 overflow-y-auto p-8 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
-            {activeVariantId !== "default" && (
-              <div
-                role="status"
-                className="mb-4 flex items-center justify-between gap-3 rounded-100 border border-trellis-green-800 bg-trellis-green-200 px-4 py-3 animate-fade-in"
-              >
-                <span className="body-100 text-foreground">
-                  Strategy modified - now focusing on Salesforce comparison
-                </span>
-                <button
-                  type="button"
-                  onClick={() => currentCompany?.id && revertVariant(currentCompany.id)}
-                  className="body-100 font-bold text-foreground hover:underline shrink-0"
-                >
-                  Revert
-                </button>
+            {companyPlays.length > 1 && selectedPlay && (
+              <div className="flex items-center flex-wrap gap-x-1 gap-y-1 mb-6 body-100 text-muted-foreground">
+                <span>This company is eligible for multiple plays. Showing the prospecting strategy for</span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 px-2 h-7 rounded heading-50 text-foreground hover:bg-[var(--color-fill-accent-neutral-subtle-alt)] transition-colors"
+                    >
+                      {selectedPlay.label}
+                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuRadioGroup
+                      value={resolvedPlayId}
+                      onValueChange={(value) => setSelectedPlayId(value)}
+                    >
+                      {companyPlays.map((p) => (
+                        <DropdownMenuRadioItem key={p.id} value={p.id}>
+                          {p.label}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             )}
             <div className="flex gap-8 items-start w-full">
@@ -1038,10 +1075,10 @@ const ProspectingStrategy = () => {
               </div>
               ) : null}
 
-              <TabsContent value="strategy" className="px-6 pt-12 pb-6 mt-0">
-                {companyPlays.map((play) => (
-                  <PlayHeader key={play.id} play={play} />
-                ))}
+              <TabsContent value="strategy" className="px-6 pt-6 pb-6 mt-0">
+                {selectedPlay && (
+                  <PlayHeader play={selectedPlay} compact />
+                )}
                 {isRunningResearch ? (
                   <div className="flex items-center justify-center min-h-[420px] animate-fade-in">
                     <div className="rounded-100 border border-core-subtle bg-card px-6 py-6 w-full max-w-md">
@@ -1101,7 +1138,12 @@ const ProspectingStrategy = () => {
                 <Collapsible defaultOpen className="mb-12">
                   <CollapsibleTrigger className="flex items-center gap-2 w-full group">
                     <TrellisIcon name="downCarat" size={12} className="text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
-                    <h3 className="heading-200 text-foreground">Outreach Targets</h3>
+                    <h3 className="heading-200 text-foreground">
+                      {"Outreach targets"}{outreachTargets.length > 0 ? ` (${outreachTargets.length})` : ""}
+                    </h3>
+                    {selectedPlay && companyPlays.length > 1 && (
+                      <Badge variant="orange">{selectedPlay.label}</Badge>
+                    )}
                     {(() => {
                       const seg = getOutreachStripSegments(outreachTargets);
                       if (seg.total === 0) return null;
@@ -1131,9 +1173,12 @@ const ProspectingStrategy = () => {
                     })()}
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-4" ref={outreachContainerRef}>
+                  <div key={resolvedPlayId} className="animate-fade-in">
 
                   {outreachTargets.map((contact, index) => {
                         const contactDetail = contactDetails[contact.id];
+                        // The active play (chosen by the top-of-page selector)
+                        // drives this contact's sequence and copy.
                         const dossier = getContactDossier(
                           { id: contact.id, name: contact.name, role: contact.role, signals: contact.signals, qlData: contact.qlData },
                           { id: currentCompany.id, name: currentCompany.name, industry: currentCompany.industry },
@@ -1253,6 +1298,18 @@ const ProspectingStrategy = () => {
                             const defaultCallScript = dossier.callScript;
                             const defaultLinkedInMsg = dossier.linkedInMessage;
                             const emailTemplates = dossier.emails;
+                            // If this contact's active sequence belongs to a
+                            // different play than the one being viewed, surface
+                            // a chip naming that play (one enrollment per
+                            // contact, so they can't be enrolled here).
+                            const owningPlayId = getEnrollmentPlayId(contact.id);
+                            const playProvenanceLabel =
+                              owningPlayId &&
+                              owningPlayId !== resolvedPlayId &&
+                              outreachState.sequence.kind !== "not-enrolled"
+                                ? PLAY_OUTREACH[owningPlayId]?.label ??
+                                  plays.find((p) => p.id === owningPlayId)?.label
+                                : undefined;
                             return (
                               <OutreachSequenceCard
                                 contact={{
@@ -1261,6 +1318,7 @@ const ProspectingStrategy = () => {
                                   initials: contact.initials,
                                   avatarColor: contact.avatarColor,
                                 }}
+                                playProvenanceLabel={playProvenanceLabel}
                                 callBullets={
                                   editedCallBullets[contact.id] ??
                                   dossier.callBullets
@@ -1286,8 +1344,6 @@ const ProspectingStrategy = () => {
                                 defaultCallScript={defaultCallScript}
                                 defaultLinkedInMessage={defaultLinkedInMsg}
                                 emailTemplates={emailTemplates}
-                                isExpanded={isOutreachExpanded(contact.id, "sequence")}
-                                onToggleExpanded={() => toggleOutreach(contact.id, "sequence")}
                                 expandedTouches={(() => {
                                   const map: Record<string, boolean> = {};
                                   for (const k in expandedEmails) {
@@ -1392,6 +1448,7 @@ const ProspectingStrategy = () => {
                       </div>
                     )}
                     <TextEditPopup containerRef={outreachContainerRef} />
+                  </div>
                   </CollapsibleContent>
                 </Collapsible>
               </TabsContent>
