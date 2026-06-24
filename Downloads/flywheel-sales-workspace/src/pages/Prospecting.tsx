@@ -1817,7 +1817,6 @@ const Prospecting = () => {
       </Layout>;
 };
 const viewToggleOptions: { value: CardVariant; icon: string; label: string }[] = [
-  { value: "C", icon: "listView", label: "List view" },
   { value: "current", icon: "documents", label: "Card view" },
   { value: "table", icon: "table", label: "Table view" },
 ];

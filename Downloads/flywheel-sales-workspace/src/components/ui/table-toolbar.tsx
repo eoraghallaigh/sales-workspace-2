@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Columns3, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,9 @@ interface TableToolbarProps {
   searchValue?: string;
   onSearchChange?: (value: string) => void;
   onEditColumns?: () => void;
+  // When provided, these actions replace the "Edit columns" button on the
+  // right — e.g. bulk engagement actions shown while rows are selected.
+  actions?: ReactNode;
 }
 
 /**
@@ -19,6 +23,7 @@ export const TableToolbar = ({
   searchValue,
   onSearchChange,
   onEditColumns,
+  actions,
 }: TableToolbarProps) => (
   <div className="flex items-center justify-between gap-3 px-4 pt-2 pb-2 border-b border-border bg-[var(--color-fill-surface-recessed)]">
     <div className="relative w-full max-w-md">
@@ -30,15 +35,17 @@ export const TableToolbar = ({
         className="pl-9 rounded-full bg-card pt-0 pb-0"
       />
     </div>
-    <Button
-      variant="ghost"
-      size="medium"
-      className="border border-transparent heading-50 whitespace-nowrap"
-      onClick={onEditColumns}
-    >
-      <Columns3 className="h-4 w-4" />
-      Edit columns
-    </Button>
+    {actions ?? (
+      <Button
+        variant="ghost"
+        size="medium"
+        className="border border-transparent heading-50 whitespace-nowrap"
+        onClick={onEditColumns}
+      >
+        <Columns3 className="h-4 w-4" />
+        Edit columns
+      </Button>
+    )}
   </div>
 );
 
