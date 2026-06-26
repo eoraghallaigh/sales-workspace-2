@@ -505,7 +505,7 @@ const FullProspectBook = () => {
         <Table className="min-w-[1900px]">
           <TableHeader>
             <TableRow className="bg-[var(--color-fill-surface-recessed)] hover:bg-[var(--color-fill-surface-recessed)] border-[var(--color-border-transitional-core-subtle)]">
-              <TableHead className="w-12 px-6 sticky left-0 z-20 bg-[var(--color-fill-surface-recessed)] table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
+              <TableHead className="w-12 px-4 sticky left-0 z-20 bg-[var(--color-fill-surface-recessed)] table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
                 <Checkbox />
               </TableHead>
               <TableHead className="sticky left-12 z-20 bg-[var(--color-fill-surface-recessed)] min-w-[240px] px-6 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
