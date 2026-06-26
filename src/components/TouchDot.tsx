@@ -73,5 +73,5 @@ export const TouchDots = ({
 };
 
 export const MiniTouchDots = ({ statuses }: { statuses: TouchStatus[] }) => (
-  <TouchDots statuses={statuses} size={12} showIcons={false} />
+  <TouchDots statuses={statuses} size={8} showIcons={false} />
 );

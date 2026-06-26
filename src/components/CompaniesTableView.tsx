@@ -61,7 +61,7 @@ const getWhyNow = (company: Company): string =>
   company.conversionTrigger ?? "Ranked by urgency + account potential";
 
 const headerCellClass =
-  "h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]";
+  "h-[35px] pl-5 pr-5 pt-0 pb-0 bg-[var(--color-fill-surface-recessed)] table-header-text !capitalize align-middle border-r border-[var(--color-border-transitional-core-subtle)]";
 const bodyCellClass = "border-b border-border px-4 py-3 align-middle";
 
 const CompaniesTableView = ({
@@ -212,11 +212,11 @@ const CompaniesTableView = ({
       <div className="overflow-x-auto">
         <Table className="min-w-[1000px]">
           <TableHeader>
-            <TableRow className="bg-[var(--color-specialty-table-header-default)] hover:bg-[var(--color-specialty-table-header-default)] border-[var(--color-border-transitional-core-subtle)]">
-              <TableHead className="w-12 h-11 px-4 py-3 sticky left-0 z-20 bg-[var(--color-specialty-table-header-default)] table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
+            <TableRow className="bg-[var(--color-fill-surface-recessed)] hover:bg-[var(--color-fill-surface-recessed)] border-[var(--color-border-transitional-core-subtle)]">
+              <TableHead className="w-12 h-[35px] px-4 pt-0 pb-0 sticky left-0 z-20 bg-[var(--color-fill-surface-recessed)] table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
                 <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} />
               </TableHead>
-              <TableHead className={`sticky left-12 z-20 bg-[var(--color-specialty-table-header-default)] min-w-[260px] ${headerCellClass}`}>
+              <TableHead className={`sticky left-12 z-20 bg-[var(--color-fill-surface-recessed)] min-w-[260px] ${headerCellClass}`}>
                 Company
               </TableHead>
               <TableHead className={`min-w-[140px] ${headerCellClass}`}>Industry</TableHead>
@@ -226,7 +226,7 @@ const CompaniesTableView = ({
               {!currentPlayId && (
                 <TableHead className={`min-w-[180px] ${headerCellClass}`}>Touches</TableHead>
               )}
-              <TableHead className="min-w-[120px] h-11 px-6 py-3 table-header-text align-middle">
+              <TableHead className="min-w-[120px] h-[35px] pl-5 pr-5 pt-0 pb-0 bg-[var(--color-fill-surface-recessed)] table-header-text !capitalize align-middle">
                 Status
               </TableHead>
             </TableRow>

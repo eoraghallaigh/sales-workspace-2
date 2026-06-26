@@ -1,10 +1,18 @@
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import WorkspaceHeader from "@/components/WorkspaceHeader";
 import CreateViewModal from "@/components/CreateViewModal";
+import { Button } from "@/components/ui/button";
+import { StatusIndicator } from "@/components/ui/status-indicator";
 import { useCyclePath } from "@/hooks/useCyclePath";
 import { usePlays } from "@/contexts/PlaysContext";
-import { Play } from "@/data/playData";
+import { Play, PlayStatus } from "@/data/playData";
+
+// How long after the last edit we commit the draft and flip to "Changes saved".
+const AUTOSAVE_DELAY_MS = 1000;
+
+type SaveState = "idle" | "saving" | "saved";
 
 const PlayBuilder = () => {
   const navigate = useNavigate();
@@ -15,17 +23,91 @@ const PlayBuilder = () => {
   const editing = playId ? plays.find((c) => c.id === playId) ?? null : null;
   const isEditMode = !!editing;
 
-  const handleSave = (play: Play) => {
-    if (editing) {
-      updatePlay(editing.id, play);
-    } else {
-      addPlay(play);
+  // The latest play assembled by the form, plus whether it's ready to publish.
+  const [latestPlay, setLatestPlay] = useState<Play | null>(editing ?? null);
+  const [canPublish, setCanPublish] = useState(false);
+  // Drives the bottom-panel status: nothing until the first edit, then it
+  // cycles saving -> saved. An existing play starts already "saved".
+  const [saveState, setSaveState] = useState<SaveState>(isEditMode ? "saved" : "idle");
+  // The id of the row we're auto-saving into. Set on first create so later
+  // edits update the same draft instead of spawning duplicates.
+  const draftIdRef = useRef<string | null>(editing?.id ?? null);
+  // The form emits once on mount; skip it so we don't show "Saving" on load.
+  const sawFirstChangeRef = useRef(false);
+
+  const handlePlayChange = useCallback((play: Play, publishable: boolean) => {
+    setLatestPlay(play);
+    setCanPublish(publishable);
+  }, []);
+
+  // On each edit: show "Saving changes" immediately, then a beat after the user
+  // stops interacting commit the draft and flip to "Changes saved". In create
+  // mode the actual write waits until the play has a real name.
+  useEffect(() => {
+    if (!latestPlay) return;
+    if (!sawFirstChangeRef.current) {
+      sawFirstChangeRef.current = true;
+      return;
     }
+
+    setSaveState("saving");
+    const started =
+      draftIdRef.current !== null ||
+      (latestPlay.label.trim().length > 0 && latestPlay.label !== "New play");
+
+    const timer = setTimeout(() => {
+      if (started) {
+        if (draftIdRef.current) {
+          updatePlay(draftIdRef.current, latestPlay);
+        } else {
+          draftIdRef.current = latestPlay.id;
+          addPlay({ ...latestPlay, status: "draft" });
+        }
+      }
+      setSaveState("saved");
+    }, AUTOSAVE_DELAY_MS);
+
+    return () => clearTimeout(timer);
+  }, [latestPlay, addPlay, updatePlay]);
+
+  const handlePublish = () => {
+    if (!latestPlay || !canPublish) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const status: PlayStatus = latestPlay.startDate > today ? "scheduled" : "live";
+    const published = { ...latestPlay, status };
+    if (draftIdRef.current) {
+      updatePlay(draftIdRef.current, published);
+    } else {
+      addPlay(published);
+    }
+    navigate(cyclePath("/plays"));
   };
 
   const handleClose = () => {
     navigate(cyclePath("/plays"));
   };
+
+  const formFooter = (
+    <div className="flex items-center justify-between gap-4 border-t border-[var(--color-border-container-default)] p-3">
+      <Button
+        variant="primary"
+        size="medium"
+        onClick={handlePublish}
+        disabled={!canPublish}
+      >
+        Publish play
+      </Button>
+      {saveState !== "idle" && (
+        <StatusIndicator
+          key={saveState}
+          className="animate-fade-in"
+          loading={saveState === "saving"}
+          dotClassName="bg-trellis-green-600"
+          label={saveState === "saving" ? "Saving changes" : "Changes saved"}
+        />
+      )}
+    </div>
+  );
 
   return (
     <Layout>
@@ -39,7 +121,8 @@ const PlayBuilder = () => {
           <CreateViewModal
             isOpen
             onClose={handleClose}
-            onSave={handleSave}
+            onPlayChange={handlePlayChange}
+            footer={formFooter}
             initialPlay={editing ?? undefined}
           />
         </div>
