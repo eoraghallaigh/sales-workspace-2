@@ -202,7 +202,7 @@ const CompaniesTableView = ({
   };
 
   return (
-    <div className="border border-border bg-card">
+    <div className="border border-border bg-card rounded-[4px] overflow-hidden">
       <TableToolbar
         searchPlaceholder="Search companies"
         searchValue={search}
@@ -231,7 +231,7 @@ const CompaniesTableView = ({
               </TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className="[&>tr:last-child>td]:border-b-0">
             {filteredCompanies.map((company) => {
               const statusBadge = currentPlayId
                 ? getPlayStatusBadge(company.status)

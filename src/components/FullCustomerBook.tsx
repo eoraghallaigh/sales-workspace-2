@@ -219,25 +219,25 @@ const FullCustomerBook = () => {
       </div>
 
       {/* Table */}
-      <div className="border border-border bg-card">
+      <div className="border border-border bg-card rounded-[4px] overflow-hidden">
         <TableToolbar searchPlaceholder="Search portals" />
         <div className="overflow-x-auto">
         <Table className="min-w-[1100px]">
           <TableHeader>
-            <TableRow className="bg-[var(--color-specialty-table-header-default)] hover:bg-[var(--color-specialty-table-header-default)] border-[var(--color-border-transitional-core-subtle)]">
-              <TableHead className="w-12 h-11 px-6 py-3 sticky left-0 z-20 bg-[var(--color-specialty-table-header-default)] table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
+            <TableRow className="bg-[var(--color-fill-surface-recessed)] hover:bg-[var(--color-fill-surface-recessed)] border-[var(--color-border-transitional-core-subtle)]">
+              <TableHead className="w-12 px-6 sticky left-0 z-20 bg-[var(--color-fill-surface-recessed)] table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
                 <Checkbox />
               </TableHead>
-              <TableHead className="sticky left-12 z-20 bg-[var(--color-specialty-table-header-default)] min-w-[260px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
+              <TableHead className="sticky left-12 z-20 bg-[var(--color-fill-surface-recessed)] min-w-[260px] px-6 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
                 Customer
               </TableHead>
-              <TableHead className="min-w-[140px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Portal ID</TableHead>
-              <TableHead className="min-w-[240px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Action Guidance</TableHead>
-              <TableHead className="min-w-[280px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Install Base Signals</TableHead>
-              <TableHead className="min-w-[160px] h-11 px-6 py-3 table-header-text align-middle">Platform MRR (USD)</TableHead>
+              <TableHead className="min-w-[140px] px-6 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Portal ID</TableHead>
+              <TableHead className="min-w-[240px] px-6 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Action Guidance</TableHead>
+              <TableHead className="min-w-[280px] px-6 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Install Base Signals</TableHead>
+              <TableHead className="min-w-[160px] px-6 table-header-text align-middle">Platform MRR (USD)</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className="[&>tr:last-child>td]:border-b-0">
             {customers.map(customer => {
               const isExpanded = expanded.has(customer.id);
               const hasContacts = customer.contacts.length > 0;
@@ -295,12 +295,12 @@ const FullCustomerBook = () => {
                     </td>
                   </TableRow>
                   {isExpanded && hasContacts && customer.contacts.map(contact => (
-                    <TableRow key={`${customer.id}-${contact.id}`} className="bg-fill-surface-recessed hover:bg-fill-surface-recessed/80">
-                      <td className="w-12 sticky left-0 z-10 bg-inherit border-b border-border px-4 py-3 align-middle">
+                    <TableRow key={`${customer.id}-${contact.id}`} className="bg-card hover:bg-fill-surface-recessed">
+                      <td className="w-12 sticky left-0 z-10 bg-inherit border-b border-border pl-7 pr-1 py-3 align-middle">
                         <Checkbox />
                       </td>
                       <td className="sticky left-12 z-10 bg-inherit border-b border-border border-r border-border px-4 py-3 align-middle">
-                        <div className="flex items-center gap-3 pl-7">
+                        <div className="flex items-center gap-3 pl-10">
                           <Avatar className={`h-7 w-7 ${contact.avatarColor}`}>
                             <AvatarFallback className={`${contact.avatarColor} text-trellis-white detail-100`}>
                               {contact.initials}

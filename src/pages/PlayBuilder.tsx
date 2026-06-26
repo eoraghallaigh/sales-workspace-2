@@ -34,6 +34,13 @@ const PlayBuilder = () => {
   const draftIdRef = useRef<string | null>(editing?.id ?? null);
   // The form emits once on mount; skip it so we don't show "Saving" on load.
   const sawFirstChangeRef = useRef(false);
+  // Serialized snapshot of the last play we processed. Auto-saving writes back
+  // into the plays store, which re-emits a content-identical play; comparing
+  // against this lets us ignore that echo so the status can settle on "saved".
+  const lastSavedRef = useRef<string | null>(null);
+  // Whether the user has actually edited a form field. Stays false through the
+  // mount emit, so backing straight out of a fresh form saves nothing.
+  const hasEditedRef = useRef(false);
 
   const handlePlayChange = useCallback((play: Play, publishable: boolean) => {
     setLatestPlay(play);
@@ -45,25 +52,35 @@ const PlayBuilder = () => {
   // mode the actual write waits until the play has a real name.
   useEffect(() => {
     if (!latestPlay) return;
+    // Compare on content only: buildPlay regenerates a volatile id on every
+    // emit, so including it would flag benign re-emits (e.g. the form resetting
+    // on mount) as edits and surface "Saving changes" before any real change.
+    const serialized = JSON.stringify({ ...latestPlay, id: "" });
     if (!sawFirstChangeRef.current) {
       sawFirstChangeRef.current = true;
+      lastSavedRef.current = serialized;
       return;
     }
+    // Ignore re-emits whose content matches what we already saved — notably the
+    // echo from auto-saving writing back into the plays store — otherwise the
+    // status would loop "saving" → "saved" → "saving" and never settle.
+    if (serialized === lastSavedRef.current) return;
 
+    // Reaching here means real content changed (the mount emit and echoes are
+    // filtered above), so this is a genuine user edit.
+    hasEditedRef.current = true;
     setSaveState("saving");
-    const started =
-      draftIdRef.current !== null ||
-      (latestPlay.label.trim().length > 0 && latestPlay.label !== "New play");
 
     const timer = setTimeout(() => {
-      if (started) {
-        if (draftIdRef.current) {
-          updatePlay(draftIdRef.current, latestPlay);
-        } else {
-          draftIdRef.current = latestPlay.id;
-          addPlay({ ...latestPlay, status: "draft" });
-        }
+      if (draftIdRef.current) {
+        // Pin the id: in create mode buildPlay regenerates it each keystroke, so
+        // keep updating the same draft row rather than spawning duplicates.
+        updatePlay(draftIdRef.current, { ...latestPlay, id: draftIdRef.current });
+      } else {
+        draftIdRef.current = latestPlay.id;
+        addPlay({ ...latestPlay, status: "draft" });
       }
+      lastSavedRef.current = serialized;
       setSaveState("saved");
     }, AUTOSAVE_DELAY_MS);
 
@@ -76,7 +93,7 @@ const PlayBuilder = () => {
     const status: PlayStatus = latestPlay.startDate > today ? "scheduled" : "live";
     const published = { ...latestPlay, status };
     if (draftIdRef.current) {
-      updatePlay(draftIdRef.current, published);
+      updatePlay(draftIdRef.current, { ...published, id: draftIdRef.current });
     } else {
       addPlay(published);
     }
@@ -84,28 +101,46 @@ const PlayBuilder = () => {
   };
 
   const handleClose = () => {
+    // Backing out persists the work-in-progress only if the user actually edited
+    // something. A brand-new play is saved as a Draft (Untitled Play if unnamed);
+    // an existing play keeps its current status so editing never demotes it.
+    if (hasEditedRef.current && latestPlay) {
+      const finalPlay: Play = {
+        ...latestPlay,
+        label: latestPlay.label.trim() || "Untitled Play",
+        status: isEditMode ? latestPlay.status : "draft",
+      };
+      if (draftIdRef.current) {
+        updatePlay(draftIdRef.current, { ...finalPlay, id: draftIdRef.current });
+      } else {
+        draftIdRef.current = finalPlay.id;
+        addPlay(finalPlay);
+      }
+    }
     navigate(cyclePath("/plays"));
   };
 
   const formFooter = (
-    <div className="flex items-center justify-between gap-4 border-t border-[var(--color-border-container-default)] p-3">
-      <Button
-        variant="primary"
-        size="medium"
-        onClick={handlePublish}
-        disabled={!canPublish}
-      >
-        Publish play
-      </Button>
-      {saveState !== "idle" && (
-        <StatusIndicator
-          key={saveState}
-          className="animate-fade-in"
-          loading={saveState === "saving"}
-          dotClassName="bg-trellis-green-600"
-          label={saveState === "saving" ? "Saving changes" : "Changes saved"}
-        />
-      )}
+    <div className="border-t border-[var(--color-border-container-default)] p-3">
+      <div className="flex items-center justify-between gap-4">
+        <Button
+          variant="primary"
+          size="medium"
+          onClick={handlePublish}
+          disabled={!canPublish}
+        >
+          Publish play
+        </Button>
+        {saveState !== "idle" && (
+          <StatusIndicator
+            key={saveState}
+            className="animate-fade-in"
+            loading={saveState === "saving"}
+            dotClassName="bg-trellis-green-600"
+            label={saveState === "saving" ? "Saving changes" : "Changes saved"}
+          />
+        )}
+      </div>
     </div>
   );
 

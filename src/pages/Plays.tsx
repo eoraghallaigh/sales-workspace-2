@@ -11,35 +11,39 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useCyclePath } from "@/hooks/useCyclePath";
 import { usePlays } from "@/contexts/PlaysContext";
-import { Play, PlayStatus } from "@/data/playData";
+import { Play, PlayState, getPlayState, isPlayEditable } from "@/data/playData";
 
-const STATUS_OPTIONS: { value: PlayStatus; label: string }[] = [
+const STATE_OPTIONS: { value: PlayState; label: string }[] = [
   { value: "draft", label: "Draft" },
-  { value: "scheduled", label: "Scheduled" },
-  { value: "live", label: "Live" },
+  { value: "upcoming", label: "Upcoming" },
+  { value: "active", label: "Active" },
   { value: "ended", label: "Ended" },
-  { value: "archived", label: "Archived" },
 ];
 
 const SEGMENT_OPTIONS = ["SMB", "Mid-Market", "Enterprise"];
 const GEO_OPTIONS = ["US", "EMEA", "APAC", "France"];
 
-const STATUS_PILL_CLASS: Record<PlayStatus, string> = {
+const STATE_PILL_CLASS: Record<PlayState, string> = {
   draft: "bg-trellis-neutral-100 text-muted-foreground",
-  scheduled: "bg-blue-100 text-blue-800",
-  live: "bg-green-100 text-green-800",
+  upcoming: "bg-blue-100 text-blue-800",
+  active: "bg-green-100 text-green-800",
   ended: "bg-trellis-neutral-200 text-foreground",
-  archived: "bg-trellis-neutral-100 text-muted-foreground",
 };
 
-const STATUS_PILL_LABEL: Record<PlayStatus, string> = {
+const STATE_PILL_LABEL: Record<PlayState, string> = {
   draft: "Draft",
-  scheduled: "Scheduled",
-  live: "Live",
+  upcoming: "Upcoming",
+  active: "Active",
   ended: "Ended",
-  archived: "Archived",
 };
 
 const formatDateRange = (start: string, end: string) => {
@@ -119,7 +123,7 @@ const Plays = () => {
 
   const filtered = useMemo(() => {
     return plays.filter((c) => {
-      if (selectedStatuses.size > 0 && !selectedStatuses.has(c.status)) return false;
+      if (selectedStatuses.size > 0 && !selectedStatuses.has(getPlayState(c))) return false;
       if (selectedSegments.size > 0) {
         const overlap = (c.marketSegment ?? []).some((s) => selectedSegments.has(s));
         if (!overlap) return false;
@@ -143,7 +147,7 @@ const Plays = () => {
   };
   const clear = (setter: React.Dispatch<React.SetStateAction<Set<string>>>) => () => setter(new Set());
 
-  const handleRowClick = (play: Play) => {
+  const handleEditPlay = (play: Play) => {
     navigate(cyclePath(`/plays/${play.id}/edit`));
   };
 
@@ -176,10 +180,10 @@ const Plays = () => {
               <div className="flex gap-2 flex-wrap">
                 <MultiSelectDropdown
                   label="Status"
-                  options={STATUS_OPTIONS.map((s) => s.label)}
-                  selected={new Set(Array.from(selectedStatuses).map((s) => STATUS_PILL_LABEL[s as PlayStatus]))}
+                  options={STATE_OPTIONS.map((s) => s.label)}
+                  selected={new Set(Array.from(selectedStatuses).map((s) => STATE_PILL_LABEL[s as PlayState]))}
                   onToggle={(label) => {
-                    const value = STATUS_OPTIONS.find((s) => s.label === label)?.value;
+                    const value = STATE_OPTIONS.find((s) => s.label === label)?.value;
                     if (value) toggle(setSelectedStatuses)(value);
                   }}
                   onClear={clear(setSelectedStatuses)}
@@ -211,64 +215,76 @@ const Plays = () => {
             </div>
 
             {/* Table */}
-            <div className="bg-card rounded-lg border border-core-subtle overflow-hidden">
-              <table className="w-full body-100">
-                <thead>
-                  <tr className="border-b border-core-subtle bg-muted/40">
-                    <th className="text-left heading-50 text-muted-foreground px-4 py-3">Name</th>
-                    <th className="text-left heading-50 text-muted-foreground px-4 py-3">Owner</th>
-                    <th className="text-left heading-50 text-muted-foreground px-4 py-3">Status</th>
-                    <th className="text-left heading-50 text-muted-foreground px-4 py-3">Segment</th>
-                    <th className="text-left heading-50 text-muted-foreground px-4 py-3">Geo</th>
-                    <th className="text-left heading-50 text-muted-foreground px-4 py-3">Dates</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="px-4 py-12 text-center">
-                        <p className="body-100 text-muted-foreground mb-3">No plays match these filters</p>
-                        {anyFilterActive && (
-                          <Button variant="ghost" size="medium" onClick={clearAllFilters}>
-                            Clear filters
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  ) : (
-                    filtered.map((play) => (
-                      <tr
-                        key={play.id}
-                        onClick={() => handleRowClick(play)}
-                        className="border-b border-core-subtle last:border-b-0 hover:bg-trellis-neutral-100 cursor-pointer transition-colors"
-                      >
-                        <td className="px-4 py-4">
-                          <span className="body-100 font-medium text-foreground">{play.label}</span>
+            <div className="border border-border bg-card rounded-[4px] overflow-hidden">
+              <div className="overflow-x-auto">
+                <Table className="min-w-[900px]">
+                  <TableHeader>
+                    <TableRow className="bg-[var(--color-fill-surface-recessed)] hover:bg-[var(--color-fill-surface-recessed)] border-[var(--color-border-transitional-core-subtle)]">
+                      <TableHead className="min-w-[260px] px-6 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Name</TableHead>
+                      <TableHead className="min-w-[180px] px-6 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Owner</TableHead>
+                      <TableHead className="min-w-[120px] px-6 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Status</TableHead>
+                      <TableHead className="min-w-[160px] px-6 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Segment</TableHead>
+                      <TableHead className="min-w-[120px] px-6 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Geo</TableHead>
+                      <TableHead className="min-w-[220px] px-6 table-header-text align-middle">Dates</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="[&>tr:last-child>td]:border-b-0">
+                    {filtered.length === 0 ? (
+                      <TableRow>
+                        <td colSpan={6} className="border-b border-border px-6 py-12 text-center">
+                          <p className="body-100 text-muted-foreground mb-3">No plays match these filters</p>
+                          {anyFilterActive && (
+                            <Button variant="ghost" size="medium" onClick={clearAllFilters}>
+                              Clear filters
+                            </Button>
+                          )}
                         </td>
-                        <td className="px-4 py-4 text-muted-foreground">{play.owner}</td>
-                        <td className="px-4 py-4">
-                          <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded-full body-75 ${STATUS_PILL_CLASS[play.status]}`}
-                          >
-                            {STATUS_PILL_LABEL[play.status]}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-muted-foreground">
-                          {play.marketSegment && play.marketSegment.length > 0
-                            ? play.marketSegment.join(", ")
-                            : "—"}
-                        </td>
-                        <td className="px-4 py-4 text-muted-foreground">
-                          {play.geo && play.geo.length > 0 ? play.geo.join(", ") : "—"}
-                        </td>
-                        <td className="px-4 py-4 text-muted-foreground">
-                          {formatDateRange(play.startDate, play.endDate)}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                      </TableRow>
+                    ) : (
+                      filtered.map((play) => {
+                        const state = getPlayState(play);
+                        const editable = isPlayEditable(play);
+                        return (
+                          <TableRow key={play.id} className="bg-card hover:bg-fill-surface-recessed">
+                            <td className="border-b border-border px-6 py-3 align-middle">
+                              {editable ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleEditPlay(play)}
+                                  className="body-125 text-text-interactive hover:text-text-interactive-hover hover:underline text-left"
+                                >
+                                  {play.label}
+                                </button>
+                              ) : (
+                                <span className="body-125 text-foreground">{play.label}</span>
+                              )}
+                            </td>
+                            <td className="border-b border-border px-6 py-3 align-middle body-100 text-muted-foreground">{play.owner}</td>
+                            <td className="border-b border-border px-6 py-3 align-middle">
+                              <span
+                                className={`inline-flex items-center px-2 py-0.5 rounded-full body-75 ${STATE_PILL_CLASS[state]}`}
+                              >
+                                {STATE_PILL_LABEL[state]}
+                              </span>
+                            </td>
+                            <td className="border-b border-border px-6 py-3 align-middle body-100 text-muted-foreground">
+                              {play.marketSegment && play.marketSegment.length > 0
+                                ? play.marketSegment.join(", ")
+                                : "—"}
+                            </td>
+                            <td className="border-b border-border px-6 py-3 align-middle body-100 text-muted-foreground">
+                              {play.geo && play.geo.length > 0 ? play.geo.join(", ") : "—"}
+                            </td>
+                            <td className="border-b border-border px-6 py-3 align-middle body-100 text-muted-foreground">
+                              {formatDateRange(play.startDate, play.endDate)}
+                            </td>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           </div>
         </div>

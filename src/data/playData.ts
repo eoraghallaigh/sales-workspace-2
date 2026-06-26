@@ -46,6 +46,25 @@ export interface Play {
   filters?: PlayFilter[];
 }
 
+// The state shown to users is derived: a play is a Draft until published, then
+// its lifecycle follows its dates — Upcoming before launch, Active between
+// launch and expiry, Ended once the expiry date has passed.
+export type PlayState = "draft" | "upcoming" | "active" | "ended";
+
+export const getPlayState = (play: Play): PlayState => {
+  if (play.status === "draft") return "draft";
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const start = new Date(`${play.startDate}T00:00:00`);
+  const end = new Date(`${play.endDate}T00:00:00`);
+  if (start > today) return "upcoming";
+  if (end < today) return "ended";
+  return "active";
+};
+
+// Ended plays are read-only; Draft, Upcoming and Active plays can be edited.
+export const isPlayEditable = (play: Play): boolean => getPlayState(play) !== "ended";
+
 export const plays: Play[] = [
   {
     id: "salesforce-switchers",

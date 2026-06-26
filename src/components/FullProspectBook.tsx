@@ -16,7 +16,6 @@ import {
   ChevronRight,
   ExternalLink,
   ListFilter,
-  Star,
 } from "lucide-react";
 import Tag from "@/components/Tag";
 import FilterPill from "@/components/FilterPill";
@@ -44,7 +43,7 @@ interface ProspectRow {
   recentConversionDate: string;
   lastActivityDate: string;
   nextStep: string;
-  rating: number;
+  rating: "High" | "Medium" | "Low" | "Not a Fit";
   priority: "P1" | "P2" | "P3" | "P4";
   contacts: ProspectContact[];
 }
@@ -62,7 +61,7 @@ const prospects: ProspectRow[] = [
     recentConversionDate: "Jun 9, 2026",
     lastActivityDate: "Jun 10, 2026",
     nextStep: "Call Alex Hsu",
-    rating: 5,
+    rating: "High",
     priority: "P1",
     contacts: [
       {
@@ -100,7 +99,7 @@ const prospects: ProspectRow[] = [
     recentConversionDate: "Jun 7, 2026",
     lastActivityDate: "Jun 8, 2026",
     nextStep: "Re-engage before renewal",
-    rating: 4,
+    rating: "High",
     priority: "P1",
     contacts: [],
   },
@@ -116,7 +115,7 @@ const prospects: ProspectRow[] = [
     recentConversionDate: "Jun 3, 2026",
     lastActivityDate: "Jun 5, 2026",
     nextStep: "Send follow-up email",
-    rating: 3,
+    rating: "Medium",
     priority: "P2",
     contacts: [],
   },
@@ -132,7 +131,7 @@ const prospects: ProspectRow[] = [
     recentConversionDate: "Jun 8, 2026",
     lastActivityDate: "Jun 8, 2026",
     nextStep: "Enroll in sequence",
-    rating: 4,
+    rating: "High",
     priority: "P2",
     contacts: [],
   },
@@ -148,7 +147,7 @@ const prospects: ProspectRow[] = [
     recentConversionDate: "—",
     lastActivityDate: "May 30, 2026",
     nextStep: "Research decision makers",
-    rating: 3,
+    rating: "Medium",
     priority: "P3",
     contacts: [],
   },
@@ -164,7 +163,7 @@ const prospects: ProspectRow[] = [
     recentConversionDate: "May 28, 2026",
     lastActivityDate: "May 29, 2026",
     nextStep: "Qualify fit on first call",
-    rating: 2,
+    rating: "Low",
     priority: "P3",
     contacts: [],
   },
@@ -180,7 +179,7 @@ const prospects: ProspectRow[] = [
     recentConversionDate: "Jun 6, 2026",
     lastActivityDate: "Jun 9, 2026",
     nextStep: "Call new VP of Marketing",
-    rating: 5,
+    rating: "High",
     priority: "P1",
     contacts: [
       {
@@ -218,7 +217,7 @@ const prospects: ProspectRow[] = [
     recentConversionDate: "Jun 5, 2026",
     lastActivityDate: "Jun 7, 2026",
     nextStep: "Multi-thread to operations",
-    rating: 4,
+    rating: "High",
     priority: "P1",
     contacts: [],
   },
@@ -234,7 +233,7 @@ const prospects: ProspectRow[] = [
     recentConversionDate: "Jun 2, 2026",
     lastActivityDate: "Jun 4, 2026",
     nextStep: "Send case study",
-    rating: 3,
+    rating: "Medium",
     priority: "P2",
     contacts: [],
   },
@@ -250,7 +249,7 @@ const prospects: ProspectRow[] = [
     recentConversionDate: "Jun 4, 2026",
     lastActivityDate: "Jun 6, 2026",
     nextStep: "Enroll in sequence",
-    rating: 4,
+    rating: "High",
     priority: "P2",
     contacts: [],
   },
@@ -266,7 +265,7 @@ const prospects: ProspectRow[] = [
     recentConversionDate: "May 26, 2026",
     lastActivityDate: "May 31, 2026",
     nextStep: "Nurture with content",
-    rating: 3,
+    rating: "Medium",
     priority: "P3",
     contacts: [],
   },
@@ -282,7 +281,7 @@ const prospects: ProspectRow[] = [
     recentConversionDate: "Jun 1, 2026",
     lastActivityDate: "Jun 3, 2026",
     nextStep: "Confirm budget authority",
-    rating: 4,
+    rating: "High",
     priority: "P2",
     contacts: [],
   },
@@ -298,7 +297,7 @@ const prospects: ProspectRow[] = [
     recentConversionDate: "Jun 9, 2026",
     lastActivityDate: "Jun 9, 2026",
     nextStep: "Book discovery call",
-    rating: 5,
+    rating: "High",
     priority: "P1",
     contacts: [
       {
@@ -336,7 +335,7 @@ const prospects: ProspectRow[] = [
     recentConversionDate: "—",
     lastActivityDate: "May 20, 2026",
     nextStep: "Monitor for intent",
-    rating: 2,
+    rating: "Low",
     priority: "P4",
     contacts: [],
   },
@@ -352,7 +351,7 @@ const prospects: ProspectRow[] = [
     recentConversionDate: "May 27, 2026",
     lastActivityDate: "May 29, 2026",
     nextStep: "Qualify on first call",
-    rating: 3,
+    rating: "Medium",
     priority: "P3",
     contacts: [],
   },
@@ -368,7 +367,7 @@ const prospects: ProspectRow[] = [
     recentConversionDate: "Jun 3, 2026",
     lastActivityDate: "Jun 5, 2026",
     nextStep: "Share webinar follow-up",
-    rating: 4,
+    rating: "High",
     priority: "P2",
     contacts: [],
   },
@@ -384,7 +383,7 @@ const prospects: ProspectRow[] = [
     recentConversionDate: "May 24, 2026",
     lastActivityDate: "May 28, 2026",
     nextStep: "Nurture with content",
-    rating: 3,
+    rating: "Medium",
     priority: "P3",
     contacts: [],
   },
@@ -400,7 +399,7 @@ const prospects: ProspectRow[] = [
     recentConversionDate: "Jun 7, 2026",
     lastActivityDate: "Jun 8, 2026",
     nextStep: "Reach out to trial owner",
-    rating: 5,
+    rating: "High",
     priority: "P1",
     contacts: [
       {
@@ -500,30 +499,30 @@ const FullProspectBook = () => {
       </div>
 
       {/* Table */}
-      <div className="border border-border bg-card">
+      <div className="border border-border bg-card rounded-[4px] overflow-hidden">
         <TableToolbar searchPlaceholder="Search prospects" />
         <div className="overflow-x-auto">
         <Table className="min-w-[1900px]">
           <TableHeader>
-            <TableRow className="bg-[var(--color-specialty-table-header-default)] hover:bg-[var(--color-specialty-table-header-default)] border-[var(--color-border-transitional-core-subtle)]">
-              <TableHead className="w-12 h-11 px-6 py-3 sticky left-0 z-20 bg-[var(--color-specialty-table-header-default)] table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
+            <TableRow className="bg-[var(--color-fill-surface-recessed)] hover:bg-[var(--color-fill-surface-recessed)] border-[var(--color-border-transitional-core-subtle)]">
+              <TableHead className="w-12 px-6 sticky left-0 z-20 bg-[var(--color-fill-surface-recessed)] table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
                 <Checkbox />
               </TableHead>
-              <TableHead className="sticky left-12 z-20 bg-[var(--color-specialty-table-header-default)] min-w-[240px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
+              <TableHead className="sticky left-12 z-20 bg-[var(--color-fill-surface-recessed)] min-w-[240px] px-6 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
                 Company
               </TableHead>
-              <TableHead className="min-w-[140px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Industry</TableHead>
-              <TableHead className="min-w-[170px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Domain</TableHead>
-              <TableHead className="min-w-[260px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Intent Signals</TableHead>
-              <TableHead className="min-w-[200px] h-11 px-6 py-3 table-header-text align-middle whitespace-nowrap border-r border-[var(--color-border-transitional-core-subtle)]">Recent Conversion</TableHead>
-              <TableHead className="min-w-[230px] h-11 px-6 py-3 table-header-text align-middle whitespace-nowrap border-r border-[var(--color-border-transitional-core-subtle)]">Recent Conversion Date</TableHead>
-              <TableHead className="min-w-[200px] h-11 px-6 py-3 table-header-text align-middle whitespace-nowrap border-r border-[var(--color-border-transitional-core-subtle)]">Last Activity Date</TableHead>
-              <TableHead className="min-w-[180px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Next Step</TableHead>
-              <TableHead className="min-w-[120px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Rating</TableHead>
-              <TableHead className="min-w-[90px] h-11 px-6 py-3 table-header-text align-middle">Priority</TableHead>
+              <TableHead className="min-w-[140px] px-6 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Industry</TableHead>
+              <TableHead className="min-w-[170px] px-6 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Domain</TableHead>
+              <TableHead className="min-w-[260px] px-6 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Intent Signals</TableHead>
+              <TableHead className="min-w-[200px] px-6 table-header-text align-middle whitespace-nowrap border-r border-[var(--color-border-transitional-core-subtle)]">Recent Conversion</TableHead>
+              <TableHead className="min-w-[230px] px-6 table-header-text align-middle whitespace-nowrap border-r border-[var(--color-border-transitional-core-subtle)]">Recent Conversion Date</TableHead>
+              <TableHead className="min-w-[200px] px-6 table-header-text align-middle whitespace-nowrap border-r border-[var(--color-border-transitional-core-subtle)]">Last Activity Date</TableHead>
+              <TableHead className="min-w-[180px] px-6 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Next Step</TableHead>
+              <TableHead className="min-w-[120px] px-6 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Rating</TableHead>
+              <TableHead className="min-w-[90px] px-6 table-header-text align-middle">Priority</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className="[&>tr:last-child>td]:border-b-0">
             {prospects.map(prospect => {
               const isExpanded = expanded.has(prospect.id);
               const hasContacts = prospect.contacts.length > 0;
@@ -592,19 +591,19 @@ const FullProspectBook = () => {
                       <span className="body-100 text-foreground">{prospect.nextStep}</span>
                     </td>
                     <td className="border-b border-border px-4 py-3 align-middle">
-                      <StarRating rating={prospect.rating} />
+                      <span className="body-100 text-foreground">{prospect.rating}</span>
                     </td>
                     <td className="border-b border-border px-4 py-3 align-middle">
                       <span className="body-100 text-foreground">{prospect.priority}</span>
                     </td>
                   </TableRow>
                   {isExpanded && hasContacts && prospect.contacts.map(contact => (
-                    <TableRow key={`${prospect.id}-${contact.id}`} className="bg-fill-surface-recessed hover:bg-fill-surface-recessed/80">
-                      <td className="w-12 sticky left-0 z-10 bg-inherit border-b border-border px-4 py-3 align-middle">
+                    <TableRow key={`${prospect.id}-${contact.id}`} className="bg-card hover:bg-fill-surface-recessed">
+                      <td className="w-12 sticky left-0 z-10 bg-inherit border-b border-border pl-7 pr-1 py-3 align-middle">
                         <Checkbox />
                       </td>
                       <td className="sticky left-12 z-10 bg-inherit border-b border-border border-r border-border px-4 py-3 align-middle">
-                        <div className="flex items-center gap-3 pl-7">
+                        <div className="flex items-center gap-3 pl-10">
                           <Avatar className={`h-7 w-7 ${contact.avatarColor}`}>
                             <AvatarFallback className={`${contact.avatarColor} text-trellis-white detail-100`}>
                               {contact.initials}
@@ -667,19 +666,5 @@ const FullProspectBook = () => {
     </div>
   );
 };
-
-
-const StarRating = ({ rating }: { rating: number }) => (
-  <div className="flex items-center gap-0.5" aria-label={`${rating} out of 5`}>
-    {[1, 2, 3, 4, 5].map(n => (
-      <Star
-        key={n}
-        className={`h-3.5 w-3.5 ${
-          n <= rating ? "fill-current text-[#eab308]" : "text-trellis-neutral-300"
-        }`}
-      />
-    ))}
-  </div>
-);
 
 export default FullProspectBook;

@@ -121,7 +121,7 @@ const ProspectingSubNav = ({
   return (
     <Card
       className={cn(
-        "flex-shrink-0 bg-card border-core-subtle rounded-none border-l-0 border-t-0 border-b-0 h-[var(--page-content-height)] overflow-hidden transition-all duration-300 pr-3 pt-6",
+        "flex-shrink-0 bg-card border-core-subtle rounded-none border-l-0 border-t-0 border-b-0 h-full overflow-y-auto transition-all duration-300 pr-3 pt-6 pb-6",
         isCollapsed ? "w-16" : "w-[274px]"
       )}
       onWheel={(e) => e.stopPropagation()}
@@ -165,11 +165,6 @@ const ProspectingSubNav = ({
                 ))}
               </CollapsibleContent>
             </Collapsible>
-
-            {separator}
-
-            {/* Daily Power Hour */}
-            <Row isAlpha={isAlpha} label="Daily Power Hour" selected={isPowerHourRoute} onClick={() => navigate(cyclePath("/power-hour/review"))} className={isAlpha ? "mb-1" : "mb-2"} />
 
             {separator}
 
