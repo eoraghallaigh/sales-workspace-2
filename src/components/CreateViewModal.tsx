@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, Fragment } from "react";
+import { useState, useEffect, useCallback, useRef, Fragment, type ReactNode } from "react";
 import { Plus, Trash2, Copy, Search, Check, Hash, Calendar, ChevronDown, ArrowUpDown, Loader2, Sparkles, Link as LinkIcon } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,11 @@ interface CreateViewModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave?: (play: Play) => void;
+  // Fires on every form change so the parent can auto-save a draft and toggle
+  // the "Publish" CTA. `canPublish` mirrors the form's required fields.
+  onPlayChange?: (play: Play, canPublish: boolean) => void;
+  // Action panel rendered at the bottom of the wizard (publish CTA + save status).
+  footer?: ReactNode;
   initialPlay?: Play;
 }
 
@@ -2680,6 +2685,8 @@ const CreateViewModal = ({
   isOpen,
   onClose,
   onSave,
+  onPlayChange,
+  footer,
   initialPlay
 }: CreateViewModalProps) => {
   const [currentStep, setCurrentStep] = useState<Step>("settings");
@@ -4208,24 +4215,15 @@ const CreateViewModal = ({
 
   const canSavePlay = Boolean(selectedSegment && selectedTeams.length > 0 && viewName.trim() && viewDescription.trim() && launchDate && heroLink.trim());
 
-  const handleSavePlay = () => {
-    if (!canSavePlay) return;
-    if (onSave) onSave(buildPlay());
-    onClose();
-  };
+  // Push the current play + publish-readiness up to the page on every change so
+  // it can auto-save a draft and enable the header "Publish play" CTA. Saving
+  // now happens automatically — there's no longer a footer save button.
+  useEffect(() => {
+    if (!isOpen) return;
+    onPlayChange?.(buildPlay(), canSavePlay);
+  }, [isOpen, buildPlay, canSavePlay, onPlayChange]);
 
-  const wizardFooter = (
-    <div className="border-t border-[var(--color-border-container-default)] p-3 flex justify-start">
-      <Button
-        variant="primary"
-        size="medium"
-        onClick={handleSavePlay}
-        disabled={!canSavePlay}
-      >
-        {initialPlay ? "Save play" : "Create play"}
-      </Button>
-    </div>
-  );
+  const wizardFooter = footer ?? null;
 
   if (!isOpen) return null;
   return <div className="flex flex-col h-full">

@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Ribbon } from "@/components/ui/ribbon";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, FileText, Swords, MessageSquareText, Video, File, Calendar, ExternalLink, Megaphone, Loader2 } from "lucide-react";
+import { ChevronDown, FileText, Swords, MessageSquareText, Video, File, Calendar, ExternalLink, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Play, EnablementMaterial } from "@/data/playData";
 
@@ -132,10 +132,7 @@ const PlayHeader = ({ play, defaultOpen = false, loadingMicrosite = false, loadi
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         {compact ? (
           <div className="flex flex-col gap-2">
-            <Badge variant="red" className="gap-1 self-start">
-              <Megaphone className="h-3 w-3" />
-              <span className="uppercase tracking-wide">Prospecting Play</span>
-            </Badge>
+            <Ribbon className="self-start">Prospecting Play</Ribbon>
             <CollapsibleTrigger className="flex items-center gap-2 group">
               <ChevronDown className={`h-4 w-4 text-muted-foreground flex-shrink-0 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
               <h3 className="heading-200 text-foreground">{play.label}</h3>
@@ -144,10 +141,7 @@ const PlayHeader = ({ play, defaultOpen = false, loadingMicrosite = false, loadi
         ) : (
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-4">
-              <Badge variant="red" className="gap-1 self-start">
-                <Megaphone className="h-3 w-3" />
-                <span className="uppercase tracking-wide">Prospecting Play</span>
-              </Badge>
+              <Ribbon className="self-start">Prospecting Play</Ribbon>
               <CollapsibleTrigger className="flex items-center gap-2 group text-left">
                 <ChevronDown className={`h-5 w-5 text-muted-foreground flex-shrink-0 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
                 <h3 className="heading-300 text-foreground">{play.label}</h3>

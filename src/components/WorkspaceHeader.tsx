@@ -11,6 +11,8 @@ interface WorkspaceHeaderProps {
   subtitle?: ReactNode;
   backLink?: { to: string; label: string };
   title?: string;
+  // Right-aligned content for the back-link page header (e.g. status + CTA).
+  actions?: ReactNode;
 }
 
 /*
@@ -26,6 +28,7 @@ const WorkspaceHeader = ({
   subtitle,
   backLink,
   title,
+  actions,
 }: WorkspaceHeaderProps) => {
   const { cyclePath } = useCyclePath();
   const { theme } = useTheme();
@@ -71,16 +74,19 @@ const WorkspaceHeader = ({
   if (backLink) {
     return (
       <div className="sticky top-0 z-30 bg-card border-b border-core-subtle" onWheel={(e) => e.stopPropagation()}>
-        <div className="pl-12 pr-6 pt-6 pb-4">
-          <Link
-            to={backLink.to}
-            className="inline-flex items-center gap-1 heading-25 text-text-interactive hover:underline"
-          >
-            <ChevronLeft className="h-3 w-3" />
-            <span>{backLink.label}</span>
-          </Link>
-          {title && <h1 className={`${titleClass} mt-3`}>{title}</h1>}
-          {subtitle && <div className="mt-2">{subtitle}</div>}
+        <div className="pl-12 pr-6 pt-6 pb-4 flex items-center justify-between gap-4">
+          <div>
+            <Link
+              to={backLink.to}
+              className="inline-flex items-center gap-1 heading-25 text-text-interactive hover:underline"
+            >
+              <ChevronLeft className="h-3 w-3" />
+              <span>{backLink.label}</span>
+            </Link>
+            {title && <h1 className={`${titleClass} mt-3`}>{title}</h1>}
+            {subtitle && <div className="mt-2">{subtitle}</div>}
+          </div>
+          {actions && <div className="flex items-center gap-3 shrink-0">{actions}</div>}
         </div>
       </div>
     );

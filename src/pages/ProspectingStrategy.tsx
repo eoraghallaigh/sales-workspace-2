@@ -939,7 +939,7 @@ const ProspectingStrategy = () => {
               <h1 className="heading-200 text-foreground mt-1.5 truncate">{currentCompany.name}</h1>
             ) : (
             <div className="flex items-start justify-between gap-4 mt-3">
-              <div className="flex items-center gap-3">
+              <div className="flex items-start gap-3">
                 <img src={companyLogoPlaceholder} alt="" className="w-10 h-10 rounded" />
                 <div>
                   <h1 className="heading-300 text-foreground">{currentCompany.name}</h1>
@@ -955,7 +955,7 @@ const ProspectingStrategy = () => {
                   <a
                     href="#"
                     onClick={(e) => e.preventDefault()}
-                    className="body-100 font-bold text-text-interactive hover:underline flex items-center gap-1 mt-1"
+                    className="link-100 text-text-interactive hover:underline flex items-center gap-1 mt-1"
                   >
                     Open company record <TrellisIcon name="externalLink" size={12} />
                   </a>
@@ -1016,7 +1016,7 @@ const ProspectingStrategy = () => {
           <div onScroll={(e) => setCondensed(e.currentTarget.scrollTop > 48)} className={`flex-1 overflow-y-auto p-8 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
             {companyPlays.length > 1 && selectedPlay && (
               <div className="flex items-center flex-wrap gap-x-1 gap-y-1 mb-6 body-100 text-muted-foreground">
-                <span>This company is eligible for multiple plays. Showing the prospecting strategy for</span>
+                <span className="text-[var(--color-text-core-default)]">This company is eligible for multiple plays. Showing the prospecting strategy for</span>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
@@ -1141,9 +1141,6 @@ const ProspectingStrategy = () => {
                     <h3 className="heading-200 text-foreground">
                       {"Outreach targets"}{outreachTargets.length > 0 ? ` (${outreachTargets.length})` : ""}
                     </h3>
-                    {selectedPlay && companyPlays.length > 1 && (
-                      <Badge variant="orange">{selectedPlay.label}</Badge>
-                    )}
                     {(() => {
                       const seg = getOutreachStripSegments(outreachTargets);
                       if (seg.total === 0) return null;
@@ -1172,6 +1169,11 @@ const ProspectingStrategy = () => {
                       );
                     })()}
                   </CollapsibleTrigger>
+                  {selectedPlay && (
+                    <p className="detail-100 text-muted-foreground mt-2 pl-5">
+                      Contacts and sequences are optimised for the {selectedPlay.label} play.
+                    </p>
+                  )}
                   <CollapsibleContent className="mt-4" ref={outreachContainerRef}>
                   <div key={resolvedPlayId} className="animate-fade-in">
 
@@ -1187,7 +1189,7 @@ const ProspectingStrategy = () => {
                         return (
                           <div
                             key={contact.id}
-                            className="mb-6 rounded-100 border-100 border-core-subtle overflow-hidden pb-6">
+                            className="mb-6 rounded-300 border-100 border-core-subtle overflow-hidden pb-6">
 
                         {/* Card header */}
                         <div

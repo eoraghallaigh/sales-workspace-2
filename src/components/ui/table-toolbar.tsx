@@ -25,20 +25,20 @@ export const TableToolbar = ({
   onEditColumns,
   actions,
 }: TableToolbarProps) => (
-  <div className="flex items-center justify-between gap-3 px-4 pt-2 pb-2 border-b border-border bg-[var(--color-fill-surface-recessed)]">
+  <div className="flex items-center justify-between gap-3 px-4 pt-2 pb-2 h-[44px] border-b border-border bg-[var(--color-fill-surface-default)]">
     <div className="relative w-full max-w-md">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
       <Input
         value={searchValue}
         onChange={(e) => onSearchChange?.(e.target.value)}
         placeholder={searchPlaceholder}
-        className="pl-9 rounded-full bg-card pt-0 pb-0"
+        className="pl-9 rounded-full bg-card pt-0 pb-0 h-[30px]"
       />
     </div>
     {actions ?? (
       <Button
         variant="ghost"
-        size="medium"
+        size="small"
         className="border border-transparent heading-50 whitespace-nowrap"
         onClick={onEditColumns}
       >
