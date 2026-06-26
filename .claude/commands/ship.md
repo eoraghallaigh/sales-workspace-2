@@ -6,6 +6,8 @@ description: Commit, open a PR against main, merge it, then sync both remotes so
 
 This command ships the current branch's changes through a PR on the internal repo, then syncs both remotes (internal EMU + public Netlify mirror) so the deploy is live.
 
+`/ship` targets `main`, which is the **live playground** (the bare `prospecting-strategy.netlify.app` URL). To freeze the current design as a stable, immutable URL for a release cycle, use `/lock-cycle <date>` instead — that's how engineers get a "what's in scope" URL that doesn't move.
+
 ## Step 1 — Commit
 
 Stage and commit all uncommitted changes. Write a concise message focused on **why** the change was made — the diff shows the what. Always commit unsigned:
