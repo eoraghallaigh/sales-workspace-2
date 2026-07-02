@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 export type CardVariant = "current" | "C" | "table";
 
 const STORAGE_KEY = "prospecting-card-variant";
-const DEFAULT_VARIANT: CardVariant = "current";
+const DEFAULT_VARIANT: CardVariant = "table";
 
 const isVariant = (v: unknown): v is CardVariant =>
   v === "current" || v === "table";

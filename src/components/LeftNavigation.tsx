@@ -48,8 +48,8 @@ export const LeftNavigation = () => {
     <nav
       className={
         isAlpha
-          ? "fixed left-0 top-0 w-16 h-screen z-40 flex flex-col items-center py-3 gap-1"
-          : "fixed left-0 top-12 w-16 h-[calc(100vh-48px)] z-40 flex flex-col items-center py-3 gap-1"
+          ? "fixed left-0 top-7 w-16 h-[calc(100vh-28px)] z-40 flex flex-col items-center py-3 gap-1"
+          : "fixed left-0 top-[76px] w-16 h-[var(--page-content-height)] z-40 flex flex-col items-center py-3 gap-1"
       }
       style={isAlpha ? undefined : { background: "#333333" }}
       onWheel={(e) => e.stopPropagation()}

@@ -34,7 +34,7 @@ const Agents = () => {
   const { cyclePath } = useCyclePath();
   return (
     <Layout>
-      <div className="flex flex-col h-screen overflow-hidden">
+      <div className="flex flex-col h-[var(--page-content-height)] overflow-hidden">
         <WorkspaceHeader activeTab="agents" />
         <div className="flex-1 overflow-y-auto p-8">
           <div className="grid grid-cols-2 gap-6 max-w-[1200px]">

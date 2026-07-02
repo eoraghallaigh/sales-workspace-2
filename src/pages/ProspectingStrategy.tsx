@@ -38,9 +38,6 @@ import EmailCommunicator from "@/components/EmailCommunicator";
 import ProspectingAgent from "@/components/ProspectingAgent";
 import { OutreachSequenceCard } from "@/components/OutreachSequenceCard";
 import { TouchDots, type TouchStatus } from "@/components/TouchDot";
-import RecentConversionsCard from "@/components/RecentConversionsCard";
-import HubSummaryCard from "@/components/HubSummaryCard";
-import { getRecentConversions, getHubSummary } from "@/data/companyCards";
 
 import { getCompanyStrategy } from "@/data/companyStrategies";
 import { getContactDossier } from "@/data/contactDossier";
@@ -296,14 +293,6 @@ const ProspectingStrategy = () => {
   const selectedPlay = useMemo(
     () => companyPlays.find((p) => p.id === resolvedPlayId) ?? companyPlays[0],
     [companyPlays, resolvedPlayId],
-  );
-  const recentConversions = useMemo(
-    () => getRecentConversions(currentCompany?.id ?? ""),
-    [currentCompany?.id],
-  );
-  const hubSummary = useMemo(
-    () => getHubSummary(currentCompany?.id ?? ""),
-    [currentCompany?.id],
   );
 
   // Re-initialize empty-state defaults whenever the current company changes.
@@ -774,6 +763,10 @@ const ProspectingStrategy = () => {
     <p className="body-100 text-muted-foreground">Notes content coming soon.</p>
   );
 
+  const comingSoon = (label: string) => (
+    <p className="body-100 text-muted-foreground">{label} content coming soon.</p>
+  );
+
   const companyBody = (() => {
     type Property = { label: string; value?: string };
     type PropertyGroup = { id: string; label: string; properties: Property[] };
@@ -1051,13 +1044,18 @@ const ProspectingStrategy = () => {
               <TabsList ref={tabsListRef} className="relative w-full justify-start border-b border-border-subtle rounded-none bg-transparent px-0 h-auto gap-0">
                 {["Strategy", "Company Data", "Activity", `Deals (${currentCompanyDetails?.deals?.length || 0})`, "Notes"].map((tab) => {
                     const tabValue = tab.toLowerCase().split(" ")[0].replace("(", "");
+                    const isStrategy = tabValue === "strategy";
                     return (
                       <TabsTrigger
                         key={tab}
                         value={tabValue === "deals" ? "deals" : tabValue}
-                        className="rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-transparent px-4 py-3 heading-50 text-muted-foreground data-[state=active]:text-foreground">
+                        disabled={!isStrategy}
+                        className={`rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-transparent px-4 heading-50 text-muted-foreground data-[state=active]:text-foreground disabled:opacity-100 ${isStrategy ? "py-3" : "flex-col h-auto py-2 gap-0.5"}`}>
 
                       {tab}
+                      {!isStrategy && (
+                        <span className="detail-100 font-normal text-muted-foreground">Coming soon</span>
+                      )}
                     </TabsTrigger>);
 
                   })}
@@ -1081,8 +1079,8 @@ const ProspectingStrategy = () => {
                 )}
                 {isRunningResearch ? (
                   <div className="flex items-center justify-center min-h-[420px] animate-fade-in">
-                    <div className="rounded-100 border border-core-subtle bg-card px-6 py-6 w-full max-w-md">
-                      <p className="heading-50 text-foreground mb-3">
+                    <div className="px-6 py-6 w-full max-w-md">
+                      <p className="heading-50 text-foreground mb-3 text-center">
                         Researching {currentCompany.name}…
                       </p>
                       <AgentReasoningSteps kind="research" stepMs={6000} />
@@ -1474,16 +1472,12 @@ const ProspectingStrategy = () => {
             </div>
             {!isNarrow && (
               <div className="flex flex-col gap-4 flex-[4_1_0%] min-w-0">
-                <InfoCard title="Company data" maxHeight="max-h-[640px]" collapsible defaultCollapsed>{companyBody}</InfoCard>
-                <InfoCard title="Hub summary" maxHeight="max-h-[640px]" collapsible defaultCollapsed>
-                  <HubSummaryCard summary={hubSummary} />
-                </InfoCard>
-                <InfoCard title={`Recent conversions (${recentConversions.length})`} maxHeight="max-h-[480px]" collapsible defaultCollapsed>
-                  <RecentConversionsCard conversions={recentConversions} onContactClick={setContactDrawerId} />
-                </InfoCard>
-                <InfoCard title="Activity" maxHeight="max-h-[640px]" collapsible defaultCollapsed>{activityBody}</InfoCard>
-                <InfoCard title="Deals" maxHeight="max-h-[480px]" collapsible defaultCollapsed>{dealsBody}</InfoCard>
-                <InfoCard title="Notes" maxHeight="max-h-[320px]" collapsible defaultCollapsed>{notesBody}</InfoCard>
+                <InfoCard title="Company data" maxHeight="max-h-[640px]" collapsible>{comingSoon("Company data")}</InfoCard>
+                <InfoCard title="Hub summary" maxHeight="max-h-[640px]" collapsible>{comingSoon("Hub summary")}</InfoCard>
+                <InfoCard title="Recent conversions" maxHeight="max-h-[480px]" collapsible>{comingSoon("Recent conversions")}</InfoCard>
+                <InfoCard title="Activity" maxHeight="max-h-[640px]" collapsible>{comingSoon("Activity")}</InfoCard>
+                <InfoCard title="Deals" maxHeight="max-h-[480px]" collapsible>{comingSoon("Deals")}</InfoCard>
+                <InfoCard title="Notes" maxHeight="max-h-[320px]" collapsible>{comingSoon("Notes")}</InfoCard>
               </div>
             )}
             </div>

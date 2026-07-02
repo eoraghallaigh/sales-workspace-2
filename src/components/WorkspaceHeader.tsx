@@ -1,11 +1,71 @@
 import { Link } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ChevronDown } from "lucide-react";
 import { ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useCyclePath } from "@/hooks/useCyclePath";
 import { useTheme } from "@/contexts/ThemeContext";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
+
+const REPS = [
+  "Eoin McCarthy",
+  "Eoin Gallagher",
+  "Eoin Doyle",
+  "Eoin O'Connell",
+  "Eoin Beecham",
+  "Eoin Riddell",
+  "Eoin Smith",
+  "Eoin O'Riordan",
+  "Eoin Ó Raghallaigh",
+];
+
+const RepSelector = () => {
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState(() => {
+    if (typeof window === "undefined") return "Eoin Ó Raghallaigh";
+    return localStorage.getItem("selectedRep") || "Eoin Ó Raghallaigh";
+  });
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex items-center gap-2 outline-none hover:opacity-80 transition-opacity"
+        >
+          <span>{selected}</span>
+          <ChevronDown className="h-5 w-5 text-foreground" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-80 p-0">
+        <Command>
+          <CommandInput placeholder="Search" />
+          <CommandList>
+            <CommandEmpty>No reps found.</CommandEmpty>
+            <CommandGroup>
+              {REPS.map((rep) => (
+                <CommandItem
+                  key={rep}
+                  value={rep}
+                  onSelect={() => {
+                    setSelected(rep);
+                    localStorage.setItem("selectedRep", rep);
+                    setOpen(false);
+                  }}
+                  className={`cursor-pointer body-125 ${rep === selected ? "bg-trellis-neutral-300" : ""}`}
+                >
+                  {rep}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+};
 
 interface WorkspaceHeaderProps {
-  activeTab?: "summary" | "prospecting" | "deals" | "tasks" | "agents" | "performance";
+  activeTab?: "summary" | "prospecting" | "feed" | "deals" | "tasks" | "schedule" | "agents" | "performance";
   hideTabs?: boolean;
   hideTitle?: boolean;
   subtitle?: ReactNode;
@@ -37,9 +97,9 @@ const WorkspaceHeader = ({
   const tabs = [
     { id: "summary", label: "Summary", path: cyclePath("/summary") },
     { id: "prospecting", label: "Prospecting", path: cyclePath("/prospecting") },
-    { id: "deals", label: "Deals", path: cyclePath("/deals") },
+    { id: "feed", label: "Feed", path: "#" },
     { id: "tasks", label: "Tasks", path: "#" },
-    { id: "agents", label: "Agents", path: cyclePath("/agents") },
+    { id: "schedule", label: "Schedule", path: "#" },
     { id: "performance", label: "Performance", path: cyclePath("/dashboard") },
   ];
 
@@ -96,7 +156,11 @@ const WorkspaceHeader = ({
     <div className="sticky top-0 z-30 bg-card border-b border-core-subtle" onWheel={(e) => e.stopPropagation()}>
       <div className={isAlpha ? "pl-12 pr-6 pt-10" : "pl-12 pr-6 pt-6"}>
         {!hideTitle && (
-          <h1 className={`${titleClass} ${isAlpha ? "mb-8" : "mb-6"}`}>Sales Workspace | Olivia Smith</h1>
+          <h1 className={`${titleClass} ${isAlpha ? "mb-8" : "mb-6"} flex items-center gap-3`}>
+            <span>Sales</span>
+            <span className="font-normal text-[var(--color-text-core-subtle)]">|</span>
+            <RepSelector />
+          </h1>
         )}
         {subtitle && <div className="mb-4">{subtitle}</div>}
 

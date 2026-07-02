@@ -75,6 +75,19 @@ const Prospecting = () => {
   const [expandedPanelCompanyId, setExpandedPanelCompanyId] = useState<string | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  // Name to show in the side panel for companies not in the prospecting dataset
+  // (e.g. the Full Prospect/Customer books), which the row supplies on preview.
+  const [previewCompanyName, setPreviewCompanyName] = useState<string | null>(null);
+  // Below the strategy page's 1200px sub-nav breakpoint the sub-nav collapses to
+  // make room for the side panel; at/above it there's room to keep it open.
+  const [isSubNavNarrow, setIsSubNavNarrow] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 1200 : false,
+  );
+  useEffect(() => {
+    const handleResize = () => setIsSubNavNarrow(window.innerWidth < 1200);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const [isContactPanelOpen, setIsContactPanelOpen] = useState(false);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [isTaskPanelOpen, setIsTaskPanelOpen] = useState(false);
@@ -199,10 +212,9 @@ const Prospecting = () => {
       return workable.filter(c => getPlayIdsForCompany(c.id).includes(activePlay.id));
     }
 
-    const bookCompanies = workable.filter(c => /^\d+$/.test(c.id));
     return !activePriority
-      ? bookCompanies
-      : bookCompanies.filter(c => (c.priority ?? "P1") === activePriority);
+      ? workable
+      : workable.filter(c => (c.priority ?? "P1") === activePriority);
   }, [prospectingCompanies, completedTasks, initialSortOrder, activePriority, activePlay]);
   const incrementCompanyTouch = (taskId: string) => {
     setProspectingCompanies(prevCompanies => prevCompanies.map(company => {
@@ -239,8 +251,9 @@ const Prospecting = () => {
       state: { from, fromLabel },
     });
   };
-  const handleCompanyNameClick = (companyId: string) => {
+  const handleCompanyNameClick = (companyId: string, companyName?: string) => {
     setSelectedCompanyId(companyId);
+    setPreviewCompanyName(companyName ?? null);
     setIsPanelOpen(true);
     setIsContactPanelOpen(false);
     setIsTaskPanelOpen(false);
@@ -544,19 +557,19 @@ const Prospecting = () => {
         <WorkspaceHeader activeTab="prospecting" />
         <div className="flex flex-1 overflow-hidden relative">
           {/* Left Sidebar - No margin, right against left nav */}
-          {!expandedPanelCompanyId && <ProspectingSubNav isCollapsed={isPanelOpen || isContactPanelOpen || isTaskPanelOpen} onActiveItemChange={setActiveNavItem} />}
+          {!expandedPanelCompanyId && <ProspectingSubNav isCollapsed={(isPanelOpen || isContactPanelOpen || isTaskPanelOpen) && isSubNavNarrow} onActiveItemChange={setActiveNavItem} />}
 
           {/* Main Content Area - Only scrolling element */}
           <div ref={listScrollRef} className={`${expandedPanelCompanyId ? 'w-[240px] flex-shrink-0' : 'flex-1'} overflow-y-auto overscroll-contain transition-all duration-300 ${!expandedPanelCompanyId && (isPanelOpen || isContactPanelOpen || isTaskPanelOpen) ? 'mr-[569px]' : 'mr-0'}`}>
             {/* Full Customer Book / Full Prospect Book views replace the default cards layout */}
             {!expandedPanelCompanyId && activeNavItem === "full-customer-book" && (
               <div className="max-w-[1440px] px-6 py-6">
-                <FullCustomerBook />
+                <FullCustomerBook onPreview={handleCompanyNameClick} />
               </div>
             )}
             {!expandedPanelCompanyId && activeNavItem === "full-prospect-book" && (
               <div className="max-w-[1440px] px-6 py-6">
-                <FullProspectBook />
+                <FullProspectBook onNameClick={handleCompanyClick} onPreview={handleCompanyNameClick} />
               </div>
             )}
             {/* Top Metrics - hidden when expanded panel is active or when a Full Book view is shown */}
@@ -739,6 +752,7 @@ const Prospecting = () => {
                   companies={companiesWithCalculatedStatus}
                   onCompanyClick={handleCompanyClick}
                   onNameClick={handleCompanyClick}
+                  onPreview={handleCompanyNameClick}
                   currentPlayId={activePlay?.id}
                 />
               ) : (
@@ -782,13 +796,13 @@ const Prospecting = () => {
            </div>
 
            {/* Side Panel - hidden when expanded panel is active */}
-           {!expandedPanelCompanyId && selectedCompanyId && <div className={`fixed top-12 right-0 h-[calc(100vh-3rem)] bg-white z-40 transition-transform duration-300 overflow-y-auto shadow-300 ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} style={{
+           {!expandedPanelCompanyId && selectedCompanyId && <div className={`fixed top-[76px] right-0 h-[var(--page-content-height)] bg-white z-40 transition-transform duration-300 overflow-y-auto shadow-300 ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} style={{
           width: '569px'
         }}>
                {/* Header */}
                 <div className="flex items-center justify-between px-6 py-5 border-b border-border">
                   <h2 className="heading-400 text-foreground">
-                    {companiesWithCalculatedStatus.find(c => c.id === selectedCompanyId)?.name}
+                    {companiesWithCalculatedStatus.find(c => c.id === selectedCompanyId)?.name ?? previewCompanyName}
                   </h2>
                   <Button variant="ghost" size="icon" onClick={() => setIsPanelOpen(false)} className="h-8 w-8">
                     <X className="h-6 w-6 text-foreground" />
@@ -799,7 +813,8 @@ const Prospecting = () => {
                 <div className="px-6 py-6 border-border">
                   {(() => {
               const company = companiesWithCalculatedStatus.find(c => c.id === selectedCompanyId);
-              if (!company) return null;
+              const displayName = company?.name ?? previewCompanyName;
+              if (!displayName) return null;
               return <>
                      {/* Company Info */}
                      <div className="flex items-start justify-between mb-8">
@@ -811,7 +826,7 @@ const Prospecting = () => {
                          
                          {/* Company Details */}
                          <div>
-                           <h3 className="heading-400 text-foreground mb-2">{company.name}</h3>
+                           <h3 className="heading-400 text-foreground mb-2">{displayName}</h3>
                            <div className="body-100 text-foreground mb-1">acmecorp.com</div>
                            <div className="body-100 text-foreground">+351 21 269 8440</div>
                          </div>
@@ -1535,7 +1550,7 @@ const Prospecting = () => {
           )}
 
           {/* Task Panel - hidden when expanded panel is active */}
-          {!expandedPanelCompanyId && selectedTask && <div className={`fixed top-12 right-0 h-[calc(100vh-3rem)] bg-white z-40 transition-transform duration-300 overflow-y-auto shadow-300 ${isTaskPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} style={{
+          {!expandedPanelCompanyId && selectedTask && <div className={`fixed top-[76px] right-0 h-[var(--page-content-height)] bg-white z-40 transition-transform duration-300 overflow-y-auto shadow-300 ${isTaskPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} style={{
           width: '569px'
         }}>
               {/* Header */}

@@ -229,3 +229,12 @@ const ALL_CONTACTS: Record<string, RecommendedContact[]> = Object.fromEntries(
 export const getAdditionalContactsForCompany = (
   companyId: string,
 ): RecommendedContact[] => ALL_CONTACTS[companyId] ?? [];
+
+// Generic pool offered by views whose rows aren't in the curated map above
+// (e.g. the Full Prospect / Customer books), so "Add contacts" still works.
+export const genericAdditionalContacts: RecommendedContact[] = [
+  { id: "gen-morgan-avery", name: "Morgan Avery", initials: "MA", role: "VP Operations", avatarColor: "bg-trellis-blue-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [] },
+  { id: "gen-riley-chen", name: "Riley Chen", initials: "RC", role: "Director of IT", avatarColor: "bg-trellis-purple-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [] },
+  { id: "gen-sam-okafor", name: "Sam Okafor", initials: "SO", role: "Head of Procurement", avatarColor: "bg-trellis-green-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [] },
+  { id: "gen-jordan-lee", name: "Jordan Lee", initials: "JL", role: "Finance Manager", avatarColor: "bg-trellis-orange-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, signals: [] },
+];

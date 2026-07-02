@@ -108,6 +108,22 @@ const PLAY_SEGMENTS: string[] = [
   "AMER Enterprise | ABM | Funding Round Series B+ | Net New",
 ];
 
+// Contact lists are named people lists (by persona / seniority) selected here,
+// the contact-level counterpart to the company lists above.
+const CONTACT_LISTS: string[] = [
+  "DMD | AEO Unaware - Pageviews | RevOps Leaders VP+",
+  "LKR | EMEA en | Fall Spotlight Masterclass | Marketing Directors & CMOs",
+  "EMEA France (FR) | NB Trigger Program | Salesforce Admins | Intent 51-100",
+  "AMER | SMB Inbound | Founders & Owners | Pricing Page Visitors 30d",
+  "APAC ANZ | Outbound | IT Decision Makers | Tier 1 Accounts",
+  "DACH (DE) | Webinar Followup | Demand Gen Managers | Trial Expired",
+  "NORAM | Install Base | Admins & Power Users 500+ FTE | Expansion",
+  "UKI | NB Trigger Program | Heads of RevOps | Hiring Signals 70+",
+  "LATAM (ES) | Reengagement | Marketing Ops | Churned SMB 6mo",
+  "EMEA Benelux | Event Driven | CX & Service Leaders | INBOUND 2026 MQL",
+  "AMER Enterprise | ABM | C-Suite & VP Buyers | Funding Series B+",
+];
+
 // Faked metadata shown for each optional enablement link as it's added, so the
 // banner shows a title + short description like the live plays page does.
 const FAKE_LINK_MATERIALS: { type: EnablementMaterial["type"]; title: string; description: string }[] = [
@@ -2699,6 +2715,7 @@ const CreateViewModal = ({
   }]);
   const [viewName, setViewName] = useState("");
   const [viewDescription, setViewDescription] = useState("");
+  const [enablementSummary, setEnablementSummary] = useState("");
   const [editingFilter, setEditingFilter] = useState<{
     groupId: string;
     filterId: string;
@@ -2806,9 +2823,14 @@ const CreateViewModal = ({
   // Settings step state
   const [expiryDate, setExpiryDate] = useState<Date | undefined>(undefined);
   const [launchDate, setLaunchDate] = useState<Date | undefined>(undefined);
+  const [launchDateOpen, setLaunchDateOpen] = useState(false);
+  const [expiryDateOpen, setExpiryDateOpen] = useState(false);
   const [selectedSegment, setSelectedSegment] = useState<string>("");
   const [segmentOpen, setSegmentOpen] = useState(false);
   const [segmentSearchQuery, setSegmentSearchQuery] = useState("");
+  const [selectedContactList, setSelectedContactList] = useState<string>("");
+  const [contactListOpen, setContactListOpen] = useState(false);
+  const [contactListSearchQuery, setContactListSearchQuery] = useState("");
   const [heroLink, setHeroLink] = useState("");
   const [enablementLinks, setEnablementLinks] = useState<string[]>(["", "", "", ""]);
   // Per-link preview loading: each link "fetches" a preview (spinner) for 5–10s
@@ -3321,7 +3343,7 @@ const CreateViewModal = ({
       : initialPlay?.filters;
     return {
       id: initialPlay?.id ?? newId,
-      label: viewName || "New play",
+      label: viewName.trim() || "Untitled Play",
       description: viewDescription || "",
       startDate,
       endDate,
@@ -4148,7 +4170,7 @@ const CreateViewModal = ({
         <div className="absolute inset-x-0 top-0 bottom-0 flex items-center justify-center pointer-events-none">
           <div className="bg-card border border-[var(--color-border-container-default)] rounded-[4px] px-6 py-4 shadow-sm max-w-md text-center">
             <p className="body-100 text-[var(--color-text-core-default)]">
-              Your play preview will appear here once you start describing it.
+              Your play preview will appear here once you start creating it.
             </p>
           </div>
         </div>
@@ -4735,10 +4757,10 @@ const CreateViewModal = ({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
           >
-            <ScrollArea className="flex-1">
-              <div className="p-6 space-y-6 divide-y divide-[var(--color-border-container-default)] [&>div:not(:first-child)]:pt-6">
-                {/* Segment */}
-                <FormControl label="Segment" required>
+            <ScrollArea className="flex-1 [&_[data-radix-scroll-area-viewport]>div]:!block">
+              <div className="p-6 space-y-6 w-full divide-y divide-[var(--color-border-container-default)] [&>div:not(:first-child)]:pt-6">
+                {/* Company List */}
+                <FormControl label="Company List" required>
                   <Popover open={segmentOpen} onOpenChange={setSegmentOpen}>
                     <PopoverTrigger asChild>
                       <SelectAnchor placeholder="Select a segment…">
@@ -4777,6 +4799,53 @@ const CreateViewModal = ({
                           ))}
                           {PLAY_SEGMENTS.filter((s) => s.toLowerCase().includes(segmentSearchQuery.toLowerCase())).length === 0 && (
                             <p className="px-2 py-3 body-75 text-[var(--color-text-core-subtle)]">No segments match.</p>
+                          )}
+                        </div>
+                      </ScrollArea>
+                    </PopoverContent>
+                  </Popover>
+                </FormControl>
+
+                {/* Contact List */}
+                <FormControl label="Contact List" required>
+                  <Popover open={contactListOpen} onOpenChange={setContactListOpen}>
+                    <PopoverTrigger asChild>
+                      <SelectAnchor placeholder="Select a contact list…">
+                        {selectedContactList || null}
+                      </SelectAnchor>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-[var(--radix-popover-trigger-width)] p-0 bg-[var(--color-fill-surface-default,#FFF)] border border-[var(--color-border-core-subtle)] rounded-[4px] shadow-lg z-[9999]"
+                      align="start"
+                      sideOffset={4}
+                    >
+                      <div className="p-2 border-b border-[var(--color-border-core-default)]">
+                        <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-[var(--color-fill-surface-recessed)]">
+                          <Search className="h-3.5 w-3.5 text-[var(--color-text-core-subtle)]" />
+                          <input
+                            type="text"
+                            placeholder="Search contact lists..."
+                            value={contactListSearchQuery}
+                            onChange={(e) => setContactListSearchQuery(e.target.value)}
+                            className="flex-1 bg-transparent body-75 text-[var(--color-text-core-default)] placeholder:text-[var(--color-text-core-subtle)] outline-none"
+                          />
+                        </div>
+                      </div>
+                      <ScrollArea className="max-h-[300px]">
+                        <div className="p-1">
+                          {CONTACT_LISTS.filter((s) => s.toLowerCase().includes(contactListSearchQuery.toLowerCase())).map((list) => (
+                            <button
+                              key={list}
+                              type="button"
+                              onClick={() => { setSelectedContactList(list); setContactListOpen(false); setContactListSearchQuery(""); }}
+                              className={`w-full flex items-center gap-2 px-2 py-2 rounded text-left body-100 text-[var(--color-text-core-default)] hover:bg-[var(--color-fill-secondary-hover)] ${selectedContactList === list ? "bg-[var(--color-fill-secondary-subtle)]" : ""}`}
+                            >
+                              <Check className={`h-3.5 w-3.5 shrink-0 ${selectedContactList === list ? "opacity-100 text-[var(--color-text-brand-default)]" : "opacity-0"}`} />
+                              <span className="flex-1 min-w-0 truncate">{list}</span>
+                            </button>
+                          ))}
+                          {CONTACT_LISTS.filter((s) => s.toLowerCase().includes(contactListSearchQuery.toLowerCase())).length === 0 && (
+                            <p className="px-2 py-3 body-75 text-[var(--color-text-core-subtle)]">No contact lists match.</p>
                           )}
                         </div>
                       </ScrollArea>
@@ -4830,6 +4899,32 @@ const CreateViewModal = ({
                   </Popover>
                 </FormControl>
 
+                {/* Launch date */}
+                <FormControl label="Launch date" required>
+                  <Popover open={launchDateOpen} onOpenChange={setLaunchDateOpen}>
+                    <PopoverTrigger asChild>
+                      <SelectAnchor
+                        placeholder="Select launch date"
+                        trailingIcon={<TrellisIcon name="date" size={16} />}
+                      >
+                        {launchDate ? format(launchDate, "PPP") : null}
+                      </SelectAnchor>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-[var(--color-fill-surface-default)] border border-[var(--color-border-core-subtle)] rounded-[4px] z-[100]" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={launchDate}
+                        onSelect={(date) => {
+                          setLaunchDate(date);
+                          setLaunchDateOpen(false);
+                        }}
+                        classNames={{ day_today: "" }}
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </FormControl>
+
                 {/* Play name */}
                 <FormControl label="Play name" required>
                   <Input
@@ -4850,32 +4945,9 @@ const CreateViewModal = ({
                   />
                 </FormControl>
 
-                {/* Launch date */}
-                <FormControl label="Launch date" required>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <SelectAnchor
-                        placeholder="Select launch date"
-                        trailingIcon={<TrellisIcon name="date" size={16} />}
-                      >
-                        {launchDate ? format(launchDate, "PPP") : null}
-                      </SelectAnchor>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-[var(--color-fill-surface-default)] border border-[var(--color-border-core-subtle)] rounded-[4px] z-[100]" align="start">
-                      <CalendarComponent
-                        mode="single"
-                        selected={launchDate}
-                        onSelect={setLaunchDate}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </FormControl>
-
                 {/* Expiry Date Section */}
                 <FormControl label="Expiry date" helpText="Optional">
-                  <Popover>
+                  <Popover open={expiryDateOpen} onOpenChange={setExpiryDateOpen}>
                     <PopoverTrigger asChild>
                       <SelectAnchor
                         placeholder="Select expiry date"
@@ -4888,9 +4960,12 @@ const CreateViewModal = ({
                       <CalendarComponent
                         mode="single"
                         selected={expiryDate}
-                        onSelect={setExpiryDate}
+                        onSelect={(date) => {
+                          setExpiryDate(date);
+                          setExpiryDateOpen(false);
+                        }}
                         disabled={(date) => date < new Date()}
-                        initialFocus
+                        classNames={{ day_today: "" }}
                         className="p-3 pointer-events-auto"
                       />
                     </PopoverContent>
@@ -4937,6 +5012,27 @@ const CreateViewModal = ({
                     </div>
                   </FormControl>
                 ))}
+
+                {/* Enablement Summary */}
+                <FormControl
+                  label="Enablement Summary"
+                  helpText={
+                    <>
+                      Create your enablement summary using this{" "}
+                      <a className="text-text-interactive hover:text-text-interactive-hover underline cursor-pointer">
+                        Claude project
+                      </a>
+                    </>
+                  }
+                >
+                  <textarea
+                    placeholder="Paste or write the enablement summary reps should see for this play."
+                    value={enablementSummary}
+                    onChange={(e) => setEnablementSummary(e.target.value)}
+                    rows={4}
+                    className="w-full rounded-[3px] border border-[var(--color-border-core-default,#8A8A8A)] bg-[var(--color-fill-field-default,#FFF)] body-200 text-[var(--color-text-core-default)] placeholder:text-[var(--color-text-core-subtle)] px-3 py-2 resize-y outline-none focus:border-[var(--color-border-interactive-default)]"
+                  />
+                </FormControl>
               </div>
             </ScrollArea>
             {wizardFooter}
@@ -4948,7 +5044,7 @@ const CreateViewModal = ({
 
         {/* Persistent right pane — skeleton until a segment is selected, then the segment's companies */}
         <div className="flex-1 flex flex-col bg-[var(--color-fill-surface-recessed)] overflow-y-auto">
-          {!(selectedSegment && selectedTeams.length > 0) ? (
+          {!(selectedSegment && selectedContactList && selectedTeams.length > 0) ? (
             renderSkeletonPreview()
           ) : (
             <div className="py-6 pr-12">

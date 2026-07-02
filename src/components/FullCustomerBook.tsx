@@ -1,25 +1,13 @@
-import { Fragment, useState } from "react";
 import { DataWell } from "@/components/ui/data-well";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { TableToolbar } from "@/components/ui/table-toolbar";
-import {
-  ChevronDown,
-  ChevronRight,
-  ExternalLink,
-  ListFilter,
-} from "lucide-react";
+import { ExternalLink, ListFilter } from "lucide-react";
 import Tag from "@/components/Tag";
 import FilterPill from "@/components/FilterPill";
-import { SIGNAL_LABELS } from "@/data/signals";
+import { SIGNAL_LABELS, type SignalInstance } from "@/data/signals";
+import { CompanyTable, type CompanyTableColumn } from "@/components/CompanyTable";
+import type { RecommendedContact } from "@/components/CompanyCard";
+import { genericAdditionalContacts } from "@/data/allContacts";
 
 interface CustomerContact {
   id: string;
@@ -150,33 +138,58 @@ const customers: CustomerRow[] = [
   },
 ];
 
-const FullCustomerBook = () => {
-  const [expanded, setExpanded] = useState<Set<string>>(new Set(["chirp"]));
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+type CustomerTableRow = CustomerRow & { recommendedContacts: RecommendedContact[] };
 
-  const toggleExpanded = (id: string) => {
-    setExpanded(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
+const FullCustomerBook = ({
+  onPreview,
+}: {
+  onPreview?: (companyId: string, companyName: string) => void;
+}) => {
+  const rows: CustomerTableRow[] = customers.map((c) => ({
+    ...c,
+    recommendedContacts: c.contacts.map((ct) => ({
+      id: ct.id,
+      name: ct.name,
+      initials: ct.initials,
+      role: ct.role,
+      avatarColor: ct.avatarColor,
+      recentTouches: 0,
+      enrolledInSequence: false,
+      recentConversions: 0,
+      signals: [] as SignalInstance[],
+    })),
+  }));
 
-  const toggleSelected = (id: string) => {
-    setSelected(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
+  const columns: CompanyTableColumn<CustomerTableRow>[] = [
+    {
+      key: "portalId", header: "Portal ID", minWidth: 140, render: (r) => (
+        <Button variant="link" className="body-100 text-text-interactive hover:text-text-interactive-hover p-0 h-auto hover:no-underline inline-flex items-center gap-1">
+          {r.portalId}
+          <ExternalLink className="h-3 w-3" />
+        </Button>
+      ),
+    },
+    {
+      key: "actionGuidance", header: "Action Guidance", minWidth: 240, render: (r) => (
+        <span className="body-100 text-foreground">
+          <span className="font-medium">{r.actionGuidanceCount} action{r.actionGuidanceCount === 1 ? "" : "s"}</span>
+          <span className="text-muted-foreground"> · {r.actionGuidanceLabel}</span>
+        </span>
+      ),
+    },
+    {
+      key: "signals", header: "Install Base Signals", minWidth: 280, render: (r) => (
+        <div className="flex flex-wrap gap-1">
+          {r.signals.map((signal) => (
+            <Tag key={signal.text} variant={signal.variant === "neutral" ? "neutral" : signal.variant}>
+              {signal.text}
+            </Tag>
+          ))}
+        </div>
+      ),
+    },
+    { key: "platformMrr", header: "Platform MRR (USD)", minWidth: 160, render: (r) => <span className="body-100 text-muted-foreground">{r.platformMrr || "—"}</span> },
+  ];
 
   return (
     <div className="flex flex-col gap-6">
@@ -219,132 +232,15 @@ const FullCustomerBook = () => {
       </div>
 
       {/* Table */}
-      <div className="border border-border bg-card">
-        <TableToolbar searchPlaceholder="Search portals" />
-        <div className="overflow-x-auto">
-        <Table className="min-w-[1100px]">
-          <TableHeader>
-            <TableRow className="bg-[var(--color-specialty-table-header-default)] hover:bg-[var(--color-specialty-table-header-default)] border-[var(--color-border-transitional-core-subtle)]">
-              <TableHead className="w-12 h-11 px-6 py-3 sticky left-0 z-20 bg-[var(--color-specialty-table-header-default)] table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
-                <Checkbox />
-              </TableHead>
-              <TableHead className="sticky left-12 z-20 bg-[var(--color-specialty-table-header-default)] min-w-[260px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
-                Customer
-              </TableHead>
-              <TableHead className="min-w-[140px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Portal ID</TableHead>
-              <TableHead className="min-w-[240px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Action Guidance</TableHead>
-              <TableHead className="min-w-[280px] h-11 px-6 py-3 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">Install Base Signals</TableHead>
-              <TableHead className="min-w-[160px] h-11 px-6 py-3 table-header-text align-middle">Platform MRR (USD)</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {customers.map(customer => {
-              const isExpanded = expanded.has(customer.id);
-              const hasContacts = customer.contacts.length > 0;
-              return (
-                <Fragment key={customer.id}>
-                  <TableRow className="bg-card hover:bg-fill-surface-recessed">
-                    <td className="w-12 sticky left-0 z-10 bg-inherit border-b border-border px-4 py-3 align-middle">
-                      <Checkbox
-                        checked={selected.has(customer.id)}
-                        onCheckedChange={() => toggleSelected(customer.id)}
-                      />
-                    </td>
-                    <td className="sticky left-12 z-10 bg-inherit border-b border-border border-r border-border px-4 py-3 align-middle">
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => toggleExpanded(customer.id)}
-                          className="flex items-center justify-center h-5 w-5 rounded hover:bg-trellis-neutral-200 text-muted-foreground"
-                          aria-label={isExpanded ? "Collapse" : "Expand"}
-                        >
-                          {isExpanded ? (
-                            <ChevronDown className="h-4 w-4" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4" />
-                          )}
-                        </button>
-                        <Button variant="link" className="body-125 text-text-interactive hover:text-text-interactive-hover p-0 h-auto hover:no-underline">
-                          {customer.name}
-                        </Button>
-                      </div>
-                    </td>
-                    <td className="border-b border-border px-4 py-3 align-middle">
-                      <Button variant="link" className="body-100 text-text-interactive hover:text-text-interactive-hover p-0 h-auto hover:no-underline inline-flex items-center gap-1">
-                        {customer.portalId}
-                        <ExternalLink className="h-3 w-3" />
-                      </Button>
-                    </td>
-                    <td className="border-b border-border px-4 py-3 align-middle">
-                      <span className="body-100 text-foreground">
-                        <span className="font-medium">{customer.actionGuidanceCount} action{customer.actionGuidanceCount === 1 ? "" : "s"}</span>
-                        <span className="text-muted-foreground"> · {customer.actionGuidanceLabel}</span>
-                      </span>
-                    </td>
-                    <td className="border-b border-border px-4 py-3 align-middle">
-                      <div className="flex flex-wrap gap-1">
-                        {customer.signals.map(signal => (
-                          <Tag key={signal.text} variant={signal.variant === "neutral" ? "neutral" : signal.variant}>
-                            {signal.text}
-                          </Tag>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="border-b border-border px-4 py-3 align-middle">
-                      <span className="body-100 text-muted-foreground">{customer.platformMrr || "—"}</span>
-                    </td>
-                  </TableRow>
-                  {isExpanded && hasContacts && customer.contacts.map(contact => (
-                    <TableRow key={`${customer.id}-${contact.id}`} className="bg-fill-surface-recessed hover:bg-fill-surface-recessed/80">
-                      <td className="w-12 sticky left-0 z-10 bg-inherit border-b border-border px-4 py-3 align-middle">
-                        <Checkbox />
-                      </td>
-                      <td className="sticky left-12 z-10 bg-inherit border-b border-border border-r border-border px-4 py-3 align-middle">
-                        <div className="flex items-center gap-3 pl-7">
-                          <Avatar className={`h-7 w-7 ${contact.avatarColor}`}>
-                            <AvatarFallback className={`${contact.avatarColor} text-trellis-white detail-100`}>
-                              {contact.initials}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex flex-col">
-                            <Button variant="link" className="body-125 text-text-interactive hover:text-text-interactive-hover p-0 h-auto justify-start hover:no-underline">
-                              {contact.name}
-                            </Button>
-                            {contact.role && (
-                              <span className="detail-100 text-muted-foreground">{contact.role}</span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="border-b border-border px-4 py-3 align-middle">
-                        <span className="body-100 text-muted-foreground">—</span>
-                      </td>
-                      <td className="border-b border-border px-4 py-3 align-middle">
-                        <Button variant="secondary-alt" size="small" className="heading-50">
-                          Enroll in sequence
-                        </Button>
-                      </td>
-                      <td className="border-b border-border px-4 py-3 align-middle">
-                        <div className="flex flex-wrap gap-1">
-                          {contact.signals.map(signal => (
-                            <Tag key={signal.text} variant={signal.variant === "neutral" ? "neutral" : signal.variant}>
-                              {signal.text}
-                            </Tag>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="border-b border-border px-4 py-3 align-middle">
-                        <span className="body-100 text-muted-foreground">—</span>
-                      </td>
-                    </TableRow>
-                  ))}
-                </Fragment>
-              );
-            })}
-          </TableBody>
-        </Table>
-        </div>
-      </div>
+      <CompanyTable
+        rows={rows}
+        columns={columns}
+        primaryHeader="Customer"
+        minTableWidth={1100}
+        toolbar={<TableToolbar searchPlaceholder="Search portals" />}
+        getAvailableContacts={() => genericAdditionalContacts}
+        onPreview={onPreview ? (r) => onPreview(r.id, r.name) : undefined}
+      />
     </div>
   );
 };
