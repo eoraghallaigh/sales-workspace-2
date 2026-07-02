@@ -69,11 +69,11 @@ const CallPrepPanel = ({ isOpen, onClose, contact, onCallClick }: CallPrepPanelP
     <>
       {/* Dark scrim overlay */}
       <div 
-        className="fixed inset-0 top-12 bg-black/50 z-30"
+        className="fixed inset-0 top-[76px] bg-black/50 z-30"
         onClick={onClose}
       />
-      
-      <div className="fixed top-12 right-0 bottom-0 w-[569px] bg-card border-l border-border shadow-lg z-40 flex flex-col overflow-hidden">
+
+      <div className="fixed top-[76px] right-0 bottom-0 w-[569px] bg-card border-l border-border shadow-lg z-40 flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border">
         <h2 className="heading-300">Cold Call Preparation</h2>

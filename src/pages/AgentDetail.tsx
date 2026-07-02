@@ -18,7 +18,7 @@ const AgentDetail = () => {
 
   return (
     <Layout>
-      <div className="flex flex-col h-screen overflow-hidden">
+      <div className="flex flex-col h-[var(--page-content-height)] overflow-hidden">
         {/* Header area */}
         <div className="bg-card border-b border-core-subtle px-8 pt-6 pb-0">
           {/* Breadcrumb */}

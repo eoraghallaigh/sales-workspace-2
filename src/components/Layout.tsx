@@ -1,5 +1,6 @@
 import { ReactNode, useState, useEffect } from "react";
 import { GlobalNavigation } from "./GlobalNavigation";
+import { PrototypeBanner } from "./PrototypeBanner";
 import { useTheme } from "@/contexts/ThemeContext";
 
 /*
@@ -29,9 +30,10 @@ export const Layout = ({ children }: LayoutProps) => {
   if (isAlpha) {
     return (
       <div className="h-screen overflow-hidden bg-[var(--t-ui-color-foundational-bg-subtle)]">{/* recessed grey canvas */}
+        <PrototypeBanner />
         <GlobalNavigation />
         <main
-          className={`ml-16 p-3 h-screen overflow-hidden transition-all duration-300 ${
+          className={`ml-16 mt-7 p-3 h-[calc(100vh-28px)] overflow-hidden transition-all duration-300 ${
             isChatPanelOpen ? 'mr-96' : 'mr-0'
           }`}
         >
@@ -46,9 +48,10 @@ export const Layout = ({ children }: LayoutProps) => {
   // Transitional (master) shell
   return (
     <div className="h-screen overflow-hidden bg-background">
+      <PrototypeBanner />
       <GlobalNavigation />
       <main
-        className={`ml-16 mt-12 overflow-hidden overscroll-none transition-all duration-300 ${
+        className={`ml-16 mt-[76px] overflow-hidden overscroll-none transition-all duration-300 ${
           isChatPanelOpen ? 'mr-96' : 'mr-0'
         }`}
       >

@@ -146,7 +146,7 @@ const PlayBuilder = () => {
 
   return (
     <Layout>
-      <div className="flex flex-col h-[calc(100vh-3rem)] overflow-hidden bg-muted/30">
+      <div className="flex flex-col h-[var(--page-content-height)] overflow-hidden bg-muted/30">
         <WorkspaceHeader
           backLink={{ to: cyclePath("/plays"), label: "Plays" }}
           title={isEditMode ? "Edit play" : "Create play"}

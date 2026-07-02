@@ -167,7 +167,7 @@ const Plays = () => {
 
   return (
     <Layout>
-      <div className="flex flex-col h-screen overflow-hidden">
+      <div className="flex flex-col h-[var(--page-content-height)] overflow-hidden">
         <WorkspaceHeader
           backLink={{ to: cyclePath("/prospecting"), label: "Prospecting" }}
           title="Plays"

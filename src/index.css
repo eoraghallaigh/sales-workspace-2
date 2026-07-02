@@ -78,7 +78,7 @@
    * top header from their height. Alpha pages sit on the white dynamic
    * surface and fill it. */
   --page-bg: var(--color-fill-surface-recessed);
-  --page-content-height: calc(100vh - 48px);
+  --page-content-height: calc(100vh - 76px);
 
   /* Base Colors - Neutral Scale */
   --trellis-color-neutral-100: #f8f7f6;
