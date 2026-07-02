@@ -71,7 +71,16 @@ From the PR and commits just merged, assemble an `IterationEntry` object:
 - **`whatChanged`**: an array of bullet strings describing **what** changed. Each bullet should be a standalone, descriptive sentence that communicates the UX change to someone who hasn't seen the prototype. **Only include meaningful UX changes** — new features, redesigned flows, significant layout/interaction changes. Omit bug fixes, data changes, code refactors, and minor tweaks (e.g. swapping an icon direction, changing avatar colours, fixing alignment).
 - **`why`**: an array of 1–3 bullet strings explaining **why** the changes were made — the design rationale, user problem, or stakeholder driver. This is the most important part.
 - **`prUrl`**: the PR URL from Step 3.
-- **`commitment`**: infer from the changes — typical values are `"plays"`, `"outreach-strategy"`, `"prospecting-tables"`, or omit if unclear.
+- **`commitment`**: which cycle commitment this iteration belongs to. **Read the commitments** from the cycle data file before assembling the entry:
+
+  ```bash
+  GH_TOKEN=$(gh auth token --user eoraghallaigh_hubspot) \
+    gh api repos/HubSpotShare/fpl-team-home/contents/src/data/cycles/q2c2.ts \
+    --jq '.content' | base64 -d | grep -E 'id: "|title: "'
+  ```
+
+  This returns the valid commitment ids and their titles (e.g. `outreach-strategy`, `full-prospect-book`, `plays`). Pick the one that best fits the changes. If the changes span multiple commitments, pick the primary one. If none fit, omit the field.
+
 - **`screenshots`**: `[]` (empty for now — screenshots can be added separately).
 
 ### 6a′. Present the entry for review
