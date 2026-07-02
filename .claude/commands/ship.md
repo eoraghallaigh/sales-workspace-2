@@ -68,11 +68,15 @@ From the PR and commits just merged, assemble an `IterationEntry` object:
 - **`id`**: `YYYY-MM-DD-<slug>` — today's date + a kebab-case slug derived from the commit/PR title.
 - **`date`**: today's date, `YYYY-MM-DD`.
 - **`label`**: the slug portion of the id (same as the branch name or a short label).
-- **`whatChanged`**: an array of 1–5 bullet strings describing **what** changed. Pull these from the commit messages or PR body. Each bullet should be a standalone sentence.
+- **`whatChanged`**: an array of bullet strings describing **what** changed. Each bullet should be a standalone, descriptive sentence that communicates the UX change to someone who hasn't seen the prototype. **Only include meaningful UX changes** — new features, redesigned flows, significant layout/interaction changes. Omit bug fixes, data changes, code refactors, and minor tweaks (e.g. swapping an icon direction, changing avatar colours, fixing alignment).
 - **`why`**: an array of 1–3 bullet strings explaining **why** the changes were made — the design rationale, user problem, or stakeholder driver. This is the most important part.
 - **`prUrl`**: the PR URL from Step 3.
 - **`commitment`**: infer from the changes — typical values are `"plays"`, `"outreach-strategy"`, `"prospecting-tables"`, or omit if unclear.
 - **`screenshots`**: `[]` (empty for now — screenshots can be added separately).
+
+### 6a′. Present the entry for review
+
+**Do not write the entry to the team-home repo yet.** First, present the assembled entry to the user in a readable format and ask them to review and sign off before proceeding. The user may want to reword bullets, add/remove items, or skip the entry entirely. Only proceed to 6b once the user confirms.
 
 ### 6b. Read the current iteration file
 
@@ -119,7 +123,7 @@ GH_TOKEN=$(gh auth token --user eoraghallaigh_hubspot) \
   -f message="Add iteration entry: <id>" \
   -f content="<base64-encoded-updated-file>" \
   -f sha="<sha-from-6b>" \
-  -f branch="main"
+  -f branch="master"
 ```
 
 ### 6e. Verify
@@ -138,7 +142,7 @@ Report:
 
 ## Notes
 
-- **Iteration entries go to a separate repo** (`HubSpotShare/fpl-team-home`) via the GitHub Contents API. The prototype repo stays clean.
+- **Iteration entries go to a separate repo** (`HubSpotShare/fpl-team-home`, branch `master`) via the GitHub Contents API. The prototype repo stays clean.
 - **Screenshots are not captured automatically.** Entries are written with `screenshots: []`. Screenshots can be added to `public/about/iterations/<id>/` in the team-home repo later.
 - **No build monitoring.** This is a standalone Vite prototype — there's no Blazar/CI pipeline to poll.
 - **Both repos update from one push** because `origin` is configured with two push URLs. If that ever breaks, check `git remote get-url --push --all origin` — it should list both the EMU and public repo URLs.
