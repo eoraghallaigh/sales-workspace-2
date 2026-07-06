@@ -4,16 +4,20 @@ import { useCyclePath } from "@/hooks/useCyclePath";
 import { Layout } from "@/components/Layout";
 import WorkspaceHeader from "@/components/WorkspaceHeader";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { DataWell } from "@/components/ui/data-well";
 import { Checkbox } from "@/components/ui/checkbox";
-import { TableHeaderCell } from "@/components/ui/table-header-cell";
-import { TableDataCell } from "@/components/ui/table-data-cell";
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { TableToolbar } from "@/components/ui/table-toolbar";
 import Tag from "@/components/Tag";
 import { SignalChip } from "@/components/SignalChip";
 import type { SignalId } from "@/data/signals";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
-import { Columns3 } from "lucide-react";
 import ProspectingSubNav from "@/components/ProspectingSubNav";
 
 // Power Hour contact data with enriched fields
@@ -377,6 +381,14 @@ const PowerHourReview = () => {
   const { cyclePath } = useCyclePath();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [contacts, setContacts] = useState(powerHourContacts);
+  const [search, setSearch] = useState("");
+
+  const filteredContacts = search.trim()
+    ? contacts.filter((c) => {
+        const q = search.toLowerCase();
+        return c.name.toLowerCase().includes(q) || c.company.toLowerCase().includes(q);
+      })
+    : contacts;
 
   const toggleContact = (id: string) => {
     setSelectedIds((prev) => {
@@ -440,13 +452,6 @@ const PowerHourReview = () => {
                 </Button>
               )}
               <Button
-                    variant="ghost"
-                    size="small"
-                    className="border border-transparent heading-50 whitespace-nowrap">
-                <Columns3 className="h-4 w-4" />
-                Edit columns
-              </Button>
-              <Button
                     variant="secondary"
                     size="small">
                 Add Contacts
@@ -461,110 +466,113 @@ const PowerHourReview = () => {
             </div>
           </div>
 
-              <Card className="border border-border-core-subtle rounded-100 shadow-100 overflow-hidden">
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="flex">
-                  <TableHeaderCell className="w-[48px] min-w-[48px] items-center justify-center">
-                    <Checkbox
-                            checked={allSelected}
-                            onCheckedChange={toggleAll} />
-                          
-                  </TableHeaderCell>
-                  <TableHeaderCell className="flex-[2] w-auto">
-                    Contact
-                  </TableHeaderCell>
-                  <TableHeaderCell className="flex-[2] w-auto">
-                    Company
-                  </TableHeaderCell>
-                  <TableHeaderCell className="flex-[1.5] w-auto">
-                    Phone
-                  </TableHeaderCell>
-                  <TableHeaderCell className="flex-[1.5] w-auto items-start">
-                    Recent Conversions
-                  </TableHeaderCell>
-                  <TableHeaderCell className="flex-[2] w-auto">
-                    Intent Signals
-                  </TableHeaderCell>
-                  <TableHeaderCell className="flex-1 w-auto">
-                    Last Touch
-                  </TableHeaderCell>
-                  <TableHeaderCell className="flex-1 w-auto">
-                    Priority
-                  </TableHeaderCell>
-                </tr>
-              </thead>
-              <tbody>
-                {contacts.map((contact) =>
-                      <tr
-                        key={contact.id}
-                        className="flex cursor-pointer transition-colors"
-                        onClick={() => toggleContact(contact.id)}>
-                        
-                    <TableDataCell className="w-[48px] min-w-[48px] items-center justify-center">
-                      <Checkbox
-                            checked={selectedIds.has(contact.id)}
-                            onCheckedChange={() => toggleContact(contact.id)}
-                            onClick={(e) => e.stopPropagation()} />
-                          
-                    </TableDataCell>
-                    <TableDataCell className="flex-[2] w-auto">
-                      <div className="flex flex-col">
-                        <a href="#" className="body-125 text-text-interactive hover:underline cursor-pointer">{contact.name}</a>
-                        <span className="detail-200 text-muted-foreground">{contact.title}</span>
-                      </div>
-                    </TableDataCell>
-                    <TableDataCell className="flex-[2] w-auto">
-                      <a href="#" className="body-100 text-text-interactive hover:underline cursor-pointer">{contact.company}</a>
-                    </TableDataCell>
-                    <TableDataCell className="flex-[1.5] w-auto">
-                      <span className="body-100 text-foreground">{contact.phone}</span>
-                    </TableDataCell>
-                    <TableDataCell className="flex-[1.5] w-auto">
-                      {contact.recentConversions.length > 0 ?
-                          <div className="flex flex-col gap-1">
-                          {contact.recentConversions.map((conv, i) =>
-                            <span key={i} className="body-100 text-foreground">{conv}</span>
+              <div className="border border-border bg-card rounded-[4px] overflow-hidden">
+                <TableToolbar
+                  searchPlaceholder="Search contacts"
+                  searchValue={search}
+                  onSearchChange={setSearch}
+                />
+                <div className="overflow-x-auto">
+                  <Table style={{ minWidth: 1100 }}>
+                    <TableHeader>
+                      <TableRow className="bg-[var(--color-fill-surface-recessed)] hover:bg-[var(--color-fill-surface-recessed)] border-[var(--color-border-transitional-core-subtle)]">
+                        <TableHead className="w-12 px-4 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
+                          <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
+                        </TableHead>
+                        <TableHead className="px-4 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]" style={{ minWidth: 220 }}>
+                          Contact
+                        </TableHead>
+                        <TableHead className="px-4 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]" style={{ minWidth: 180 }}>
+                          Company
+                        </TableHead>
+                        <TableHead className="px-4 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]" style={{ minWidth: 160 }}>
+                          Phone
+                        </TableHead>
+                        <TableHead className="px-4 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]" style={{ minWidth: 180 }}>
+                          Recent Conversions
+                        </TableHead>
+                        <TableHead className="px-4 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]" style={{ minWidth: 200 }}>
+                          Intent Signals
+                        </TableHead>
+                        <TableHead className="px-4 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]" style={{ minWidth: 120 }}>
+                          Last Touch
+                        </TableHead>
+                        <TableHead className="px-4 table-header-text align-middle" style={{ minWidth: 100 }}>
+                          Priority
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody className="[&>tr:last-child>td]:border-b-0">
+                      {filteredContacts.map((contact) => (
+                        <TableRow
+                          key={contact.id}
+                          className="group bg-card hover:bg-fill-surface-recessed cursor-pointer"
+                          onClick={() => toggleContact(contact.id)}
+                        >
+                          <td className="w-12 border-b border-border px-4 py-3 align-middle">
+                            <Checkbox
+                              checked={selectedIds.has(contact.id)}
+                              onCheckedChange={() => toggleContact(contact.id)}
+                              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                            />
+                          </td>
+                          <td className="border-b border-border px-4 py-3 align-middle">
+                            <div className="flex flex-col">
+                              <button className="body-125 text-text-interactive hover:underline cursor-pointer text-left p-0 bg-transparent border-none">{contact.name}</button>
+                              <span className="detail-200 text-muted-foreground">{contact.title}</span>
+                            </div>
+                          </td>
+                          <td className="border-b border-border px-4 py-3 align-middle">
+                            <button className="body-100 text-text-interactive hover:underline cursor-pointer text-left p-0 bg-transparent border-none">{contact.company}</button>
+                          </td>
+                          <td className="border-b border-border px-4 py-3 align-middle">
+                            <span className="body-100 text-foreground">{contact.phone}</span>
+                          </td>
+                          <td className="border-b border-border px-4 py-3 align-middle">
+                            {contact.recentConversions.length > 0 ? (
+                              <div className="flex flex-col gap-1">
+                                {contact.recentConversions.map((conv, i) => (
+                                  <span key={i} className="body-100 text-foreground">{conv}</span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="detail-200 text-muted-foreground">—</span>
                             )}
-                        </div> :
-
-                          <span className="detail-200 text-muted-foreground">—</span>
-                          }
-                    </TableDataCell>
-                    <TableDataCell className="flex-[2] w-auto">
-                      {contact.signals.length > 0 ?
-                          <div className="flex flex-wrap gap-1">
-                          {contact.signals.map((signal, i) => {
-                            const signalId = labelToSignalId(signal);
-                            return signalId ?
-                              <SignalChip
-                                key={i}
-                                signal={{ id: signalId }}
-                                owner={{ kind: "contact", id: contact.id, name: contact.name, role: contact.title }}
-                              /> :
-                              <Tag key={i} variant="neutral">{signal}</Tag>;
-                          })}
-                        </div> :
-
-                          <span className="detail-200 text-muted-foreground">—</span>
-                          }
-                    </TableDataCell>
-                    <TableDataCell className="flex-1 w-auto">
-                      <span className="detail-100 text-muted-foreground">{contact.lastTouchDate}</span>
-                    </TableDataCell>
-                    <TableDataCell className="flex-1 w-auto">
-                      <Tag variant={contact.priority === "P1" ? "blue" : "neutral"}>
-                        {contact.priority}
-                      </Tag>
-                    </TableDataCell>
-                  </tr>
-                      )}
-              </tbody>
-            </table>
-          </div>
-        </Card>
+                          </td>
+                          <td className="border-b border-border px-4 py-3 align-middle">
+                            {contact.signals.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {contact.signals.map((signal, i) => {
+                                  const signalId = labelToSignalId(signal);
+                                  return signalId ? (
+                                    <SignalChip
+                                      key={i}
+                                      signal={{ id: signalId }}
+                                      owner={{ kind: "contact", id: contact.id, name: contact.name, role: contact.title }}
+                                    />
+                                  ) : (
+                                    <Tag key={i} variant="neutral">{signal}</Tag>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <span className="detail-200 text-muted-foreground">—</span>
+                            )}
+                          </td>
+                          <td className="border-b border-border px-4 py-3 align-middle">
+                            <span className="detail-100 text-muted-foreground">{contact.lastTouchDate}</span>
+                          </td>
+                          <td className="border-b border-border px-4 py-3 align-middle">
+                            <Tag variant={contact.priority === "P1" ? "blue" : "neutral"}>
+                              {contact.priority}
+                            </Tag>
+                          </td>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
             </div>
           </div>
         </div>

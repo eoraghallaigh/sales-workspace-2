@@ -28,7 +28,7 @@ import {
   TokenSelect,
 } from "./controls";
 import { AlignIcon, DirectionIcon, JustifyIcon, WrapIcon } from "./flexIcons";
-import { BUTTON_VARIANT_NAMES } from "./buttonVariants";
+import { BUTTON_VARIANT_NAMES, BUTTON_SIZE_NAMES } from "./buttonVariants";
 
 export interface StashItem {
   id: string;
@@ -59,7 +59,7 @@ const TRANSFORM_OPTIONS: { value: string; label: string }[] = [
   { value: "lowercase", label: "lowercase" },
 ];
 
-type SectionKey = "component" | "colour" | "typography" | "padding" | "margin" | "flex" | "layout" | "border" | "element" | "stash";
+type SectionKey = "component" | "colour" | "typography" | "padding" | "margin" | "flex" | "layout" | "border" | "instructions" | "element" | "stash";
 
 const FLEX_DISPLAY_OPTIONS = ["block", "flex", "inline-flex", "grid", "inline-block", "inline", "none"];
 const FLEX_DIRECTION_OPTIONS = ["row", "row-reverse", "column", "column-reverse"];
@@ -130,6 +130,7 @@ const SandboxPanel = ({
     flex: true,
     layout: true,
     border: true,
+    instructions: true,
     element: true,
     stash: true,
   });
@@ -152,7 +153,7 @@ const SandboxPanel = ({
     onStateChange({ ...state, [key]: value });
 
   const targetLine = targetLineFor(source, element);
-  const agentBlock = formatEntryBlock(source, element, output, entry.move, entry.deleted);
+  const agentBlock = formatEntryBlock(source, element, output, entry.move, entry.deleted, state.agentInstructions);
   const hasChanges = output.summary.length > 0 || !!entry.move || !!entry.deleted;
 
   const declKey = JSON.stringify(output.decls);
@@ -215,12 +216,20 @@ const SandboxPanel = ({
             key: "component" as SectionKey,
             title: "Component",
             body: (
-              <EnumSelect
-                label="Button variant"
-                value={state.variant}
-                options={BUTTON_VARIANT_NAMES.map((name) => ({ value: name, label: name }))}
-                onChange={set("variant")}
-              />
+              <>
+                <EnumSelect
+                  label="Button variant"
+                  value={state.variant}
+                  options={BUTTON_VARIANT_NAMES.map((name) => ({ value: name, label: name }))}
+                  onChange={set("variant")}
+                />
+                <EnumSelect
+                  label="Button size"
+                  value={state.buttonSize}
+                  options={BUTTON_SIZE_NAMES.map((name) => ({ value: name, label: name }))}
+                  onChange={set("buttonSize")}
+                />
+              </>
             ),
           },
         ]
@@ -421,6 +430,19 @@ const SandboxPanel = ({
             onChange={set("shadow")}
           />
         </>
+      ),
+    },
+    {
+      key: "instructions",
+      title: "Agent instructions",
+      body: (
+        <textarea
+          value={state.agentInstructions}
+          onChange={(e) => set("agentInstructions")(e.target.value)}
+          placeholder="Describe what the agent should do that the controls above can't express…"
+          className="w-full rounded border border-slate-300 bg-white p-2.5 text-xs leading-relaxed text-slate-700 placeholder:text-slate-400 focus:border-[#FF4800] focus:outline-none focus:ring-1 focus:ring-[#FF4800]"
+          rows={3}
+        />
       ),
     },
     {

@@ -19,7 +19,7 @@ import {
   toRgb,
 } from "@/design-tokens/resolve";
 import { ElementSource } from "./fiber";
-import { detectButtonVariant } from "./buttonVariants";
+import { detectButtonVariant, detectButtonSize } from "./buttonVariants";
 import { type MoveRecord, moveSummaryLine } from "./reorder";
 
 export interface Crumb {
@@ -69,6 +69,7 @@ export interface Original {
   // component, so it gets its own control rather than free-form style edits.
   isButton: boolean;
   variant: string;
+  buttonSize: string;
   baseClassName: string;
 }
 
@@ -99,6 +100,8 @@ export interface PanelState {
   borderRadius: string;
   shadow: string;
   variant: string;
+  buttonSize: string;
+  agentInstructions: string;
 }
 
 export interface BuiltOutput {
@@ -198,6 +201,7 @@ export const computeOriginal = (element: HTMLElement): Original => {
     shadow: matchShadow(cs.boxShadow),
     isButton: detectedVariant !== "",
     variant: detectedVariant,
+    buttonSize: detectedVariant !== "" ? detectButtonSize(element) : "",
     baseClassName: typeof element.className === "string" ? element.className : "",
   };
 };
@@ -229,6 +233,8 @@ export const initialState = (o: Original): PanelState => ({
   borderRadius: o.borderRadius.tokenName,
   shadow: o.shadow.tokenName,
   variant: o.variant,
+  buttonSize: o.buttonSize,
+  agentInstructions: "",
 });
 
 const colorValue = (list: ColorToken[], name: string): string => {
@@ -428,13 +434,18 @@ export const buildOutput = (state: PanelState, o: Original): BuiltOutput => {
     summary.push(`variant prop: ${state.variant} (was ${o.variant})`);
   }
 
+  if (o.isButton && state.buttonSize && state.buttonSize !== o.buttonSize) {
+    summary.push(`size prop: ${state.buttonSize} (was ${o.buttonSize})`);
+  }
+
   return { decls, classes, summary };
 };
 
 export const changeCount = (entry: SandboxEntry): number =>
   buildOutput(entry.state, entry.original).summary.length +
   (entry.move ? 1 : 0) +
-  (entry.deleted ? 1 : 0);
+  (entry.deleted ? 1 : 0) +
+  (entry.state.agentInstructions.trim() ? 1 : 0);
 
 export const hasChanges = (entry: SandboxEntry): boolean => changeCount(entry) > 0;
 
@@ -451,6 +462,7 @@ export const formatEntryBlock = (
   output: BuiltOutput,
   move?: MoveRecord,
   deleted?: boolean,
+  agentInstructions?: string,
 ): string => {
   const classAttr =
     typeof element.className === "string" && element.className ? ` class="${element.className}"` : "";
@@ -472,6 +484,9 @@ export const formatEntryBlock = (
     .join("\n");
   if (cssBlock) {
     lines.push("", "Resolved CSS:", ".selector {", cssBlock, "}");
+  }
+  if (agentInstructions?.trim()) {
+    lines.push("", "Agent instructions:", agentInstructions.trim());
   }
   return lines.join("\n");
 };
