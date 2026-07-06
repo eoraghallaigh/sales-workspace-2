@@ -1236,7 +1236,7 @@ const ProspectingStrategy = () => {
                         </div>
 
                         {contact.signals.length > 0 && (
-                          <div className="px-6 py-3 bg-card">
+                          <div className="px-6 py-0 bg-card">
                             <SignalChipRow
                               signals={contact.signals}
                               owner={{ kind: "contact", id: contact.id, name: contact.name, role: contact.role }}
@@ -1280,7 +1280,7 @@ const ProspectingStrategy = () => {
                             </div>
                           </div>
                         ) : (
-                        <div key={`content-${contact.id}`} className="px-6 pt-0 pb-0 bg-card animate-fade-in">
+                        <div key={`content-${contact.id}`} className="px-6 pt-4 pb-0 bg-card animate-fade-in">
                           {/* Description */}
                           <p className="body-100 text-foreground leading-relaxed mb-4">
                             {dossier.blurb}
@@ -1288,9 +1288,15 @@ const ProspectingStrategy = () => {
 
                           {/* Primary Friction */}
                           <p className="heading-50 text-foreground mb-1">Primary Friction:</p>
-                          <p className="body-100 text-foreground leading-relaxed mb-4">
+                          <p className="body-100 text-foreground leading-relaxed mb-3">
                             {dossier.primaryFriction}
                           </p>
+                          <div className="mb-12">
+                            <Button variant="primary" size="small">
+                              <Phone />
+                              Call {contact.name.split(" ")[0]}
+                            </Button>
+                          </div>
 
                           {/* Call */}
                           {(() => {

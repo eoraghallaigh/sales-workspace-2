@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from "re
 import SandboxPanel from "./SandboxPanel";
 import { getElementSource } from "./fiber";
 import { applyOverride, clearAllOverrides, clearOverride } from "./overrides";
-import { applyButtonVariant } from "./buttonVariants";
+import { applyButtonVariant, applyButtonSize } from "./buttonVariants";
 import {
   Crumb,
   PanelState,
@@ -182,6 +182,7 @@ const DesignMode = () => {
     if (entry && !hasChanges(entry)) {
       clearOverride(id);
       applyButtonVariant(entry.element, entry.original, entry.original.variant);
+      applyButtonSize(entry.element, entry.original, entry.original.buttonSize);
       entry.element.removeAttribute("data-sandbox-id");
       setEntries((prev) => {
         const next = { ...prev };
@@ -230,6 +231,7 @@ const DesignMode = () => {
     if (!entry) return;
     applyOverride(id, buildOutput(state, entry.original).decls);
     applyButtonVariant(entry.element, entry.original, state.variant);
+    applyButtonSize(entry.element, entry.original, state.buttonSize);
     setEntries((prev) => (prev[id] ? { ...prev, [id]: { ...prev[id], state } } : prev));
   }, []);
 
@@ -281,6 +283,7 @@ const DesignMode = () => {
     if (!entry) return;
     clearOverride(id);
     applyButtonVariant(entry.element, entry.original, entry.original.variant);
+    applyButtonSize(entry.element, entry.original, entry.original.buttonSize);
     restoreMove(entry);
     setEntries((prev) =>
       prev[id]
@@ -294,6 +297,7 @@ const DesignMode = () => {
     if (!entry) return;
     clearOverride(id);
     applyButtonVariant(entry.element, entry.original, entry.original.variant);
+    applyButtonSize(entry.element, entry.original, entry.original.buttonSize);
     restoreMove(entry);
     if (id === currentIdRef.current) {
       setEntries((prev) =>
@@ -358,7 +362,7 @@ const DesignMode = () => {
   const copyAll = useCallback(() => {
     const blocks = Object.values(entriesRef.current)
       .filter((entry) => hasChanges(entry))
-      .map((entry) => formatEntryBlock(entry.source, entry.element, buildOutput(entry.state, entry.original), entry.move, entry.deleted));
+      .map((entry) => formatEntryBlock(entry.source, entry.element, buildOutput(entry.state, entry.original), entry.move, entry.deleted, entry.state.agentInstructions));
     if (!blocks.length) return;
     const text = `Design sandbox — ${blocks.length} element(s) to update:\n\n${blocks.join("\n\n---\n\n")}`;
     navigator.clipboard?.writeText(text).then(() => setCopiedAll(true)).catch(() => setCopiedAll(false));
@@ -367,6 +371,7 @@ const DesignMode = () => {
   const clearAll = useCallback(() => {
     Object.values(entriesRef.current).forEach((entry) => {
       applyButtonVariant(entry.element, entry.original, entry.original.variant);
+      applyButtonSize(entry.element, entry.original, entry.original.buttonSize);
       restoreMove(entry);
       entry.element.removeAttribute("data-sandbox-id");
     });

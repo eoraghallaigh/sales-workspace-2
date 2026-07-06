@@ -35,7 +35,7 @@ const ContactDetailPanel = ({
 
   return (
     <div
-      className={`fixed top-[76px] right-0 h-[var(--page-content-height)] bg-white z-40 transition-transform duration-300 overflow-y-auto shadow-300 ${
+      className={`fixed top-12 right-0 h-[var(--page-content-height)] bg-white z-40 transition-transform duration-300 overflow-y-auto shadow-300 ${
         isOpen ? "translate-x-0" : "translate-x-full"
       }`}
       style={{ width: "569px" }}

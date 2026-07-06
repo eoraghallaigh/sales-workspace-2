@@ -70,7 +70,7 @@ interface CompanyTableProps<T extends CompanyTableRow> {
 }
 
 const HEADER_CELL =
-  "px-6 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]";
+  "px-4 table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]";
 const BODY_CELL = "border-b border-border px-4 py-3 align-middle";
 
 const contactKey = (rowId: string, contactId: string) => `${rowId}::${contactId}`;

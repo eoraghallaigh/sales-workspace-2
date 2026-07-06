@@ -1,9 +1,15 @@
-import { buttonVariantClasses } from "@/components/ui/button";
+import { buttonVariantClasses, buttonSizeClasses } from "@/components/ui/button";
 
 export const BUTTON_VARIANT_NAMES = Object.keys(buttonVariantClasses) as string[];
+export const BUTTON_SIZE_NAMES = Object.keys(buttonSizeClasses) as string[];
 
 const tokensFor = (variant: string): string[] =>
   (buttonVariantClasses[variant as keyof typeof buttonVariantClasses] ?? "")
+    .split(/\s+/)
+    .filter(Boolean);
+
+const sizeTokensFor = (size: string): string[] =>
+  (buttonSizeClasses[size as keyof typeof buttonSizeClasses] ?? "")
     .split(/\s+/)
     .filter(Boolean);
 
@@ -113,4 +119,57 @@ export const applyButtonVariant = (
       ? origin.baseClassName
       : classNameForVariant(origin.baseClassName, origin.variant, target);
   syncAiIcon(element, target);
+};
+
+export const detectButtonSize = (element: HTMLElement): string => {
+  if (element.tagName !== "BUTTON") return "";
+  const classes = new Set(element.classList);
+  let best = "";
+  let bestFull = -1;
+  let bestPartial = 0;
+  let bestPartialName = "";
+
+  for (const name of BUTTON_SIZE_NAMES) {
+    const tokens = sizeTokensFor(name);
+    if (tokens.length === 0) continue;
+    const present = tokens.filter((t) => classes.has(t)).length;
+    if (present > bestPartial) {
+      bestPartial = present;
+      bestPartialName = name;
+    }
+    if (present === tokens.length && tokens.length > bestFull) {
+      bestFull = tokens.length;
+      best = name;
+    }
+  }
+
+  if (best) return best;
+  return bestPartial > 0 ? bestPartialName : "default";
+};
+
+const classNameForSize = (
+  baseClassName: string,
+  fromSize: string,
+  toSize: string,
+): string => {
+  const fromTokens = new Set(sizeTokensFor(fromSize));
+  const result = baseClassName.split(/\s+/).filter((t) => t && !fromTokens.has(t));
+  for (const token of sizeTokensFor(toSize)) {
+    if (!result.includes(token)) result.push(token);
+  }
+  return result.join(" ");
+};
+
+export const applyButtonSize = (
+  element: HTMLElement,
+  origin: ButtonOrigin & { buttonSize: string },
+  size: string,
+): void => {
+  if (!origin.isButton) return;
+  const target = size || origin.buttonSize;
+  const currentClassName = element.className;
+  element.className =
+    target === origin.buttonSize
+      ? currentClassName
+      : classNameForSize(currentClassName, origin.buttonSize, target);
 };

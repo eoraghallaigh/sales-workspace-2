@@ -7,6 +7,16 @@ import { AiStarIcon } from "@/components/ui/ai-star-icon"
 
 // Exported so dev-only tooling (the design sandbox) can enumerate variant
 // names and their class strings without duplicating them here.
+export const buttonSizeClasses = {
+  default: "h-10 px-4 py-2",
+  sm: "h-9 rounded-[var(--radius-button)] px-3",
+  lg: "h-11 rounded-[var(--radius-button)] px-8",
+  icon: "h-10 w-10",
+  medium: "min-h-[40px] px-[24px] gap-[8px] rounded-[var(--radius-button)]",
+  small: "min-h-[32px] gap-[8px] rounded-[var(--radius-button)]",
+  "extra-small": "min-h-[26px] rounded-[var(--radius-button)]",
+} as const;
+
 export const buttonVariantClasses = {
   default: "bg-[var(--button-primary-bg)] text-primary-foreground hover:bg-[var(--button-primary-bg-hover)]",
   destructive:
@@ -119,6 +129,22 @@ const buttonVariants = cva(
         variant: "ai-secondary",
         size: "extra-small",
         class: "px-[10px] gap-[4px] heading-50"
+      },
+      // Ghost variants
+      {
+        variant: "ghost",
+        size: "medium",
+        class: "px-[24px] gap-[8px]"
+      },
+      {
+        variant: "ghost",
+        size: "small",
+        class: "px-[8px] gap-[8px]"
+      },
+      {
+        variant: "ghost",
+        size: "extra-small",
+        class: "px-[8px] gap-[4px]"
       },
       // Transparent variants
       {
