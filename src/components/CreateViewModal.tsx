@@ -124,15 +124,6 @@ const CONTACT_LISTS: string[] = [
   "AMER Enterprise | ABM | C-Suite & VP Buyers | Funding Series B+",
 ];
 
-// Faked metadata shown for each optional enablement link as it's added, so the
-// banner shows a title + short description like the live plays page does.
-const FAKE_LINK_MATERIALS: { type: EnablementMaterial["type"]; title: string; description: string }[] = [
-  { type: "battle-card", title: "Competitive battle card", description: "Key differentiators, objection handling, and pricing comparison." },
-  { type: "talk-track", title: "Discovery talk track", description: "Recommended discovery questions and positioning for first calls." },
-  { type: "case-study", title: "Customer case study", description: "Proof point showing measurable ROI for a similar account." },
-  { type: "one-pager", title: "Product one-pager", description: "Key features, pricing tiers, and ideal customer profile." },
-];
-
 // --- Segment preview (fake) -------------------------------------------------
 // Segments are fake, so we fabricate the "filters" that define each list plus a
 // set of owned companies. Everything is derived deterministically from the
@@ -3910,19 +3901,7 @@ const CreateViewModal = ({
   // titled enablement material.
   const renderPlayBanner = () => {
     const heroTrimmed = heroLink.trim();
-    // A link contributes to the banner once it's loading or ready (after blur).
     const heroShown = !!heroTrimmed && (heroLoading || heroReady);
-    const materials: EnablementMaterial[] = enablementLinks
-      .map((url, i) => ({ url: url.trim(), i }))
-      .filter((x) => x.url && (linkLoading[x.i] || linkReady[x.i]))
-      .map((x) => {
-        const fake = FAKE_LINK_MATERIALS[x.i % FAKE_LINK_MATERIALS.length];
-        return { id: `em-link-${x.i}`, title: fake.title, type: fake.type, description: fake.description };
-      });
-    const loadingMaterialIds = enablementLinks
-      .map((_, i) => i)
-      .filter((i) => linkLoading[i])
-      .map((i) => `em-link-${i}`);
     const startDate = (launchDate ?? new Date()).toISOString().slice(0, 10);
     const endDate = (expiryDate ?? new Date(Date.now() + 1000 * 60 * 60 * 24 * 60)).toISOString().slice(0, 10);
     const previewPlay: Play = {
@@ -3933,7 +3912,7 @@ const CreateViewModal = ({
       endDate,
       createdBy: defaultViewerLabel,
       completionCriteria: "",
-      enablementMaterials: materials,
+      enablementMaterials: [],
       micrositeUrl: heroShown ? heroTrimmed : undefined,
       micrositeTitle: heroReady ? `${viewName.trim() || "Play"} playbook` : undefined,
       micrositeDescription: heroReady ? "Messaging, positioning, and resources to run this play." : undefined,
@@ -3942,7 +3921,7 @@ const CreateViewModal = ({
       status: "draft",
       owner: defaultViewerLabel,
     };
-    return <PlayHeader play={previewPlay} defaultOpen loadingMicrosite={heroLoading} loadingMaterialIds={loadingMaterialIds} />;
+    return <PlayHeader play={previewPlay} defaultOpen loadingMicrosite={heroLoading} />;
   };
 
   // Shared results count
