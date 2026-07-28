@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useRef, useState, useCallback, type ReactNode } from "react";
 import {
   GripVertical,
   Bold,
@@ -10,6 +10,10 @@ import {
   Redo2,
   ChevronDown,
   Megaphone,
+  Plus,
+  Phone,
+  Linkedin,
+  Mail,
 } from "lucide-react";
 import {
   DndContext,
@@ -40,6 +44,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import { AiStarIcon } from "@/components/ui/ai-star-icon";
@@ -325,9 +330,10 @@ type EmailEditorProps = {
   initialBody: string;
   onSave: (subject: string, body: string) => void;
   onDiscard: () => void;
+  onDelete?: () => void;
 };
 
-const EmailEditor = ({ initialSubject, initialBody, onSave, onDiscard }: EmailEditorProps) => {
+const EmailEditor = ({ initialSubject, initialBody, onSave, onDiscard, onDelete }: EmailEditorProps) => {
   const [history, setHistory] = useState<Array<{ subject: string; body: string }>>([
     { subject: initialSubject, body: initialBody },
   ]);
@@ -440,8 +446,13 @@ const EmailEditor = ({ initialSubject, initialBody, onSave, onDiscard }: EmailEd
             >
               <Redo2 size={14} />
             </button>
-            <Button variant="secondary" size="extra-small" onClick={onDiscard}>
-              Discard
+            {onDelete && (
+              <Button variant="ghost" size="extra-small" className="mr-2 text-destructive hover:text-destructive" onClick={onDelete}>
+                Delete step
+              </Button>
+            )}
+            <Button variant="secondary" size="extra-small" className="mr-2" onClick={onDiscard}>
+              Cancel
             </Button>
             <Button
               variant="primary"
@@ -462,9 +473,10 @@ type EditableEmailBodyProps = {
   subject: string;
   body: string;
   onSave: (subject: string, body: string) => void;
+  onDelete?: () => void;
 };
 
-const EditableEmailBody = ({ subject, body, onSave }: EditableEmailBodyProps) => {
+const EditableEmailBody = ({ subject, body, onSave, onDelete }: EditableEmailBodyProps) => {
   const [isEditing, setIsEditing] = useState(false);
 
   if (isEditing) {
@@ -477,6 +489,7 @@ const EditableEmailBody = ({ subject, body, onSave }: EditableEmailBodyProps) =>
           setIsEditing(false);
         }}
         onDiscard={() => setIsEditing(false)}
+        onDelete={onDelete}
       />
     );
   }
@@ -537,9 +550,10 @@ type SingleFieldEditorProps = {
   label: string;
   onSave: (value: string) => void;
   onDiscard: () => void;
+  onDelete?: () => void;
 };
 
-const SingleFieldEditor = ({ initialValue, label, onSave, onDiscard }: SingleFieldEditorProps) => {
+const SingleFieldEditor = ({ initialValue, label, onSave, onDiscard, onDelete }: SingleFieldEditorProps) => {
   const [history, setHistory] = useState<string[]>([initialValue]);
   const [index, setIndex] = useState(0);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
@@ -632,8 +646,13 @@ const SingleFieldEditor = ({ initialValue, label, onSave, onDiscard }: SingleFie
           >
             <Redo2 size={14} />
           </button>
-          <Button variant="secondary" size="extra-small" onClick={onDiscard}>
-            Discard
+          {onDelete && (
+            <Button variant="ghost" size="extra-small" className="mr-2 text-destructive hover:text-destructive" onClick={onDelete}>
+              Delete step
+            </Button>
+          )}
+          <Button variant="secondary" size="extra-small" className="mr-2" onClick={onDiscard}>
+            Cancel
           </Button>
           <Button
             variant="primary"
@@ -653,9 +672,10 @@ type EditableTextProps = {
   value: string;
   label: string;
   onSave: (value: string) => void;
+  onDelete?: () => void;
 };
 
-const EditableText = ({ value, label, onSave }: EditableTextProps) => {
+const EditableText = ({ value, label, onSave, onDelete }: EditableTextProps) => {
   const [isEditing, setIsEditing] = useState(false);
   if (isEditing) {
     return (
@@ -667,6 +687,7 @@ const EditableText = ({ value, label, onSave }: EditableTextProps) => {
           setIsEditing(false);
         }}
         onDiscard={() => setIsEditing(false)}
+        onDelete={onDelete}
       />
     );
   }
@@ -681,9 +702,10 @@ type BulletsEditorProps = {
   initialBullets: string[];
   onSave: (bullets: string[]) => void;
   onDiscard: () => void;
+  onDelete?: () => void;
 };
 
-const BulletsEditor = ({ initialBullets, onSave, onDiscard }: BulletsEditorProps) => {
+const BulletsEditor = ({ initialBullets, onSave, onDiscard, onDelete }: BulletsEditorProps) => {
   const [bullets, setBullets] = useState<string[]>(initialBullets);
   const dirty = bullets.some((b, i) => b !== initialBullets[i]);
   return (
@@ -703,8 +725,13 @@ const BulletsEditor = ({ initialBullets, onSave, onDiscard }: BulletsEditorProps
         ))}
       </ul>
       <div className="flex items-center justify-end gap-1">
-        <Button variant="secondary" size="extra-small" onClick={onDiscard}>
-          Discard
+        {onDelete && (
+          <Button variant="ghost" size="extra-small" className="mr-2 text-destructive hover:text-destructive" onClick={onDelete}>
+            Delete step
+          </Button>
+        )}
+        <Button variant="secondary" size="extra-small" className="mr-2" onClick={onDiscard}>
+          Cancel
         </Button>
         <Button
           variant="primary"
@@ -722,9 +749,11 @@ const BulletsEditor = ({ initialBullets, onSave, onDiscard }: BulletsEditorProps
 const EditableBullets = ({
   bullets,
   onSave,
+  onDelete,
 }: {
   bullets: string[];
   onSave: (bullets: string[]) => void;
+  onDelete?: () => void;
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   if (isEditing) {
@@ -736,6 +765,7 @@ const EditableBullets = ({
           setIsEditing(false);
         }}
         onDiscard={() => setIsEditing(false)}
+        onDelete={onDelete}
       />
     );
   }
@@ -770,6 +800,7 @@ type SortableRowProps = {
   scriptMode: ScriptMode;
   onScriptModeChange: (mode: ScriptMode) => void;
   onReply?: () => void;
+  onDelete?: () => void;
 };
 
 const SortableRow = ({
@@ -790,6 +821,7 @@ const SortableRow = ({
   scriptMode,
   onScriptModeChange,
   onReply,
+  onDelete,
 }: SortableRowProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: touch.id,
@@ -881,11 +913,13 @@ const SortableRow = ({
                       value={touch.script}
                       label="Call script"
                       onSave={(v) => onScriptChange?.(v)}
+                      onDelete={onDelete}
                     />
                   ) : (
                     <EditableBullets
                       bullets={callBullets}
                       onSave={(next) => next.forEach((v, i) => onCallBulletChange(i, v))}
+                      onDelete={onDelete}
                     />
                   )}
                   <ScriptModeToggle mode={scriptMode} onChange={onScriptModeChange} />
@@ -901,6 +935,7 @@ const SortableRow = ({
                   value={touch.message}
                   label="Message"
                   onSave={(v) => onMessageChange?.(v)}
+                  onDelete={onDelete}
                 />
               ) : (
                 <p className="body-100 text-muted-foreground leading-relaxed whitespace-pre-line">
@@ -916,6 +951,7 @@ const SortableRow = ({
                     onSubjectChange?.(s);
                     onBodyChange?.(b);
                   }}
+                  onDelete={onDelete}
                 />
               ) : (
                 <p className="body-100 text-muted-foreground leading-relaxed whitespace-pre-line">
@@ -1084,6 +1120,126 @@ const SortableRow = ({
   );
 };
 
+type InsertedStep = {
+  id: string;
+  kind: "call" | "linkedin" | "email";
+  content: string;
+  subject: string;
+};
+
+let insertCounter = 0;
+
+const STEP_CHOICES: { kind: "call" | "linkedin" | "email"; label: string; icon: typeof Phone }[] = [
+  { kind: "call", label: "Call", icon: Phone },
+  { kind: "linkedin", label: "LinkedIn", icon: Linkedin },
+  { kind: "email", label: "Email", icon: Mail },
+];
+
+const InsertStepButton = ({ onInsert }: { onInsert: (kind: "call" | "linkedin" | "email") => void }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="absolute left-1/2 bottom-0 -translate-x-1/2 translate-y-1/2 z-10 flex items-center gap-1 rounded-full border border-[var(--color-border-core-subtle)] bg-white px-2 py-0.5 detail-100 text-muted-foreground opacity-0 group-hover/insert:opacity-100 hover:!opacity-100 hover:border-[var(--color-border-interactive-default)] hover:text-foreground transition-opacity shadow-sm"
+        >
+          <Plus size={12} />
+          Step
+        </button>
+      </PopoverTrigger>
+      <PopoverContent side="bottom" align="center" className="w-auto p-1">
+        <div className="flex flex-col gap-0.5">
+          {STEP_CHOICES.map(({ kind, label, icon: Icon }) => (
+            <button
+              key={kind}
+              type="button"
+              className="flex items-center gap-2 rounded px-3 py-1.5 text-left detail-100 text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+              onClick={() => {
+                onInsert(kind);
+                setOpen(false);
+              }}
+            >
+              <Icon size={14} className="text-muted-foreground" />
+              {label}
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+const InsertedStepRow = ({
+  step,
+  onSave,
+  onDiscard,
+}: {
+  step: InsertedStep;
+  onSave: (step: InsertedStep) => void;
+  onDiscard: () => void;
+}) => {
+  const [subject, setSubject] = useState(step.subject);
+  const [content, setContent] = useState(step.content);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const icon = step.kind === "call" ? "calling" : step.kind === "linkedin" ? "linkedin" : "email";
+  const label = step.kind === "call" ? "Call task" : step.kind === "linkedin" ? "LinkedIn message task" : "Email";
+
+  return (
+    <div className="border-t border-[var(--color-border-core-subtle)] py-4 px-2 animate-fade-in">
+      <div className="flex items-center gap-2 mb-3">
+        <TrellisIcon name={icon} size={14} className="text-muted-foreground" />
+        <span className="heading-50 text-foreground">{label}</span>
+      </div>
+      <div className="flex flex-col gap-3 pl-6">
+        {step.kind === "email" && (
+          <div className="flex flex-col gap-1">
+            <label className="heading-50 text-foreground">Subject</label>
+            <Input
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="Email subject…"
+              autoFocus
+            />
+          </div>
+        )}
+        <div className="flex flex-col gap-1">
+          <label className="heading-50 text-foreground">
+            {step.kind === "call" ? "Call script" : step.kind === "linkedin" ? "Message" : "Body"}
+          </label>
+          <Textarea
+            ref={bodyRef}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder={
+              step.kind === "call"
+                ? "Write your call script…"
+                : step.kind === "linkedin"
+                  ? "Write your LinkedIn message…"
+                  : "Write your email body…"
+            }
+            className="min-h-[100px] leading-relaxed"
+            autoFocus={step.kind !== "email"}
+          />
+        </div>
+        <div className="flex items-center justify-end gap-1">
+          <Button variant="secondary" size="extra-small" className="mr-2" onClick={onDiscard}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            size="extra-small"
+            disabled={!content.trim()}
+            onClick={() => onSave({ ...step, content, subject })}
+          >
+            Save
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export type OutreachSequenceCardProps = {
   contact: { id: string; name: string; initials: string; avatarColor: string };
   // When this contact is already enrolled in a different play's sequence, the
@@ -1163,6 +1319,50 @@ export const OutreachSequenceCard = ({
   const [localOverride, setLocalOverride] = useState<LocalOverride>(null);
   const [order, setOrder] = useState<string[]>(() => buildDefaultOrder(contact.id));
   const [isRegenerateOpen, setIsRegenerateOpen] = useState(false);
+  const [pendingInsert, setPendingInsert] = useState<{ afterId: string; step: InsertedStep } | null>(null);
+  const [customTouches, setCustomTouches] = useState<Map<string, Touch>>(new Map());
+  const [customExpanded, setCustomExpanded] = useState<Set<string>>(new Set());
+
+  const handleInsertStep = useCallback((afterId: string, kind: "call" | "linkedin" | "email") => {
+    const id = `${contact.id}-insert-${++insertCounter}`;
+    setPendingInsert({ afterId, step: { id, kind, content: "", subject: "" } });
+  }, [contact.id]);
+
+  const handleSaveInsert = useCallback((step: InsertedStep) => {
+    if (!pendingInsert) return;
+    const touch: Touch = step.kind === "call"
+      ? { id: step.id, kind: "call", state: { kind: "not-attempted" }, script: step.content }
+      : step.kind === "linkedin"
+        ? { id: step.id, kind: "linkedin", state: { kind: "not-sent" }, message: step.content }
+        : { id: step.id, kind: "email", status: { kind: "scheduled", sendsAt: "when enrolled" }, subject: step.subject, body: step.content, emailIndex: -1 };
+    setCustomTouches((prev) => new Map(prev).set(step.id, touch));
+    setOrder((prev) => {
+      const idx = prev.indexOf(pendingInsert.afterId);
+      const next = [...prev];
+      next.splice(idx + 1, 0, step.id);
+      return next;
+    });
+    setCustomExpanded((prev) => new Set(prev).add(step.id));
+    setPendingInsert(null);
+  }, [pendingInsert]);
+
+  const handleDiscardInsert = useCallback(() => {
+    setPendingInsert(null);
+  }, []);
+
+  const handleDeleteStep = useCallback((id: string) => {
+    setOrder((prev) => prev.filter((x) => x !== id));
+    setCustomTouches((prev) => {
+      const next = new Map(prev);
+      next.delete(id);
+      return next;
+    });
+    setCustomExpanded((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
 
   const status = classifyStatus(localOverride, sequence);
   const fromBackend = !pristine;
@@ -1216,6 +1416,7 @@ export const OutreachSequenceCard = ({
     [callTouch.id, callTouch],
     [liTouch.id, liTouch],
     ...emailTouches.map((t) => [t.id, t] as [string, Touch]),
+    ...customTouches,
   ]);
 
   const orderedTouches: Touch[] = order
@@ -1243,7 +1444,8 @@ export const OutreachSequenceCard = ({
       )}
       <div className="overflow-hidden">
         <div className="flex flex-wrap items-center gap-2 py-3">
-          <span className="heading-50 text-foreground">5-touch sequence</span>
+          <span className="heading-100 text-foreground">5-touch sequence</span>
+          {status !== null && renderStatusBadgeStack(status, sequence, localOverride)}
           {playOptions && playOptions.length > 1 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -1270,7 +1472,6 @@ export const OutreachSequenceCard = ({
           )}
           <div className="flex-1" />
           {mutedAttribution}
-          {status !== null && renderStatusBadgeStack(status, sequence, localOverride)}
         </div>
           <div className="pb-0">
             <DndContext
@@ -1287,48 +1488,68 @@ export const OutreachSequenceCard = ({
                       : "divide-y divide-[var(--color-border-core-subtle)] border-y border-[var(--color-border-core-subtle)] mb-6"
                   }
                 >
-                  {orderedTouches.map((t, idx) => (
-                    <SortableRow
-                      key={t.id}
-                      touch={t}
-                      isFirst={idx === 0}
-                      isLast={idx === orderedTouches.length - 1}
-                      draggable={draggable}
-                      isEnrolled={isEnrolled}
-                      isExpanded={expandedTouches[t.id] ?? false}
-                      onToggle={() => onToggleTouch(t.id)}
-                      contact={{
-                        name: contact.name,
-                        initials: contact.initials,
-                        avatarColor: contact.avatarColor,
-                      }}
-                      callBullets={callBullets}
-                      onCallBulletChange={onCallBulletChange}
-                      scriptMode={scriptMode}
-                      onScriptModeChange={onScriptModeChange}
-                      onScriptChange={
-                        t.kind === "call" ? (v) => onCallScriptChange(v) : undefined
-                      }
-                      onMessageChange={
-                        t.kind === "linkedin" ? (v) => onLinkedInMessageChange(v) : undefined
-                      }
-                      onSubjectChange={
-                        t.kind === "email"
-                          ? (v) => onEmailSubjectChange(t.emailIndex, v)
-                          : undefined
-                      }
-                      onBodyChange={
-                        t.kind === "email"
-                          ? (v) => onEmailBodyChange(t.emailIndex, v)
-                          : undefined
-                      }
-                      onReply={
-                        t.kind === "email" && onReplyToEmail
-                          ? () => onReplyToEmail(t.emailIndex)
-                          : undefined
-                      }
-                    />
-                  ))}
+                  {orderedTouches.map((t, idx) => {
+                    const hasPending = pendingInsert?.afterId === t.id;
+                    const isCustom = customTouches.has(t.id);
+                    return (
+                    <div key={t.id} className={`relative ${!isEnrolled && !hasPending ? "group/insert" : ""}`}>
+                      <SortableRow
+                        touch={t}
+                        isFirst={idx === 0}
+                        isLast={idx === orderedTouches.length - 1}
+                        draggable={draggable}
+                        isEnrolled={isEnrolled}
+                        isExpanded={isCustom ? customExpanded.has(t.id) : (expandedTouches[t.id] ?? false)}
+                        onToggle={() => isCustom ? setCustomExpanded((prev) => {
+                          const next = new Set(prev);
+                          next.has(t.id) ? next.delete(t.id) : next.add(t.id);
+                          return next;
+                        }) : onToggleTouch(t.id)}
+                        contact={{
+                          name: contact.name,
+                          initials: contact.initials,
+                          avatarColor: contact.avatarColor,
+                        }}
+                        callBullets={callBullets}
+                        onCallBulletChange={onCallBulletChange}
+                        scriptMode={scriptMode}
+                        onScriptModeChange={onScriptModeChange}
+                        onScriptChange={
+                          t.kind === "call" ? (v) => onCallScriptChange(v) : undefined
+                        }
+                        onMessageChange={
+                          t.kind === "linkedin" ? (v) => onLinkedInMessageChange(v) : undefined
+                        }
+                        onSubjectChange={
+                          t.kind === "email"
+                            ? (v) => onEmailSubjectChange(t.emailIndex, v)
+                            : undefined
+                        }
+                        onBodyChange={
+                          t.kind === "email"
+                            ? (v) => onEmailBodyChange(t.emailIndex, v)
+                            : undefined
+                        }
+                        onReply={
+                          t.kind === "email" && onReplyToEmail
+                            ? () => onReplyToEmail(t.emailIndex)
+                            : undefined
+                        }
+                        onDelete={() => handleDeleteStep(t.id)}
+                      />
+                      {hasPending && (
+                        <InsertedStepRow
+                          step={pendingInsert!.step}
+                          onSave={handleSaveInsert}
+                          onDiscard={handleDiscardInsert}
+                        />
+                      )}
+                      {!isEnrolled && !hasPending && (
+                        <InsertStepButton onInsert={(kind) => handleInsertStep(t.id, kind)} />
+                      )}
+                    </div>
+                    );
+                  })}
                 </div>
               </SortableContext>
             </DndContext>

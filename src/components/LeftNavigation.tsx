@@ -19,6 +19,7 @@ export const LeftNavigation = () => {
   const topItems: Array<{ name: any; to?: string }> = [{ name: "bookmark" }];
   const branchItems: Array<{ name: any; to?: string }> = [
     { name: "crm", to: cyclePath("/summary") },
+    { name: "calling", to: cyclePath("/power-hour/review") },
     { name: "plays" },
     { name: "documents" },
     { name: "salesTemplates" },
@@ -48,8 +49,8 @@ export const LeftNavigation = () => {
     <nav
       className={
         isAlpha
-          ? "fixed left-0 top-7 w-16 h-[calc(100vh-28px)] z-40 flex flex-col items-center py-3 gap-1"
-          : "fixed left-0 top-[76px] w-16 h-[var(--page-content-height)] z-40 flex flex-col items-center py-3 gap-1"
+          ? "fixed left-0 top-0 w-16 h-screen z-40 flex flex-col items-center py-3 gap-1"
+          : "fixed left-0 top-12 w-16 h-[var(--page-content-height)] z-40 flex flex-col items-center py-3 gap-1"
       }
       style={isAlpha ? undefined : { background: "#333333" }}
       onWheel={(e) => e.stopPropagation()}

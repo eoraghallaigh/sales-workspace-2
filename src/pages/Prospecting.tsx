@@ -796,7 +796,7 @@ const Prospecting = () => {
            </div>
 
            {/* Side Panel - hidden when expanded panel is active */}
-           {!expandedPanelCompanyId && selectedCompanyId && <div className={`fixed top-[76px] right-0 h-[var(--page-content-height)] bg-white z-40 transition-transform duration-300 overflow-y-auto shadow-300 ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} style={{
+           {!expandedPanelCompanyId && selectedCompanyId && <div className={`fixed top-12 right-0 h-[var(--page-content-height)] bg-white z-40 transition-transform duration-300 overflow-y-auto shadow-300 ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} style={{
           width: '569px'
         }}>
                {/* Header */}
@@ -1550,7 +1550,7 @@ const Prospecting = () => {
           )}
 
           {/* Task Panel - hidden when expanded panel is active */}
-          {!expandedPanelCompanyId && selectedTask && <div className={`fixed top-[76px] right-0 h-[var(--page-content-height)] bg-white z-40 transition-transform duration-300 overflow-y-auto shadow-300 ${isTaskPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} style={{
+          {!expandedPanelCompanyId && selectedTask && <div className={`fixed top-12 right-0 h-[var(--page-content-height)] bg-white z-40 transition-transform duration-300 overflow-y-auto shadow-300 ${isTaskPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} style={{
           width: '569px'
         }}>
               {/* Header */}

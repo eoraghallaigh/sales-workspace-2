@@ -187,6 +187,16 @@ const ProspectingSubNav = ({
                 />
               </CollapsibleContent>
             </Collapsible>
+
+            {separator}
+
+            {/* Daily Power Hour */}
+            <Row
+              isAlpha={isAlpha}
+              label="Daily Power Hour"
+              selected={isPowerHourRoute}
+              onClick={() => navigate(cyclePath("/power-hour/review"))}
+            />
           </div>
         </>
       )}

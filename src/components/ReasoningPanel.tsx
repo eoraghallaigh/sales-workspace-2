@@ -134,7 +134,7 @@ const ReasoningPanel = ({ onClose, contactName, companyName }: ReasoningPanelPro
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed top-[76px] right-0 h-[var(--page-content-height)] bg-white z-50 overflow-y-auto shadow-300"
+      className="fixed top-12 right-0 h-[var(--page-content-height)] bg-white z-50 overflow-y-auto shadow-300"
       style={{ width: "569px" }}
     >
       <div className="sticky top-0 z-10 bg-white flex items-center justify-between px-6 py-5 border-b border-border">
