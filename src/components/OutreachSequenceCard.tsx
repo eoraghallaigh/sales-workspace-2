@@ -1447,7 +1447,7 @@ export const OutreachSequenceCard = ({
   };
 
   return (
-    <div>
+    <div className="bg-[var(--color-fill-surface-raised)]">
       {playProvenanceLabel && (
         <Badge variant="orange" className="gap-1 mb-2">
           <Megaphone className="h-3 w-3" />
