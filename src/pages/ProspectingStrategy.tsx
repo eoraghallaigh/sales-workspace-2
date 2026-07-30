@@ -1400,6 +1400,7 @@ const ProspectingStrategy = () => {
                                 }}
                                 onViewReasoning={() => setReasoningContactId(contact.id)}
                                 onRegenerate={() => handleRegenerateSequence(contact.id)}
+                                enableFeedback
                               />
                             );
                           })()}

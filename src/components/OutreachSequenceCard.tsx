@@ -1,5 +1,6 @@
-import { useRef, useState, useCallback, type ReactNode } from "react";
+import { useRef, useState, useCallback, useEffect, type ReactNode } from "react";
 import {
+  CheckCircle2,
   GripVertical,
   Bold,
   Italic,
@@ -47,6 +48,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
+import { InlineFeedbackRow } from "@/components/InlineFeedbackRow";
 import { AiStarIcon } from "@/components/ui/ai-star-icon";
 import RegenerateSequenceModal from "@/components/RegenerateSequenceModal";
 import type { CallState, LinkedInState, EmailStatus, SequenceState } from "@/data/outreachStates";
@@ -1275,6 +1277,7 @@ export type OutreachSequenceCardProps = {
   onReplyToEmail?: (idx: number) => void;
   onViewReasoning: () => void;
   onRegenerate?: (instructions: string) => void;
+  enableFeedback?: boolean;
 };
 
 const buildDefaultOrder = (contactId: string): string[] => [
@@ -1312,6 +1315,7 @@ export const OutreachSequenceCard = ({
   onReplyToEmail,
   onViewReasoning,
   onRegenerate,
+  enableFeedback,
 }: OutreachSequenceCardProps) => {
   const firstName = contact.name.split(" ")[0];
   const pristine = isPristine(call, linkedin, sequence);
@@ -1319,6 +1323,14 @@ export const OutreachSequenceCard = ({
   const [localOverride, setLocalOverride] = useState<LocalOverride>(null);
   const [order, setOrder] = useState<string[]>(() => buildDefaultOrder(contact.id));
   const [isRegenerateOpen, setIsRegenerateOpen] = useState(false);
+  const [isFeedbackMode, setIsFeedbackMode] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackSuccess, setFeedbackSuccess] = useState(false);
+  const feedbackRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (isFeedbackMode && !feedbackSuccess) feedbackRef.current?.focus();
+  }, [isFeedbackMode, feedbackSuccess]);
   const [pendingInsert, setPendingInsert] = useState<{ afterId: string; step: InsertedStep } | null>(null);
   const [customTouches, setCustomTouches] = useState<Map<string, Touch>>(new Map());
   const [customExpanded, setCustomExpanded] = useState<Set<string>>(new Set());
@@ -1588,6 +1600,72 @@ export const OutreachSequenceCard = ({
                 </div>
               )}
               </div>
+              {enableFeedback && (
+                <InlineFeedbackRow
+                  onThumbsUp={() => {}}
+                  onThumbsDown={() => setIsFeedbackMode(true)}
+                  thumbsDownWrapper={(btn) => (
+                    <Popover open={isFeedbackMode} onOpenChange={(open) => {
+                      setIsFeedbackMode(open);
+                      if (!open) setFeedbackText("");
+                    }}>
+                      <PopoverTrigger asChild>
+                        {btn}
+                      </PopoverTrigger>
+                      <PopoverContent side="top" align="end" sideOffset={8} className="w-[280px] p-0">
+                        {feedbackSuccess ? (
+                          <div className="px-4 py-3.5 flex flex-col items-center justify-center gap-1.5">
+                            <CheckCircle2 className="h-6 w-6 text-trellis-green-600" />
+                            <p className="heading-50 text-foreground">Feedback submitted!</p>
+                          </div>
+                        ) : (
+                          <div className="px-4 pt-4 pb-4">
+                            <p className="heading-50 text-foreground mb-1">
+                              What's wrong with this sequence?
+                            </p>
+                            <p className="detail-200 text-muted-foreground mb-3">
+                              Your feedback is used to train the sequencing agent.
+                            </p>
+                            <Textarea
+                              ref={feedbackRef}
+                              value={feedbackText}
+                              onChange={(e) => setFeedbackText(e.target.value)}
+                              className="min-h-[60px] body-75 resize-none mt-4"
+                            />
+                            <div className="flex items-center justify-end gap-2 mt-4">
+                              <Button
+                                variant="ghost"
+                                size="extra-small"
+                                onClick={() => {
+                                  setIsFeedbackMode(false);
+                                  setFeedbackText("");
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                variant="primary"
+                                size="extra-small"
+                                disabled={feedbackText.trim().length === 0}
+                                onClick={() => {
+                                  setFeedbackSuccess(true);
+                                  setTimeout(() => {
+                                    setIsFeedbackMode(false);
+                                    setFeedbackText("");
+                                    setFeedbackSuccess(false);
+                                  }, 1000);
+                                }}
+                              >
+                                Submit
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                />
+              )}
             </div>
           </div>
       </div>
