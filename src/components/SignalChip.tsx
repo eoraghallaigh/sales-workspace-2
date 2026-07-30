@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import Tag from "@/components/Tag";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { CheckCircle2 } from "lucide-react";
 import { InlineFeedbackRow } from "@/components/InlineFeedbackRow";
 import {
   HoverCard,
@@ -46,25 +46,38 @@ const DetailBody = ({
 
 const FeedbackBody = ({
   title,
+  subtitle,
   onSubmit,
   onCancel,
 }: {
   title: string;
+  subtitle: string;
   onSubmit: (text: string) => void;
   onCancel: () => void;
 }) => {
   const [text, setText] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     textareaRef.current?.focus();
   }, []);
 
+  if (isSuccess) {
+    return (
+      <div className="px-4 py-3.5 flex flex-col items-center justify-center gap-1.5">
+        <CheckCircle2 className="h-6 w-6 text-trellis-green-600" />
+        <p className="heading-50 text-foreground">Feedback submitted!</p>
+      </div>
+    );
+  }
+
   return (
     <div className="px-4 py-3.5">
-      <p className="heading-50 text-foreground mb-4">
+      <p className="heading-50 text-foreground mb-1">
         What's wrong with "{title}"?
       </p>
+      <p className="detail-200 text-muted-foreground mb-3">{subtitle}</p>
       <Textarea
         ref={textareaRef}
         value={text}
@@ -79,7 +92,10 @@ const FeedbackBody = ({
           variant="primary"
           size="extra-small"
           disabled={text.trim().length === 0}
-          onClick={() => onSubmit(text.trim())}
+          onClick={() => {
+            setIsSuccess(true);
+            setTimeout(() => onSubmit(text.trim()), 1000);
+          }}
         >
           Submit
         </Button>
@@ -101,8 +117,6 @@ export const SignalChip = ({ signal, owner, className }: SignalChipProps) => {
   const detail = resolveSignalDetail(signal, owner);
   const [isFeedbackMode, setIsFeedbackMode] = useState(false);
   const [open, setOpen] = useState(false);
-  const { toast } = useToast();
-
   const handleOpenChange = (next: boolean) => {
     if (isFeedbackMode && !next) return;
     setOpen(next);
@@ -110,10 +124,6 @@ export const SignalChip = ({ signal, owner, className }: SignalChipProps) => {
   };
 
   const handleSubmitFeedback = (_text: string) => {
-    toast({
-      title: "Feedback received",
-      description: `Thanks — we'll review your note on "${def.label}".`,
-    });
     setIsFeedbackMode(false);
     setOpen(false);
   };
@@ -144,6 +154,7 @@ export const SignalChip = ({ signal, owner, className }: SignalChipProps) => {
         {isFeedbackMode ? (
           <FeedbackBody
             title={def.label}
+            subtitle="Your feedback will be sent to the product team."
             onSubmit={handleSubmitFeedback}
             onCancel={handleCancelFeedback}
           />
