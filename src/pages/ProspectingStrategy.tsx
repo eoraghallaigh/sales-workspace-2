@@ -283,7 +283,7 @@ const ProspectingStrategy = () => {
   // to the selected play. Default to the most recently created play. A user
   // selection is only honoured while it belongs to the current company, so
   // navigating to another company falls back to that company's default.
-  const [selectedPlayId, setSelectedPlayId] = useState<string | undefined>(backState?.playId);
+  const [selectedPlayId, setSelectedPlayId] = useState<string | undefined>(backState?.playId ?? searchParams.get("fromPlay") ?? undefined);
   const resolvedPlayId = useMemo(() => {
     if (selectedPlayId && companyPlays.some((p) => p.id === selectedPlayId)) {
       return selectedPlayId;
