@@ -454,12 +454,14 @@ export const getEnrollmentPlayId = (contactId: string): string | undefined =>
 // default to a single play (no selector).
 export const contactPlayEligibility: Record<string, string[]> = {
   // Fusion Technologies (company 13) — Enterprise Expansion + Salesforce Switchers.
-  // Brandon overlaps both; the others split, so each play has a distinct contact set.
-  c32: ["enterprise-expansion", "salesforce-switchers"], // Brandon Lee — both (overlap)
-  c32a: ["enterprise-expansion"], // Ingrid Larsen — Enterprise Expansion
-  c32b: ["salesforce-switchers"], // Amir Farouk — Salesforce Switchers
-  c32c: ["enterprise-expansion"], // Sandra Kim — Enterprise Expansion
-  c32d: ["salesforce-switchers"], // Troy Anderson — Salesforce Switchers
+  // All contacts scoped to Salesforce Switchers so Enterprise Expansion shows
+  // the empty state ("no contacts matching the criteria for this play").
+  c31: ["salesforce-switchers"], // Rachel White
+  c32: ["salesforce-switchers"], // Brandon Lee
+  c32a: ["salesforce-switchers"], // Ingrid Larsen
+  c32b: ["salesforce-switchers"], // Amir Farouk
+  c32c: ["salesforce-switchers"], // Sandra Kim
+  c32d: ["salesforce-switchers"], // Troy Anderson
 };
 
 export const getEligiblePlayIdsForContact = (
