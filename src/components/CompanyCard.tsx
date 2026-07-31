@@ -70,6 +70,7 @@ export interface RecommendedContact {
   recentConversions?: number;
   signals: SignalInstance[];
   qlData?: QLData;
+  lastContactedDate?: string;
 }
 export interface Company {
   id: string;
