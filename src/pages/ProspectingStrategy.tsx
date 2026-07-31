@@ -128,7 +128,7 @@ const ProspectingStrategy = () => {
   const location = useLocation();
   // The page that linked here passes { from, fromLabel } so the back button
   // returns to that exact view; fall back to the P1 list for deep links.
-  const backState = location.state as { from?: string; fromLabel?: string } | null;
+  const backState = location.state as { from?: string; fromLabel?: string; playId?: string } | null;
   const [searchParams] = useSearchParams();
   const emptyParam = searchParams.get("empty");
   // hasResearch / hasSequences are owned per-company. Initial defaults come from:
@@ -283,7 +283,7 @@ const ProspectingStrategy = () => {
   // to the selected play. Default to the most recently created play. A user
   // selection is only honoured while it belongs to the current company, so
   // navigating to another company falls back to that company's default.
-  const [selectedPlayId, setSelectedPlayId] = useState<string | undefined>(undefined);
+  const [selectedPlayId, setSelectedPlayId] = useState<string | undefined>(backState?.playId ?? searchParams.get("fromPlay") ?? undefined);
   const resolvedPlayId = useMemo(() => {
     if (selectedPlayId && companyPlays.some((p) => p.id === selectedPlayId)) {
       return selectedPlayId;
@@ -368,11 +368,14 @@ const ProspectingStrategy = () => {
   const addedContacts = playScopedContacts.filter(c => addedContactIds.has(c.id));
   const outreachTargets = [...baseOutreachTargets, ...addedContacts].filter(c => !removedContactIds.has(c.id));
 
-  // Other contacts: remaining contacts not in outreach targets
+  // Other contacts: remaining contacts not in outreach targets.
+  // When no contacts are play-scoped, fall back to the full ranked list so the
+  // rep can still manually add targets.
   const otherContacts = useMemo(() => {
     const outreachIds = new Set(outreachTargets.map(c => c.id));
-    return playScopedContacts.filter(c => !outreachIds.has(c.id)).slice(0, 10);
-  }, [playScopedContacts, outreachTargets]);
+    const pool = playScopedContacts.length > 0 ? playScopedContacts : rankedRecommended;
+    return pool.filter(c => !outreachIds.has(c.id)).slice(0, 10);
+  }, [playScopedContacts, rankedRecommended, outreachTargets]);
 
   const handleAddToOutreach = useCallback((contactId: string) => {
     setAddedContactIds(prev => new Set(prev).add(contactId));
@@ -1410,6 +1413,13 @@ const ProspectingStrategy = () => {
 
 
                       })}
+                    {outreachTargets.length === 0 && selectedPlay && (
+                      <div className="rounded-100 border border-dashed border-core-subtle bg-card px-6 py-8 text-center">
+                        <p className="body-100 text-muted-foreground">
+                          There are no contacts matching the criteria for this play.
+                        </p>
+                      </div>
+                    )}
                     {otherContacts.length > 0 && (
                       <div className="mt-8">
                         <h3 className="heading-200 text-foreground mb-4">Other Contacts</h3>
@@ -1427,8 +1437,11 @@ const ProspectingStrategy = () => {
                                     >
                                       {contact.name}
                                     </button>
-                                    <div className="detail-100 text-muted-foreground">{contact.role}</div>
-                                    <div className="detail-100 text-muted-foreground truncate">{email}</div>
+                                    <div className="detail-100 text-muted-foreground mb-1">{contact.role}</div>
+                                    <div className="detail-100 text-muted-foreground truncate mb-1">{email}</div>
+                                    {contact.lastContactedDate && (
+                                      <div className="detail-100 text-muted-foreground mb-1">Last contacted: {contact.lastContactedDate}</div>
+                                    )}
                                     {contact.signals.length > 0 && (
                                       <SignalChipRow
                                         signals={contact.signals}

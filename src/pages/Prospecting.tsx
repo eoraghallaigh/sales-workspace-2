@@ -248,7 +248,7 @@ const Prospecting = () => {
       ? activePlay.label
       : VIEW_LABELS[activeNavItem] ?? "Prospecting";
     navigate(cyclePath(`/prospecting/strategy/${companyId}${suffix}`), {
-      state: { from, fromLabel },
+      state: { from, fromLabel, playId: activePlay?.id },
     });
   };
   const handleCompanyNameClick = (companyId: string, companyName?: string) => {
