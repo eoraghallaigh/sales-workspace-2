@@ -62,6 +62,9 @@ Every spec page follows this order. Include sections that apply; skip sections t
 ### No nav
 - Spec pages use `SpecLayout` which has no navigation — they're designed to be viewed standalone or iframed.
 
+### Iframe auto-sizing
+- `SpecLayout` posts a `{ type: "spec-height", height }` message to `window.parent` on load and on resize, so a containing iframe can auto-size. This is built into the layout — **do not add height-posting code to individual spec pages**.
+
 ## Files to create/modify
 
 ### 1. Create the spec page
