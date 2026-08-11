@@ -17,6 +17,13 @@ const specs: SpecEntry[] = [
       "The hover popover on signal chips with inline thumbs up/down feedback and a written feedback form.",
     category: "Component states",
   },
+  {
+    slug: "sequence-customisation",
+    title: "Sequence customisation",
+    description:
+      "Scheduled starts, adjustable step timing, add/remove/reorder steps, and non-blocking manual tasks.",
+    category: "Interaction flows",
+  },
 ];
 
 const categories = [...new Set(specs.map((s) => s.category))];

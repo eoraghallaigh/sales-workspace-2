@@ -52,6 +52,7 @@ import { InlineFeedbackRow } from "@/components/InlineFeedbackRow";
 import { AiStarIcon } from "@/components/ui/ai-star-icon";
 import RegenerateSequenceModal from "@/components/RegenerateSequenceModal";
 import type { CallState, LinkedInState, EmailStatus, SequenceState } from "@/data/outreachStates";
+import { Calendar } from "@/components/ui/calendar";
 
 const POS_DOT = "bg-[var(--color-fill-accent-green-default)]";
 const MUTED_DOT = "bg-muted-foreground";
@@ -196,6 +197,92 @@ export const getDefaultCallBullets = (companyName: string): string[] => [
   "HubSpot Sales Hub consolidates data streams into one view",
   "Breeze AI automates prospecting so team stays focused on closing",
 ];
+
+type StartTiming = "same-day" | "1-day" | "3-days" | "custom";
+
+const getDefaultDelay = (kind: "call" | "linkedin" | "email"): number =>
+  kind === "email" ? 2 : 3;
+
+const computeStartDateLabel = (timing: StartTiming, customDate?: Date): string => {
+  if (timing === "same-day") return "";
+  const now = new Date();
+  let target: Date;
+  if (timing === "1-day") {
+    target = new Date(now);
+    target.setDate(target.getDate() + 1);
+  } else if (timing === "3-days") {
+    target = new Date(now);
+    target.setDate(target.getDate() + 3);
+  } else if (customDate) {
+    target = customDate;
+  } else {
+    return "";
+  }
+  return target.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+};
+
+const StepTimingRow = ({
+  touchKind,
+  delayDays,
+  editable,
+  onChange,
+}: {
+  touchKind: "call" | "linkedin" | "email";
+  delayDays: number;
+  editable: boolean;
+  onChange: (days: number) => void;
+}) => {
+  const isManual = touchKind === "call" || touchKind === "linkedin";
+  const verb = touchKind === "email" ? "Email will be sent" : "Task will be created";
+
+  return (
+    <p className="detail-200 text-muted-foreground py-1.5">
+      {verb}{" "}
+      {editable ? (
+        <span className="inline-flex items-center align-middle border border-[var(--color-border-core-default)] rounded-[var(--borderRadius-100)] mx-0.5 h-[26px]">
+          <input
+            type="number"
+            value={delayDays}
+            onChange={(e) => {
+              e.stopPropagation();
+              onChange(Math.max(1, parseInt(e.target.value) || 1));
+            }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-7 text-center bg-transparent py-0.5 text-foreground detail-200 font-medium [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:outline-none"
+            min={1}
+          />
+          <span className="flex flex-col border-l border-[var(--color-border-core-default)] self-stretch">
+            <button
+              type="button"
+              className="flex-1 px-1 flex items-center justify-center hover:bg-[var(--color-fill-surface-recessed)] transition-colors rounded-tr-[var(--borderRadius-100)]"
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange(delayDays + 1);
+              }}
+            >
+              <ChevronDown size={10} className="rotate-180" />
+            </button>
+            <span className="block h-px bg-[var(--color-border-core-default)]" />
+            <button
+              type="button"
+              className="flex-1 px-1 flex items-center justify-center hover:bg-[var(--color-fill-surface-recessed)] transition-colors rounded-br-[var(--borderRadius-100)]"
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange(Math.max(1, delayDays - 1));
+              }}
+            >
+              <ChevronDown size={10} />
+            </button>
+          </span>
+        </span>
+      ) : (
+        <span className="font-medium">{delayDays}</span>
+      )}{" "}
+      days after previous step.
+      {isManual && " This task will not block subsequent steps."}
+    </p>
+  );
+};
 
 type ScriptMode = "script" | "bullets";
 
@@ -784,6 +871,175 @@ const EditableBullets = ({
   );
 };
 
+const CallTaskEditor = ({
+  initialTitle,
+  initialNotes,
+  onSave,
+  onDiscard,
+  onDelete,
+}: {
+  initialTitle: string;
+  initialNotes: string;
+  onSave: (title: string, notes: string) => void;
+  onDiscard: () => void;
+  onDelete?: () => void;
+}) => {
+  const [title, setTitle] = useState(initialTitle);
+  const [notes, setNotes] = useState(initialNotes);
+  const [isBulleted, setIsBulleted] = useState(() =>
+    initialNotes.split("\n").some((l) => l.startsWith("• ")),
+  );
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+
+  const dirty = title !== initialTitle || notes !== initialNotes;
+
+  const toggleBullets = (on: boolean) => {
+    if (on) {
+      const lines = notes.split("\n").filter((l) => l.trim());
+      setNotes(lines.map((l) => (l.startsWith("• ") ? l : `• ${l}`)).join("\n"));
+    } else {
+      setNotes(
+        notes
+          .split("\n")
+          .map((l) => l.replace(/^• /, ""))
+          .join("\n"),
+      );
+    }
+    setIsBulleted(on);
+  };
+
+  const wrapSelection = (before: string, after = before) => {
+    const ta = bodyRef.current;
+    if (!ta) return;
+    const start = ta.selectionStart ?? notes.length;
+    const end = ta.selectionEnd ?? notes.length;
+    const next =
+      notes.slice(0, start) + before + notes.slice(start, end) + after + notes.slice(end);
+    setNotes(next);
+    requestAnimationFrame(() => {
+      ta.focus();
+      ta.setSelectionRange(start + before.length, end + before.length);
+    });
+  };
+
+  return (
+    <div className="flex flex-col gap-8 pt-0 pb-4" onClick={(e) => e.stopPropagation()}>
+      <div className="flex flex-col gap-1">
+        <label className="heading-50 text-foreground">Task title</label>
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="heading-50 text-foreground">Task notes</label>
+        <Textarea
+          ref={bodyRef}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          className="min-h-[120px] leading-relaxed"
+          autoFocus
+        />
+        <div className="flex items-center justify-between gap-2 mt-1">
+          <div className="flex items-center">
+            <button
+              type="button"
+              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+              onClick={() => wrapSelection("**")}
+              aria-label="Bold"
+            >
+              <Bold size={14} />
+            </button>
+            <button
+              type="button"
+              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+              onClick={() => wrapSelection("*")}
+              aria-label="Italic"
+            >
+              <Italic size={14} />
+            </button>
+            <button
+              type="button"
+              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+              onClick={() => wrapSelection("__")}
+              aria-label="Underline"
+            >
+              <Underline size={14} />
+            </button>
+            <button
+              type="button"
+              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+              onClick={() => wrapSelection("[", "](url)")}
+              aria-label="Insert link"
+            >
+              <LinkIcon size={14} />
+            </button>
+          </div>
+          <div className="flex items-center gap-1">
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="extra-small"
+                className="mr-2 text-destructive hover:text-destructive"
+                onClick={onDelete}
+              >
+                Delete step
+              </Button>
+            )}
+            <Button variant="secondary" size="extra-small" className="mr-2" onClick={onDiscard}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="extra-small"
+              onClick={() => onSave(title, notes)}
+              disabled={!dirty}
+            >
+              Save
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const EditableCallTask = ({
+  script,
+  title,
+  onSave,
+  onTitleChange,
+  onDelete,
+}: {
+  script: string;
+  title: string;
+  onSave: (v: string) => void;
+  onTitleChange: (title: string) => void;
+  onDelete?: () => void;
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+
+  if (isEditing) {
+    return (
+      <CallTaskEditor
+        initialTitle={title}
+        initialNotes={script}
+        onSave={(newTitle, newNotes) => {
+          onTitleChange(newTitle);
+          onSave(newNotes);
+          setIsEditing(false);
+        }}
+        onDiscard={() => setIsEditing(false)}
+        onDelete={onDelete}
+      />
+    );
+  }
+
+  return (
+    <ClickToEditView onActivate={() => setIsEditing(true)}>
+      <p className="heading-50 text-foreground mb-2">{title}</p>
+      <p className="body-100 text-foreground leading-relaxed whitespace-pre-line">{script}</p>
+    </ClickToEditView>
+  );
+};
+
 type SortableRowProps = {
   touch: Touch;
   isFirst: boolean;
@@ -803,6 +1059,15 @@ type SortableRowProps = {
   onScriptModeChange: (mode: ScriptMode) => void;
   onReply?: () => void;
   onDelete?: () => void;
+  stepIndex: number;
+  delayDays: number;
+  onDelayChange: (days: number) => void;
+  touchTitle: string;
+  onTitleChange: (title: string) => void;
+  startTiming: StartTiming;
+  customStartDate?: Date;
+  onStartTimingSelect: (timing: StartTiming) => void;
+  onCustomDateSelect: (date: Date) => void;
 };
 
 const SortableRow = ({
@@ -824,6 +1089,15 @@ const SortableRow = ({
   onScriptModeChange,
   onReply,
   onDelete,
+  stepIndex,
+  delayDays,
+  onDelayChange,
+  touchTitle,
+  onTitleChange,
+  startTiming,
+  customStartDate: customStartDateProp,
+  onStartTimingSelect,
+  onCustomDateSelect,
 }: SortableRowProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: touch.id,
@@ -848,10 +1122,31 @@ const SortableRow = ({
   const editable = !isEnrolled;
   const completed = isTouchCompleted(touch);
 
+  const [stepScheduleOpen, setStepScheduleOpen] = useState(false);
+  const [stepShowCal, setStepShowCal] = useState(false);
+  const [delayPopoverOpen, setDelayPopoverOpen] = useState(false);
+
+  const stepStartLabel = (() => {
+    if (startTiming === "same-day") return "same day as";
+    if (startTiming === "1-day") return "1 day after";
+    if (startTiming === "3-days") return "3 days after";
+    if (startTiming === "custom" && customStartDateProp) {
+      return `on ${customStartDateProp.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+    }
+    return "same day as";
+  })();
+
   const headingInner = (
-    <div className="flex-1 min-w-0">
+    <div className="flex-1 min-w-0 -space-y-0.5">
       <div className="flex items-center gap-2">
-        <span className="heading-50 text-foreground">{touchLabel(touch)}</span>
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            <span className="shrink-0 cursor-default">
+              <TrellisIcon name={touchIcon(touch)} size={16} className="text-foreground" />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top">{touchLabel(touch)}</TooltipContent>
+        </Tooltip>
         {touch.kind === "email" && (
           <span
             className={`body-100 flex-1 min-w-0 truncate ${
@@ -863,16 +1158,139 @@ const SortableRow = ({
             {touch.subject}
           </span>
         )}
-        <ChevronDown
-          className={`ml-auto h-4 w-4 text-muted-foreground transition-transform ${
-            isExpanded ? "" : "-rotate-90"
-          }`}
-        />
+        {(touch.kind === "call" || touch.kind === "linkedin") && (
+          <span className="body-100 flex-1 min-w-0 truncate text-foreground">
+            {touchTitle}
+          </span>
+        )}
       </div>
       {(() => {
         const meta = renderTouchMeta(touch, isEnrolled);
         return meta ? <div className="mt-1">{meta}</div> : null;
       })()}
+      {!isEnrolled && stepIndex === 0 && (
+        <div className="mt-0">
+          <span className="detail-200 text-muted-foreground">
+            First step will execute{" "}
+            <Popover
+              open={stepScheduleOpen}
+              onOpenChange={(open) => {
+                setStepScheduleOpen(open);
+                if (!open) setStepShowCal(false);
+              }}
+            >
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="font-semibold text-foreground inline-flex items-center gap-0.5 hover:underline underline-offset-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {stepStartLabel}
+                  <ChevronDown size={10} />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                side="bottom"
+                align="start"
+                className="w-auto p-1"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {stepShowCal ? (
+                  <Calendar
+                    mode="single"
+                    selected={customStartDateProp}
+                    onSelect={(date) => {
+                      if (date) onCustomDateSelect(date);
+                      setStepScheduleOpen(false);
+                      setStepShowCal(false);
+                    }}
+                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                  />
+                ) : (
+                  <div className="flex flex-col gap-0.5">
+                    {(
+                      [
+                        { value: "same-day", label: "same day as" },
+                        { value: "1-day", label: "1 day after" },
+                        { value: "3-days", label: "3 days after" },
+                      ] as const
+                    ).map(({ value, label }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        className="flex items-center gap-2 rounded px-3 py-1.5 text-left detail-200 text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+                        onClick={() => {
+                          onStartTimingSelect(value);
+                          setStepScheduleOpen(false);
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 rounded px-3 py-1.5 text-left detail-200 text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+                      onClick={() => {
+                        onStartTimingSelect("custom");
+                        setStepShowCal(true);
+                      }}
+                    >
+                      Custom Date and Time
+                    </button>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
+            {startTiming !== "custom" || !customStartDateProp ? " enrollment" : ""}.
+            {(touch.kind === "call" || touch.kind === "linkedin") &&
+              " This task will not block subsequent steps."}
+          </span>
+        </div>
+      )}
+      {!isEnrolled && stepIndex > 0 && (
+        <div className="mt-0">
+          <span className="detail-200 text-muted-foreground">
+            {touch.kind === "email" ? "Email will be sent" : "Task will be created"}{" "}
+            <Popover open={delayPopoverOpen} onOpenChange={setDelayPopoverOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="font-semibold text-foreground inline-flex items-center gap-0.5 hover:underline underline-offset-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {delayDays} day{delayDays !== 1 ? "s" : ""} after
+                  <ChevronDown size={10} />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                side="bottom"
+                align="start"
+                className="w-auto p-1"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex flex-col gap-0.5">
+                  {[1, 2, 3, 5, 7, 14].map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      className={`flex items-center gap-2 rounded px-3 py-1.5 text-left detail-200 text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors ${d === delayDays ? "font-semibold" : ""}`}
+                      onClick={() => {
+                        onDelayChange(d);
+                        setDelayPopoverOpen(false);
+                      }}
+                    >
+                      {d} day{d !== 1 ? "s" : ""}
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>{" "}
+            previous step.
+            {(touch.kind === "call" || touch.kind === "linkedin") &&
+              " This task will not block subsequent steps."}
+          </span>
+        </div>
+      )}
     </div>
   );
 
@@ -881,7 +1299,7 @@ const SortableRow = ({
       <div ref={setNodeRef} style={style}>
         <Collapsible open={isExpanded} onOpenChange={onToggle}>
           <CollapsibleTrigger asChild>
-            <div className="flex items-center gap-2 cursor-pointer text-left -mx-2 px-2 pt-5 pb-5 rounded-[4px] hover:bg-[var(--color-fill-surface-recessed)] transition-colors">
+            <div className="flex items-center gap-4 cursor-pointer text-left -mx-2 px-2 pt-5 pb-5 rounded-[4px] hover:bg-[var(--color-fill-surface-recessed)] transition-colors">
               {draggable ? (
                 <button
                   type="button"
@@ -896,36 +1314,26 @@ const SortableRow = ({
               ) : (
                 <span className="w-[14px]" />
               )}
-              <TrellisIcon
-                name={touchIcon(touch)}
-                size={14}
-                className="text-muted-foreground mt-0.5"
-              />
               {headingInner}
+              <ChevronDown
+                className={`ml-auto h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
+                  isExpanded ? "" : "-rotate-90"
+                }`}
+              />
             </div>
           </CollapsibleTrigger>
           <CollapsibleContent
-            className={`pl-7 pt-2 ${touch.kind === "email" ? "pb-6" : "pb-1"}`}
+            className="pl-7 pt-2 pb-6"
           >
             {touch.kind === "call" &&
               (editable ? (
-                <>
-                  {scriptMode === "script" ? (
-                    <EditableText
-                      value={touch.script}
-                      label="Call script"
-                      onSave={(v) => onScriptChange?.(v)}
-                      onDelete={onDelete}
-                    />
-                  ) : (
-                    <EditableBullets
-                      bullets={callBullets}
-                      onSave={(next) => next.forEach((v, i) => onCallBulletChange(i, v))}
-                      onDelete={onDelete}
-                    />
-                  )}
-                  <ScriptModeToggle mode={scriptMode} onChange={onScriptModeChange} />
-                </>
+                <EditableCallTask
+                  script={touch.script}
+                  title={touchTitle}
+                  onSave={(v) => onScriptChange?.(v)}
+                  onTitleChange={onTitleChange}
+                  onDelete={onDelete}
+                />
               ) : (
                 <p className="body-100 text-muted-foreground leading-relaxed whitespace-pre-line">
                   {touch.script}
@@ -933,10 +1341,11 @@ const SortableRow = ({
               ))}
             {touch.kind === "linkedin" &&
               (editable ? (
-                <EditableText
-                  value={touch.message}
-                  label="Message"
+                <EditableCallTask
+                  script={touch.message}
+                  title={touchTitle}
                   onSave={(v) => onMessageChange?.(v)}
+                  onTitleChange={onTitleChange}
                   onDelete={onDelete}
                 />
               ) : (
@@ -1039,8 +1448,13 @@ const SortableRow = ({
       <div className="flex-1 min-w-0">
       <Collapsible open={isExpanded} onOpenChange={onToggle}>
         <CollapsibleTrigger asChild>
-          <div className="flex items-start gap-2 cursor-pointer text-left -mx-2 px-2 py-3 rounded-[4px] hover:bg-[var(--color-fill-surface-recessed)] transition-colors">
+          <div className="flex items-center gap-2 cursor-pointer text-left -mx-2 px-2 py-3 rounded-[4px] hover:bg-[var(--color-fill-surface-recessed)] transition-colors">
             {headingInner}
+            <ChevronDown
+              className={`ml-auto h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
+                isExpanded ? "" : "-rotate-90"
+              }`}
+            />
           </div>
         </CollapsibleTrigger>
         <CollapsibleContent
@@ -1172,6 +1586,8 @@ const InsertStepButton = ({ onInsert }: { onInsert: (kind: "call" | "linkedin" |
   );
 };
 
+const DELAY_OPTIONS = [1, 2, 3, 5, 7, 14];
+
 const InsertedStepRow = ({
   step,
   onSave,
@@ -1181,11 +1597,14 @@ const InsertedStepRow = ({
   onSave: (step: InsertedStep) => void;
   onDiscard: () => void;
 }) => {
+  const [title, setTitle] = useState("");
   const [subject, setSubject] = useState(step.subject);
   const [content, setContent] = useState(step.content);
+  const [delayDays, setDelayDays] = useState(step.kind === "email" ? 2 : 3);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const icon = step.kind === "call" ? "calling" : step.kind === "linkedin" ? "linkedin" : "email";
   const label = step.kind === "call" ? "Call task" : step.kind === "linkedin" ? "LinkedIn message task" : "Email";
+  const isTask = step.kind === "call" || step.kind === "linkedin";
 
   return (
     <div className="border-t border-[var(--color-border-core-subtle)] py-4 px-2 animate-fade-in">
@@ -1194,6 +1613,49 @@ const InsertedStepRow = ({
         <span className="heading-50 text-foreground">{label}</span>
       </div>
       <div className="flex flex-col gap-3 pl-6">
+        <div className="flex flex-col gap-1">
+          <p className="detail-200 text-muted-foreground">
+            {step.kind === "email" ? "Email will be sent" : "Task will be created"}{" "}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="font-semibold text-foreground inline-flex items-center gap-0.5 hover:underline underline-offset-2"
+                >
+                  {delayDays} day{delayDays !== 1 ? "s" : ""} after
+                  <ChevronDown size={10} />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent side="bottom" align="start" className="w-auto p-1">
+                <div className="flex flex-col gap-0.5">
+                  {DELAY_OPTIONS.map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      className={`flex items-center gap-2 rounded px-3 py-1.5 text-left detail-200 text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors ${d === delayDays ? "font-semibold" : ""}`}
+                      onClick={() => setDelayDays(d)}
+                    >
+                      {d} day{d !== 1 ? "s" : ""}
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>{" "}
+            previous step.
+            {isTask && " This task will not block subsequent steps."}
+          </p>
+        </div>
+        {isTask && (
+          <div className="flex flex-col gap-1 mt-3">
+            <label className="heading-50 text-foreground">Task title</label>
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter a title…"
+              autoFocus
+            />
+          </div>
+        )}
         {step.kind === "email" && (
           <div className="flex flex-col gap-1">
             <label className="heading-50 text-foreground">Subject</label>
@@ -1205,9 +1667,9 @@ const InsertedStepRow = ({
             />
           </div>
         )}
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 mt-3">
           <label className="heading-50 text-foreground">
-            {step.kind === "call" ? "Call script" : step.kind === "linkedin" ? "Message" : "Body"}
+            {isTask ? "Task notes" : "Body"}
           </label>
           <Textarea
             ref={bodyRef}
@@ -1215,27 +1677,87 @@ const InsertedStepRow = ({
             onChange={(e) => setContent(e.target.value)}
             placeholder={
               step.kind === "call"
-                ? "Write your call script…"
+                ? "Write your call notes…"
                 : step.kind === "linkedin"
-                  ? "Write your LinkedIn message…"
+                  ? "Write your message…"
                   : "Write your email body…"
             }
             className="min-h-[100px] leading-relaxed"
-            autoFocus={step.kind !== "email"}
+            autoFocus={step.kind === "email"}
           />
         </div>
-        <div className="flex items-center justify-end gap-1">
-          <Button variant="secondary" size="extra-small" className="mr-2" onClick={onDiscard}>
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            size="extra-small"
-            disabled={!content.trim()}
-            onClick={() => onSave({ ...step, content, subject })}
-          >
-            Save
-          </Button>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center">
+            <button
+              type="button"
+              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+              onClick={() => {
+                const ta = bodyRef.current;
+                if (!ta) return;
+                const s = ta.selectionStart ?? content.length;
+                const e = ta.selectionEnd ?? content.length;
+                setContent(content.slice(0, s) + "**" + content.slice(s, e) + "**" + content.slice(e));
+              }}
+              aria-label="Bold"
+            >
+              <Bold size={14} />
+            </button>
+            <button
+              type="button"
+              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+              onClick={() => {
+                const ta = bodyRef.current;
+                if (!ta) return;
+                const s = ta.selectionStart ?? content.length;
+                const e = ta.selectionEnd ?? content.length;
+                setContent(content.slice(0, s) + "*" + content.slice(s, e) + "*" + content.slice(e));
+              }}
+              aria-label="Italic"
+            >
+              <Italic size={14} />
+            </button>
+            <button
+              type="button"
+              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+              onClick={() => {
+                const ta = bodyRef.current;
+                if (!ta) return;
+                const s = ta.selectionStart ?? content.length;
+                const e = ta.selectionEnd ?? content.length;
+                setContent(content.slice(0, s) + "__" + content.slice(s, e) + "__" + content.slice(e));
+              }}
+              aria-label="Underline"
+            >
+              <Underline size={14} />
+            </button>
+            <button
+              type="button"
+              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+              onClick={() => {
+                const ta = bodyRef.current;
+                if (!ta) return;
+                const s = ta.selectionStart ?? content.length;
+                const e = ta.selectionEnd ?? content.length;
+                setContent(content.slice(0, s) + "[" + content.slice(s, e) + "](url)" + content.slice(e));
+              }}
+              aria-label="Insert link"
+            >
+              <LinkIcon size={14} />
+            </button>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button variant="secondary" size="extra-small" className="mr-2" onClick={onDiscard}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="extra-small"
+              disabled={isTask ? !title.trim() : !content.trim()}
+              onClick={() => onSave({ ...step, content, subject })}
+            >
+              Save
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -1334,6 +1856,36 @@ export const OutreachSequenceCard = ({
   const [pendingInsert, setPendingInsert] = useState<{ afterId: string; step: InsertedStep } | null>(null);
   const [customTouches, setCustomTouches] = useState<Map<string, Touch>>(new Map());
   const [customExpanded, setCustomExpanded] = useState<Set<string>>(new Set());
+  const [startTiming, setStartTiming] = useState<StartTiming>("same-day");
+  const [customStartDate, setCustomStartDate] = useState<Date | undefined>();
+  const [isScheduleOpen, setIsScheduleOpen] = useState(false);
+  const [showCalendarPicker, setShowCalendarPicker] = useState(false);
+  const [stepDelays, setStepDelays] = useState<Record<string, number>>({});
+  const [touchTitles, setTouchTitles] = useState<Record<string, string>>({});
+
+  const getTouchTitle = useCallback(
+    (touchId: string, kind: "call" | "linkedin" | "email"): string => {
+      if (touchTitles[touchId]) return touchTitles[touchId];
+      if (kind === "call") return "Follow up call";
+      if (kind === "linkedin") return "Connection request";
+      return "";
+    },
+    [touchTitles],
+  );
+
+  const setTouchTitle = useCallback((touchId: string, title: string) => {
+    setTouchTitles((prev) => ({ ...prev, [touchId]: title }));
+  }, []);
+
+  const getDelayForTouch = useCallback(
+    (touchId: string, kind: "call" | "linkedin" | "email"): number =>
+      stepDelays[touchId] ?? getDefaultDelay(kind),
+    [stepDelays],
+  );
+
+  const setDelayForTouch = useCallback((touchId: string, days: number) => {
+    setStepDelays((prev) => ({ ...prev, [touchId]: days }));
+  }, []);
 
   const handleInsertStep = useCallback((afterId: string, kind: "call" | "linkedin" | "email") => {
     const id = `${contact.id}-insert-${++insertCounter}`;
@@ -1446,6 +1998,16 @@ export const OutreachSequenceCard = ({
     });
   };
 
+  const startTimingLabel = (() => {
+    if (startTiming === "same-day") return "same day as";
+    if (startTiming === "1-day") return "1 day after";
+    if (startTiming === "3-days") return "3 days after";
+    if (startTiming === "custom" && customStartDate) {
+      return `on ${customStartDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+    }
+    return "same day as";
+  })();
+
   return (
     <div className="bg-[var(--color-fill-surface-raised)]">
       {playProvenanceLabel && (
@@ -1548,7 +2110,30 @@ export const OutreachSequenceCard = ({
                             : undefined
                         }
                         onDelete={() => handleDeleteStep(t.id)}
+                        stepIndex={idx}
+                        delayDays={getDelayForTouch(t.id, t.kind)}
+                        onDelayChange={(days) => setDelayForTouch(t.id, days)}
+                        touchTitle={getTouchTitle(t.id, t.kind)}
+                        onTitleChange={(title) => setTouchTitle(t.id, title)}
+                        startTiming={startTiming}
+                        customStartDate={customStartDate}
+                        onStartTimingSelect={setStartTiming}
+                        onCustomDateSelect={setCustomStartDate}
                       />
+                      {idx === 0 && isEnrolled && startTiming !== "same-day" && computeStartDateLabel(startTiming, customStartDate) !== "" && (
+                        <div className="relative flex gap-3">
+                          <span className="w-[14px] shrink-0" />
+                          <div className="relative w-7 shrink-0">
+                            <span
+                              aria-hidden
+                              className="absolute left-1/2 -translate-x-1/2 w-px bg-[var(--color-border-core-subtle)] top-0 bottom-0"
+                            />
+                          </div>
+                          <p className="detail-200 text-muted-foreground py-1">
+                            Sequence starts on {computeStartDateLabel(startTiming, customStartDate)}
+                          </p>
+                        </div>
+                      )}
                       {hasPending && (
                         <InsertedStepRow
                           step={pendingInsert!.step}
