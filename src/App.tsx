@@ -29,6 +29,7 @@ import Plays from "./pages/Plays";
 import PlayBuilder from "./pages/PlayBuilder";
 import SpecsIndex from "./pages/specs/SpecsIndex";
 import FeedbackPopoverSpec from "./pages/specs/feedback-popover";
+import SequenceCustomisationSpec from "./pages/specs/sequence-customisation";
 import DesignMode from "./sandbox/DesignMode";
 import Inspector from "./inspector/Inspector";
 
@@ -69,6 +70,7 @@ const App = () => (
             <Route path="/outreach-states" element={<OutreachStates />} />
             <Route path="/specs" element={<SpecsIndex />} />
             <Route path="/specs/feedback-popover" element={<FeedbackPopoverSpec />} />
+            <Route path="/specs/sequence-customisation" element={<SequenceCustomisationSpec />} />
           </Routes>
           <GuidedTour />
           {import.meta.env.DEV && <DesignMode />}
