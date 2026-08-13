@@ -65,7 +65,7 @@ const RepSelector = () => {
 };
 
 interface WorkspaceHeaderProps {
-  activeTab?: "summary" | "prospecting" | "feed" | "deals" | "tasks" | "schedule" | "agents" | "performance";
+  activeTab?: "summary" | "prospecting" | "deals" | "tasks" | "agents" | "performance";
   hideTabs?: boolean;
   hideTitle?: boolean;
   subtitle?: ReactNode;
@@ -97,9 +97,9 @@ const WorkspaceHeader = ({
   const tabs = [
     { id: "summary", label: "Summary", path: cyclePath("/summary") },
     { id: "prospecting", label: "Prospecting", path: cyclePath("/prospecting") },
-    { id: "feed", label: "Feed", path: "#" },
+    { id: "deals", label: "Deals", path: cyclePath("/deals") },
     { id: "tasks", label: "Tasks", path: "#" },
-    { id: "schedule", label: "Schedule", path: "#" },
+    { id: "agents", label: "Agents", path: cyclePath("/agents") },
     { id: "performance", label: "Performance", path: cyclePath("/dashboard") },
   ];
 

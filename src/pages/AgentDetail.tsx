@@ -1,185 +1,192 @@
 import { Layout } from "@/components/Layout";
+import WorkspaceHeader from "@/components/WorkspaceHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ChevronDown, RotateCcw, RotateCw } from "lucide-react";
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import { useCyclePath } from "@/hooks/useCyclePath";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
+import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
+import { SignalChipRow } from "@/components/SignalChip";
+import { sig } from "@/data/signals";
 
-const powerHourContacts = [
-  { id: 1, name: "Olivia Carmichael" },
-  { id: 2, name: "Amelia Shepherd" },
-  { id: 3, name: "Marcus Chen" },
+const PREVIEW_COMPANIES = [
+  { name: "ACME Corp", industry: "Software & Technology", signals: [
+    sig("funding-round", { headline: "Raised $28M Series B", rows: [{ label: "Round", value: "Series B" }, { label: "Amount", value: "$28M" }], footnote: "Source: Crunchbase" }),
+    sig("hiring-surge", { headline: "24 open roles, up 45% this quarter", rows: [{ label: "Open roles", value: "24" }, { label: "Concentrated in", value: "Sales" }], footnote: "Source: job listings" }),
+  ]},
+  { name: "TechVision Inc", industry: "Data Analytics", signals: [
+    sig("new-hire", { headline: "Marcus Bell joined as CRO", rows: [{ label: "Role", value: "Chief Revenue Officer" }], footnote: "Source: LinkedIn" }),
+    sig("tech-stack-change", { headline: "Adopted Snowflake", rows: [{ label: "Added", value: "Snowflake" }], footnote: "Source: BuiltWith" }),
+  ]},
+  { name: "DataStream Analytics", industry: "Data Analytics", signals: [
+    sig("hiring-surge", { headline: "18 open roles, up 32%", rows: [{ label: "Open roles", value: "18" }], footnote: "Source: job listings" }),
+  ]},
+  { name: "CloudScale Systems", industry: "Cloud Infrastructure", signals: [
+    sig("funding-round", { headline: "Raised $65M Series C", rows: [{ label: "Round", value: "Series C" }, { label: "Amount", value: "$65M" }], footnote: "Source: Crunchbase" }),
+  ]},
+  { name: "Summit Financial", industry: "Financial Services", signals: [
+    sig("former-customer", { headline: "Previously a Sales Hub customer", rows: [{ label: "Product", value: "Sales Hub" }], footnote: "Source: CRM history" }),
+  ]},
 ];
 
+const AGENT_CONFIG: Record<string, { title: string; description: string; placeholder: string }> = {
+  research: {
+    title: "Company research agent",
+    description: "Define your research priorities and output structure.",
+    placeholder: "e.g. Focus on recent funding rounds, leadership changes, and technology stack. Format the output as bullet points grouped by category.",
+  },
+  sequencing: {
+    title: "Sequencing agent",
+    description: "Define your outreach style and sequence preferences.",
+    placeholder: "e.g. Keep emails under 100 words. Use a casual but professional tone. Reference the prospect's recent LinkedIn activity when possible.",
+  },
+};
+
 const AgentDetail = () => {
-  const [activeTab, setActiveTab] = useState<"activity" | "configuration">("activity");
+  const { agentId } = useParams<{ agentId: string }>();
   const { cyclePath } = useCyclePath();
+  const config = AGENT_CONFIG[agentId || ""] || AGENT_CONFIG.research;
+
+  const [instructions, setInstructions] = useState("");
+  const [selectedCompany, setSelectedCompany] = useState(PREVIEW_COMPANIES[0]);
+  const [companyOpen, setCompanyOpen] = useState(false);
 
   return (
     <Layout>
       <div className="flex flex-col h-[var(--page-content-height)] overflow-hidden">
-        {/* Header area */}
-        <div className="bg-card border-b border-core-subtle px-8 pt-6 pb-0">
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-1.5 body-100 text-muted-foreground mb-2">
-            <Link to={cyclePath("/agents")} className="hover:text-foreground text-primary">Agents</Link>
-            <ChevronRight size={14} />
-            <span>Cold call preparation</span>
-          </div>
-          <h1 className="heading-300 mb-6">Cold call preparation</h1>
+        <WorkspaceHeader
+          backLink={{ to: cyclePath("/agents"), label: "Agents" }}
+          title={config.title}
+          hideTabs
+        />
 
-          {/* Activity / Configuration tabs */}
-          <div className="border-b border-core-subtle">
-            <nav className="flex space-x-8">
-              {(["activity", "configuration"] as const).map((tab) => (
+        <div
+          className="flex-1 overflow-y-auto"
+          style={{
+            backgroundColor: "var(--color-fill-surface-recessed)",
+            padding: "48px",
+          }}
+        >
+          <div className="flex gap-16 items-start max-w-[1200px]">
+            {/* Left: Configure */}
+            <div className="flex-1 min-w-0">
+              <h2 className="heading-300 mb-1">Configure the agent</h2>
+              <p
+                className="body-100 mb-5"
+                style={{ color: "var(--color-text-core-subtle)" }}
+              >
+                {config.description}
+              </p>
+
+              <textarea
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+                placeholder={config.placeholder}
+                className="w-full min-h-[240px] rounded-[var(--radius-card)] border border-[var(--color-border-core-subtle)] bg-[var(--color-fill-secondary-default)] p-4 body-100 resize-y focus:outline-none focus:border-[var(--color-border-interactive-pressed)]"
+                style={{ color: "var(--color-text-core-default)" }}
+              />
+
+              <div className="flex items-center gap-1 mt-2">
                 <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`pb-4 px-1 border-b-2 transition-colors capitalize body-100 ${
-                    activeTab === tab
-                      ? "border-primary text-foreground !font-bold"
-                      : "border-transparent text-muted-foreground hover:text-foreground hover:border-core-subtle"
-                  }`}
+                  className="p-1 rounded hover:bg-[var(--color-fill-surface-default-hover)]"
+                  style={{ color: "var(--color-icon-core-subtle)" }}
                 >
-                  {tab === "activity" ? "Activity" : "Configuration"}
+                  <RotateCcw size={14} />
                 </button>
-              ))}
-            </nav>
-          </div>
-        </div>
+                <button
+                  className="p-1 rounded hover:bg-[var(--color-fill-surface-default-hover)]"
+                  style={{ color: "var(--color-icon-core-subtle)" }}
+                >
+                  <RotateCw size={14} />
+                </button>
+              </div>
+            </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto bg-muted/30">
-          {activeTab === "activity" ? (
-            <div className="p-8">
-              {/* Metric cards row */}
-              <div className="grid grid-cols-4 gap-4 mb-8">
-                {/* Chart card 1 - area chart placeholder */}
-                <Card className="p-4 border-core-subtle">
-                  <div className="h-2.5 w-3/5 rounded bg-muted mb-3" />
-                  <div className="h-24 rounded bg-gradient-to-br from-[hsl(var(--primary)/0.2)] via-[hsl(var(--primary)/0.1)] to-[hsl(var(--accent)/0.15)]" />
-                </Card>
-
-                {/* Chart card 2 - line chart placeholder */}
-                <Card className="p-4 border-core-subtle">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="h-2.5 w-2/5 rounded bg-muted" />
-                    <span className="text-xs font-medium" style={{ color: 'var(--color-text-positive-default)' }}>▲ 0.71%</span>
-                  </div>
-                  <div className="h-24 rounded bg-gradient-to-t from-[hsl(var(--primary)/0.08)] to-transparent relative overflow-hidden">
-                    <svg viewBox="0 0 200 80" className="w-full h-full" preserveAspectRatio="none">
-                      <path d="M0,60 Q30,55 50,50 T100,40 T150,35 T200,30" fill="none" stroke="hsl(var(--primary))" strokeWidth="2" opacity="0.5"/>
-                      <path d="M0,60 Q30,55 50,50 T100,40 T150,35 T200,30 L200,80 L0,80 Z" fill="hsl(var(--primary))" opacity="0.08"/>
-                    </svg>
-                  </div>
-                </Card>
-
-                {/* Big number card 1 */}
-                <Card className="p-4 border-core-subtle flex flex-col">
-                  <div className="h-2.5 w-3/5 rounded bg-muted mb-3" />
-                  <div className="flex-1 flex items-center justify-center">
-                    <span className="text-5xl font-light text-foreground">156</span>
-                  </div>
-                </Card>
-
-                {/* Big number card 2 */}
-                <Card className="p-4 border-core-subtle flex flex-col">
-                  <div className="h-2.5 w-2/5 rounded bg-muted mb-3" />
-                  <div className="flex-1 flex items-center justify-center">
-                    <span className="text-5xl font-light text-foreground">23</span>
-                  </div>
-                </Card>
+            {/* Right: Preview */}
+            <div className="flex-1 min-w-0">
+              <div className="mb-5">
+                <h2 className="heading-300">Preview your changes</h2>
+                <p
+                  className="body-100 mt-1"
+                  style={{ color: "var(--color-text-core-subtle)" }}
+                >
+                  This is just a test run, it won't add anything to the company record.
+                </p>
               </div>
 
-              {/* Two-column content */}
-              <div className="grid grid-cols-[1fr_1fr] gap-8">
-                {/* Left: New power hour created */}
-                <div>
-                  <div className="flex items-center gap-4 mb-1">
-                    <h2 className="heading-200">New power hour created</h2>
-                    <button className="body-100 text-primary font-medium">+ Generate a new list</button>
-                    <Button size="sm" className="body-100">Start Power Hour</Button>
-                  </div>
-                  <p className="body-100 text-muted-foreground mb-4">
-                    These are the best 30 contacts you can call right now
-                  </p>
-
-                  <div className="flex flex-col gap-4">
-                    {powerHourContacts.map((contact) => (
-                      <ContactActivityCard key={contact.id} name={contact.name} />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Right: New talking points added */}
-                <div>
-                  <h2 className="heading-200 mb-1">New talking points added</h2>
-                  <p className="body-100 text-muted-foreground mb-4">
-                    The agent has added talking points to these contacts in the last week.
-                  </p>
-
-                  {/* Talking points skeleton card */}
-                  <Card className="p-5 border-core-subtle">
-                    <div className="flex flex-col gap-2.5">
-                      {[...Array(5)].map((_, i) => (
-                        <div key={i} className="flex gap-3">
-                          {[...Array(4)].map((_, j) => (
-                            <div key={j} className="h-2.5 rounded bg-muted" style={{ width: `${20 + Math.random() * 30}%` }} />
-                          ))}
-                        </div>
-                      ))}
+              <Card className="p-5 border-[var(--color-border-core-subtle)] mb-5">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={companyLogoPlaceholder}
+                      alt={`${selectedCompany.name} logo`}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                    <div>
+                      <div className="heading-100">{selectedCompany.name}</div>
+                      <div
+                        className="body-100"
+                        style={{ color: "var(--color-text-core-subtle)" }}
+                      >
+                        {selectedCompany.industry}
+                      </div>
                     </div>
-                    <button className="flex items-center gap-1 mx-auto mt-4 body-100 text-muted-foreground hover:text-foreground">
-                      See more <ChevronDown size={14} />
-                    </button>
-                  </Card>
+                  </div>
+                  <Popover open={companyOpen} onOpenChange={setCompanyOpen}>
+                    <PopoverTrigger asChild>
+                      <button className="inline-flex items-center gap-1.5 body-100 font-medium shrink-0">
+                        Change company
+                        <ChevronDown size={14} />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-64 p-0">
+                      <Command>
+                        <CommandInput placeholder="Search companies..." />
+                        <CommandList>
+                          <CommandEmpty>No companies found.</CommandEmpty>
+                          <CommandGroup>
+                            {PREVIEW_COMPANIES.map((co) => (
+                              <CommandItem
+                                key={co.name}
+                                value={co.name}
+                                onSelect={() => {
+                                  setSelectedCompany(co);
+                                  setCompanyOpen(false);
+                                }}
+                                className="cursor-pointer body-100"
+                              >
+                                <div>
+                                  <div className="font-medium">{co.name}</div>
+                                  <div
+                                    className="text-xs"
+                                    style={{ color: "var(--color-text-core-subtle)" }}
+                                  >
+                                    {co.industry}
+                                  </div>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
-              </div>
+
+                <SignalChipRow signals={selectedCompany.signals} />
+              </Card>
+
+              <Button variant="ai" size="medium">
+                Preview
+              </Button>
             </div>
-          ) : (
-            <div className="p-8">
-              <p className="body-100 text-muted-foreground">Configuration settings will appear here.</p>
-            </div>
-          )}
+          </div>
         </div>
       </div>
     </Layout>
-  );
-};
-
-const ContactActivityCard = ({ name }: { name: string }) => {
-  return (
-    <Card className="p-5 border-core-subtle">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-muted" />
-          <span className="body-100 font-semibold text-foreground">{name}</span>
-        </div>
-        <Button variant="outline" size="sm" className="body-100 gap-1">
-          Actions <ChevronDown size={14} />
-        </Button>
-      </div>
-
-      {/* Skeleton content lines */}
-      <div className="flex flex-col gap-2.5 mb-2">
-        <div className="flex gap-3">
-          {[65, 45, 55, 40].map((w, i) => (
-            <div key={i} className="h-2.5 rounded bg-muted" style={{ width: `${w}%` }} />
-          ))}
-        </div>
-        <div className="flex gap-3">
-          {[50, 60, 35, 55].map((w, i) => (
-            <div key={i} className="h-2.5 rounded bg-muted" style={{ width: `${w}%` }} />
-          ))}
-        </div>
-        <div className="h-2.5 w-full rounded bg-muted" />
-      </div>
-
-      <button className="flex items-center gap-1 mx-auto mt-3 body-100 text-muted-foreground hover:text-foreground">
-        See more <ChevronDown size={14} />
-      </button>
-    </Card>
   );
 };
 
