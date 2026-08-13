@@ -1,0 +1,15 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Icon" clip-path="url(#clip0_0_6)">
+<g id="Transitional" clip-path="url(#clip1_0_6)">
+<path id="Vector" fill-rule="evenodd" clip-rule="evenodd" d="M16.2857 0.285714C25.1086 0.285714 32.2857 7.46286 32.2857 16.2857C32.2857 25.1086 25.1086 32.2857 16.2857 32.2857C7.46286 32.2857 0.285714 25.1086 0.285714 16.2857C0.285714 7.46286 7.46286 0.285714 16.2857 0.285714ZM16.2857 2.57143C8.72 2.57143 2.57143 8.72 2.57143 16.2857C2.57143 23.8514 8.72 30 16.2857 30C23.8514 30 30 23.8514 30 16.2857C30 8.72 23.8514 2.57143 16.2857 2.57143Z" fill="#141414"/>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_0_6">
+<rect width="32" height="32" fill="white"/>
+</clipPath>
+<clipPath id="clip1_0_6">
+<rect width="32" height="32" fill="white"/>
+</clipPath>
+</defs>
+</svg>

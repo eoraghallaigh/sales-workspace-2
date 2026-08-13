@@ -1,0 +1,15 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Icon" clip-path="url(#clip0_0_6)">
+<g id="Transitional" clip-path="url(#clip1_0_6)">
+<path id="Vector" d="M28.92 2.29L20.41 0.02C20.28 -0.01 20.14 -0.01 20.01 0.03L2.46 6.07C2.18 6.16 2 6.43 2 6.72V24.87C2 25.12 2.2 25.37 2.46 25.47L20.01 31.5C20.08 31.52 20.16 31.54 20.23 31.54C20.29 31.54 20.35 31.54 20.41 31.52L28.92 29.26C29.22 29.18 29.43 28.91 29.43 28.6V2.95C29.43 2.64 29.22 2.37 28.92 2.29ZM19.14 6.05V26.3L4.16 24.32L9.09 22.51C9.36 22.41 9.54 22.15 9.54 21.87V8.03L19.14 6.05Z" fill="#141414"/>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_0_6">
+<rect width="32" height="32" fill="white"/>
+</clipPath>
+<clipPath id="clip1_0_6">
+<rect width="32" height="32" fill="white"/>
+</clipPath>
+</defs>
+</svg>
