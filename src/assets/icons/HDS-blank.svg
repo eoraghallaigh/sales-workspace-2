@@ -1,0 +1,17 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="32" height="32" fill="#E5E5E5"/>
+<g id="Icons">
+<g id="Canvas">
+<path d="M-240 -574C-240 -582.837 -232.837 -590 -224 -590H2720C2728.84 -590 2736 -582.837 2736 -574V1076C2736 1084.84 2728.84 1092 2720 1092H-224C-232.837 1092 -240 1084.84 -240 1076V-574Z" fill="#F0F0F0"/>
+<g id="Content">
+<g id="HDS-blank">
+<path d="M-144 -128C-144 -136.837 -136.837 -144 -128 -144H160C168.837 -144 176 -136.837 176 -128V160C176 168.837 168.837 176 160 176H-128C-136.837 176 -144 168.837 -144 160V-128Z" fill="white"/>
+<g id="HDS-blank_2">
+<rect x="0.125" y="0.125" width="31.75" height="31.75" fill="white" fill-opacity="0.01"/>
+<rect x="0.125" y="0.125" width="31.75" height="31.75" stroke="#141414" stroke-width="0.25"/>
+</g>
+</g>
+</g>
+</g>
+</g>
+</svg>
