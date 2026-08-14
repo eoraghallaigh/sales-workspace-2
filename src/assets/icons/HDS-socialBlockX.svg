@@ -1,0 +1,32 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="32" height="32" fill="#E5E5E5"/>
+<g id="Icons">
+<g id="Canvas">
+<path d="M-592 -926C-592 -934.837 -584.837 -942 -576 -942H2368C2376.84 -942 2384 -934.837 2384 -926V724C2384 732.837 2376.84 740 2368 740H-576C-584.837 740 -592 732.837 -592 724V-926Z" fill="#F0F0F0"/>
+<g id="Content">
+<g id="HDS-socialBlockX">
+<path d="M-144 -128C-144 -136.837 -136.837 -144 -128 -144H160C168.837 -144 176 -136.837 176 -128V160C176 168.837 168.837 176 160 176H-128C-136.837 176 -144 168.837 -144 160V-128Z" fill="white"/>
+<g id="HDS-socialBlockX_2" clip-path="url(#clip0_0_1)">
+<rect width="32" height="32" fill="white" fill-opacity="0.01"/>
+<mask id="mask0_0_1" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32">
+<g id="Icon" clip-path="url(#clip1_0_1)">
+<path id="Canvas_2" d="M17.4667 15.6062L24.5212 25.6872H21.4788L15.7818 17.5449L14.897 16.2726L7.50303 5.69481H10.5455L16.5818 14.334L17.4667 15.6062ZM32 26.0023C31.9636 29.298 29.297 31.9637 26 32H5.98788C2.69091 31.9637 0.0363636 29.298 0 26.0023V5.99773C0.0363636 2.70201 2.69091 0.0363499 5.98788 0H25.9879C29.2848 0.0363499 31.9515 2.70201 31.9879 5.99773V26.0023H32ZM18.4606 14.4551L27.2121 4.28928H25.2364L17.5879 13.1829L11.4788 4.28928H4.8L13.8788 17.4964L5.53939 27.1897H7.51515L14.7636 18.7686L20.5455 27.1897H27.2242L18.4727 14.4551H18.4606Z" fill="#141414"/>
+</g>
+</mask>
+<g mask="url(#mask0_0_1)">
+<path id="Color" d="M0 -6.10352e-05H32V31.9999H0V-6.10352e-05Z" fill="#141414"/>
+</g>
+</g>
+</g>
+</g>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_0_1">
+<rect width="32" height="32" fill="white"/>
+</clipPath>
+<clipPath id="clip1_0_1">
+<rect width="32" height="32" fill="white"/>
+</clipPath>
+</defs>
+</svg>

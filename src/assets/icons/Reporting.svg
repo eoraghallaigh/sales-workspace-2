@@ -1,0 +1,19 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Icon" clip-path="url(#clip0_0_6)">
+<g id="Transitional" clip-path="url(#clip1_0_6)">
+<g id="Vector">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M7.86035 16.4297C8.49013 16.43 9 16.9405 9 17.5703V27.8604C8.99984 28.4901 8.49003 28.9997 7.86035 29H1C0.370099 29 -0.139488 28.4902 -0.139648 27.8604V17.5703C-0.139648 16.9403 0.37 16.4297 1 16.4297H7.86035ZM2.13965 26.7197H6.70996V18.7197H2.13965V26.7197Z" fill="#141414"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M19.29 10.7197C19.92 10.7197 20.4297 11.2304 20.4297 11.8604V27.8604C20.4295 28.4902 19.9199 29 19.29 29H12.4297C11.8 28.9998 11.2902 28.4901 11.29 27.8604V11.8604C11.29 11.2305 11.7998 10.7199 12.4297 10.7197H19.29ZM13.5703 26.7197H18.1396V13.0098H13.5703V26.7197Z" fill="#141414"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M30.71 3.86035C31.34 3.86035 31.8496 4.37 31.8496 5V27.8604C31.8494 28.4902 31.3398 29 30.71 29H23.8496C23.2199 28.9998 22.7102 28.4901 22.71 27.8604V5C22.71 4.37012 23.2198 3.86054 23.8496 3.86035H30.71ZM25 26.71H29.5703V6.13965H25V26.71Z" fill="#141414"/>
+</g>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_0_6">
+<rect width="32" height="32" fill="white"/>
+</clipPath>
+<clipPath id="clip1_0_6">
+<rect width="32" height="32" fill="white"/>
+</clipPath>
+</defs>
+</svg>
