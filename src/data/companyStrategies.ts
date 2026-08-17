@@ -20,10 +20,17 @@ export interface StrategySection {
   body: string;
 }
 
+export interface ResearchTableRow {
+  category: string;
+  content: string;
+}
+
 export interface CompanyStrategyVariant {
   summary: string;
   summaryBullets: string[];
   sections: StrategySection[];
+  researchTable?: ResearchTableRow[];
+  researchConflicts?: string;
   // When true, the strategy page prints the full `sections` inline instead of the
   // TL;DR bullets + "Read full research" link. Used to contrast the condensed vs.
   // full-research treatments side by side in the prototype.
@@ -170,6 +177,65 @@ export const companyStrategies: Record<string, CompanyStrategy> = {
           body: `- Heavy Salesforce-shop DNA in leadership: Hartwell, three of the four SVPs, and most of the new enterprise AEs all came from Salesforce. Worth knowing for displacement framing.\n- No confirmed marketing automation stack. They publish a blog and host two annual events, but the platform behind them isn't identifiable from public sources.\n- The Empowering Systems integration is mid-stream. Glassdoor reviews from former ES employees flag "data model mismatch" and "two-instance reality" as ongoing friction points — likely a live pain.\n- No CMO listed. The marketing function rolls up to a Director of Demand Gen, which suggests there's still room for a senior marketing voice.`,
         },
       ],
+      researchTable: [
+        {
+          category: "Company Overview",
+          content: "**12-year-old, privately held B2B SaaS** company headquartered in **San Francisco, CA**\nBuilds **cloud CRM and sales data management** for the multi-line selling ecosystem — manufacturers' reps, manufacturers, and distributors\nConsolidates **CRM, commission tracking, and quoting** in one platform\nTargets outside sales teams that historically ran on **spreadsheets and email**\n**500–1,000 employees**, **~$75M annual revenue** (CRM); **782 employees** on LinkedIn",
+        },
+        {
+          category: "Business Model",
+          content: "**Dual-channel B2B SaaS** model\n**Direct enterprise motion** targeting manufacturers above **$50M in revenue**\n**Rep-firm channel** covering ~**600 independent manufacturers' rep firms** in HVAC, plumbing, electrical, and electronics\nRevenue from **CRM, commission tracking, and quoting platform** subscriptions",
+        },
+        {
+          category: "Go-to-Market & Sales Motion",
+          content: "**Enterprise-led** sales motion with **AE-driven outbound**\nCurrently hiring **6 enterprise AEs** and a **VP of Sales Engineering** (posted twice since February)\n**No public CRO** — revenue function rolls up to **CEO Daniel Hartwell** directly\n**Two regional VPs of Sales** reporting to Hartwell",
+        },
+        {
+          category: "Sales & Marketing Stack",
+          content: "**No confirmed marketing automation** stack\nBlog and **two annual events** run, but the platform behind them is **unidentifiable** from public sources\n**No CMO** — marketing rolls up to a **Director of Demand Gen**\nLeadership DNA is **heavily Salesforce**, suggesting a likely **SF-based CRM stack** internally",
+        },
+        {
+          category: "Pain Signals & Priorities",
+          content: "**Empowering Systems integration is mid-stream** — Glassdoor reviews flag **\"data model mismatch\"** and **\"two-instance reality\"** as friction\nPost-acquisition **data-stitching creating Salesforce admin overhead**\n**Hiring burst** (18 open roles) signals **scaling pressure** across the enterprise sales team",
+        },
+        {
+          category: "AI, Data & Automation Maturity",
+          content: "**Orbweaver partnership** (Jan 2026) automates **EDI data exchange** between distributors and manufacturers\nFramed as first leg of an **\"open data fabric\" strategy**\n**AI-driven CRM** is their product positioning, but **internal automation maturity unclear**\n**No public references** to marketing automation or AI-assisted workflows for their own ops",
+        },
+        {
+          category: "Key Personas & Stakeholders",
+          content: "**CEO Daniel Hartwell** — ex-Salesforce Industries Cloud, joined 2019, drives enterprise expansion\n**CFO Priya Ramanathan** — ex-Workday, joined 2023\n**SVP Product Rich Gomez** — came in via Empowering Systems acquisition\n**VP Engineering Scott Mays** — came in via Empowering Systems acquisition\n**Board chair** — Insight Partners managing director\n**No public CRO**; two regional VPs of Sales report to Hartwell",
+        },
+        {
+          category: "Growth Signals",
+          content: "**$50M Series C** (October 2025) from **Insight Partners**\nFunded the **Empowering Systems acquisition** + enterprise sales expansion\n**18 open roles** on Greenhouse (as of May 25), including **6 enterprise AE seats**\n**CRA Conference presentation** (Feb 2026) — first major joint-product showing post-acquisition (~1,200 attendees)",
+        },
+        {
+          category: "Strategic Partnerships",
+          content: "**Orbweaver** — automates EDI data exchange between distributors and manufacturers (announced Jan 2026)\n**Empowering Systems** — acquired, integration ongoing\n**No other public technology alliances** or marketplace listings identified",
+        },
+        {
+          category: "Positioning & Messaging",
+          content: "Positions as the **purpose-built CRM for multi-line selling**\nCore message: **eliminating administrative busywork** for outside sales teams\nEmphasis on **consolidating CRM, commission tracking, and quoting** in one platform\nTargets reps who have been running on **spreadsheets and email**",
+        },
+        {
+          category: "Website Quality",
+          content: "**Professional B2B SaaS** site with product pages, blog, and event listings\nHosts **two annual industry events**\nContent focused on the **manufacturing/distribution vertical**\n**No pricing page** publicly visible",
+        },
+        {
+          category: "Location",
+          content: "**HQ: San Francisco, CA**\nNo additional offices confirmed\nPost-acquisition, **Empowering Systems team likely distributed**",
+        },
+        {
+          category: "Recent News & Announcements",
+          content: "**CRA Conference presentation** (Feb 24, 2026) — showcased ES integration to ~1,200 attendees\n**Orbweaver partnership** announced (Jan 2026)\n**$50M Series C** closed (Oct 2025)\n**VP of Sales Engineering** role posted twice since February",
+        },
+        {
+          category: "Active Sales Plays",
+          content: "**No HubSpot sales plays** currently assigned\n**Salesforce displacement** is the strongest angle given ex-SF leadership DNA\n**Post-acquisition stack rationalization** creates a natural evaluation window",
+        },
+      ],
+      researchConflicts: "**Salesforce DNA in leadership** could cut either way — they know what SF does well but also know its limits at scale\n**No confirmed marketing automation** creates a blind spot for the marketing hub pitch\n**Empowering Systems integration status unclear** — could be nearly done or deeply stuck\n**No CMO** — marketing rolls up to Director of Demand Gen, which may limit enterprise marketing conversations",
       contactDescription: defaultContactDescription,
       primaryFriction: defaultPrimaryFriction,
       callBullets: defaultCallBullets,

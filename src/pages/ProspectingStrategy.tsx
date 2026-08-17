@@ -36,6 +36,7 @@ import { TextEditPopup } from "@/components/TextEditPopup";
 import PreviousDealCard, { PreviousDeal } from "@/components/PreviousDealCard";
 import EmailCommunicator from "@/components/EmailCommunicator";
 import ProspectingAgent from "@/components/ProspectingAgent";
+import CompanyResearchPanel from "@/components/CompanyResearchPanel";
 import { OutreachSequenceCard } from "@/components/OutreachSequenceCard";
 import { TouchDots, type TouchStatus } from "@/components/TouchDot";
 
@@ -71,15 +72,6 @@ const RewritingStatusMessage = () => {
   }, []);
   return (
     <span className="body-125 text-foreground">{REWRITE_STATUS_MESSAGES[index]}</span>
-  );
-};
-
-// Open the Flywheel Prospecting Agent with the full company research loaded.
-const openFullResearch = (companyId: string, companyName: string) => {
-  window.dispatchEvent(
-    new CustomEvent("openProspectingAgent", {
-      detail: { mode: "research", companyId, companyName },
-    }),
   );
 };
 
@@ -180,6 +172,7 @@ const ProspectingStrategy = () => {
   const [emailReplyTo, setEmailReplyTo] = useState<{ name: string; email: string; subject: string } | null>(null);
   const [contactDrawerId, setContactDrawerId] = useState<string | null>(null);
   const [reasoningContactId, setReasoningContactId] = useState<string | null>(null);
+  const [isResearchPanelOpen, setIsResearchPanelOpen] = useState(false);
   const [callScriptMode, setCallScriptMode] = useState<"script" | "bullets">(() => {
     if (typeof window === "undefined") return "script";
     return (localStorage.getItem("callScriptMode") as "script" | "bullets") || "script";
@@ -1127,7 +1120,7 @@ const ProspectingStrategy = () => {
                         variant="ai-secondary"
                         size="small"
                         className="mt-4"
-                        onClick={() => openFullResearch(currentCompany.id, currentCompany.name)}
+                        onClick={() => setIsResearchPanelOpen(true)}
                       >
                         Read full research
                       </Button>
@@ -1611,6 +1604,13 @@ const ProspectingStrategy = () => {
         recipientName={emailReplyTo?.name}
         recipientEmail={emailReplyTo?.email}
         defaultSubject={emailReplyTo?.subject}
+      />
+
+      <CompanyResearchPanel
+        isOpen={isResearchPanelOpen}
+        onClose={() => setIsResearchPanelOpen(false)}
+        companyName={currentCompany?.name ?? ""}
+        strategy={getCompanyStrategy(currentCompany?.id).default}
       />
 
       <ProspectingAgent />

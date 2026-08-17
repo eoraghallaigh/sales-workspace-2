@@ -2162,15 +2162,17 @@ export const OutreachSequenceCard = ({
                     <TrellisIcon name="email" size={12} className="mr-1 brightness-0 invert" />
                     Enroll {firstName}
                   </Button>
-                  <Button
-                    variant="transparent"
-                    size="small"
-                    className="gap-1"
-                    onClick={() => setIsRegenerateOpen(true)}
-                  >
-                    <AiStarIcon size={14} className="mr-1" />
-                    Regenerate sequence
-                  </Button>
+                  {onRegenerate && (
+                    <Button
+                      variant="transparent"
+                      size="small"
+                      className="gap-1"
+                      onClick={() => setIsRegenerateOpen(true)}
+                    >
+                      <AiStarIcon size={14} className="mr-1" />
+                      Regenerate sequence
+                    </Button>
+                  )}
                 </div>
               )}
               {(status === "enrolled" || status === "paused") && (
