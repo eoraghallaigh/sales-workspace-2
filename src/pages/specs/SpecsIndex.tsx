@@ -24,6 +24,13 @@ const specs: SpecEntry[] = [
       "Scheduled starts, adjustable step timing, add/remove/reorder steps, and non-blocking manual tasks.",
     category: "Interaction flows",
   },
+  {
+    slug: "agent-configuration",
+    title: "Agent configuration",
+    description:
+      "Custom instructions for the research and sequencing agents, with a live preview of agent output.",
+    category: "Interaction flows",
+  },
 ];
 
 const categories = [...new Set(specs.map((s) => s.category))];
