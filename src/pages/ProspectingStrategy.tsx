@@ -39,6 +39,7 @@ import ProspectingAgent from "@/components/ProspectingAgent";
 import CompanyResearchPanel from "@/components/CompanyResearchPanel";
 import { OutreachSequenceCard } from "@/components/OutreachSequenceCard";
 import { TouchDots, type TouchStatus } from "@/components/TouchDot";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import { getCompanyStrategy } from "@/data/companyStrategies";
 import { getContactDossier } from "@/data/contactDossier";
@@ -52,6 +53,15 @@ import {
   getOutreachStripSegments,
 } from "@/data/outreachStates";
 import { getActivityTimeline } from "@/data/deriveTouches";
+
+function formatCooldownTime(isoString: string): string {
+  return new Date(isoString).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+function isContactCooldownActive(cooldownUntil?: string): boolean {
+  if (!cooldownUntil) return false;
+  return new Date(cooldownUntil).getTime() > Date.now();
+}
 
 const REWRITE_STATUS_MESSAGES = [
   "Reading account history…",
@@ -1087,7 +1097,6 @@ const ProspectingStrategy = () => {
                     companyName={currentCompany.name}
                     isRunning={isRunningResearch}
                     onRun={createStrategy}
-                    cooldownUntil={currentCompany.automationCooldownUntil}
                   />
                 ) : strategy.showFullResearch ? (
                   <>
@@ -1275,6 +1284,16 @@ const ProspectingStrategy = () => {
                                 {contact.enrolledInSequence ? "Enrolled in a sequence" : "Not enrolled in a sequence"}
                               </div>
                             </div>
+                          </div>
+                        ) : isContactCooldownActive(contact.automationCooldownUntil) ? (
+                          <div key={`cooldown-${contact.id}`} className="px-6 py-5 bg-card animate-fade-in">
+                            <Alert type="warning">
+                              <AlertDescription>
+                                Sequence generation is blocked until{" "}
+                                <span className="font-semibold">{formatCooldownTime(contact.automationCooldownUntil!)}</span>{" "}
+                                today because there is another automation running on this contact.
+                              </AlertDescription>
+                            </Alert>
                           </div>
                         ) : (
                         <div key={`content-${contact.id}`} className="px-6 pt-4 pb-0 bg-card animate-fade-in">

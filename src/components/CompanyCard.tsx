@@ -71,6 +71,7 @@ export interface RecommendedContact {
   signals: SignalInstance[];
   qlData?: QLData;
   lastContactedDate?: string;
+  automationCooldownUntil?: string;
 }
 export interface Company {
   id: string;
@@ -96,7 +97,6 @@ export interface Company {
   recommendedContacts: RecommendedContact[];
   priority?: "P1" | "P2" | "P3" | "P4";
   hasGeneratedStrategy?: boolean;
-  automationCooldownUntil?: string;
 }
 interface CompanyCardProps {
   company: Company;

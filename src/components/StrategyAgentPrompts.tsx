@@ -2,8 +2,6 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import { AiStarIconGradient } from "@/components/ui/ai-star-icon";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useState, useEffect } from "react";
 
 interface StrategyEmptyBannerProps {
   companyName: string;
@@ -63,81 +61,37 @@ interface ResearchEmptyCardProps {
   companyName: string;
   isRunning: boolean;
   onRun: () => void;
-  cooldownUntil?: string;
-}
-
-function formatCooldownTime(isoString: string): string {
-  const d = new Date(isoString);
-  return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-}
-
-function useIsCooldownActive(cooldownUntil?: string): boolean {
-  const [active, setActive] = useState(() => {
-    if (!cooldownUntil) return false;
-    return new Date(cooldownUntil).getTime() > Date.now();
-  });
-
-  useEffect(() => {
-    if (!cooldownUntil) return;
-    const remaining = new Date(cooldownUntil).getTime() - Date.now();
-    if (remaining <= 0) {
-      setActive(false);
-      return;
-    }
-    setActive(true);
-    const timer = window.setTimeout(() => setActive(false), remaining);
-    return () => window.clearTimeout(timer);
-  }, [cooldownUntil]);
-
-  return active;
 }
 
 export const ResearchEmptyCard = ({
   companyName,
   isRunning,
   onRun,
-  cooldownUntil,
-}: ResearchEmptyCardProps) => {
-  const isBlocked = useIsCooldownActive(cooldownUntil);
-  const isDisabled = isRunning || isBlocked;
-
-  return (
-    <div className="rounded-100 border border-dashed border-core-subtle bg-card px-6 py-8 text-center mb-12">
-      <div className="flex justify-center mb-3">
-        <AiStarIconGradient size={24} />
-      </div>
-      <h3 className="heading-200 text-foreground">
-        {companyName} hasn't been prepped yet
-      </h3>
-      {!isBlocked && (
-        <p className="body-100 text-muted-foreground mt-2 max-w-md mx-auto">
-          Generate company research and personalized email sequences for every
-          outreach target.
-        </p>
-      )}
-      {isBlocked && cooldownUntil && (
-        <Alert type="warning" className="mt-4 mx-auto max-w-md text-left">
-          <AlertDescription>
-            Strategy generation is blocked until{" "}
-            <span className="font-semibold">{formatCooldownTime(cooldownUntil)}</span>{" "}
-            today because there is another automation running on this company.
-          </AlertDescription>
-        </Alert>
-      )}
-      <div className="mt-5 flex justify-center">
-        <Button
-          variant="ai"
-          size="medium"
-          onClick={onRun}
-          disabled={isDisabled}
-        >
-          {isRunning && <Loader2 className="h-4 w-4 animate-spin" />}
-          {isRunning ? "Creating prospecting strategy…" : "Create prospecting strategy"}
-        </Button>
-      </div>
+}: ResearchEmptyCardProps) => (
+  <div className="rounded-100 border border-dashed border-core-subtle bg-card px-6 py-8 text-center mb-12">
+    <div className="flex justify-center mb-3">
+      <AiStarIconGradient size={24} />
     </div>
-  );
-};
+    <h3 className="heading-200 text-foreground">
+      {companyName} hasn't been prepped yet
+    </h3>
+    <p className="body-100 text-muted-foreground mt-2 max-w-md mx-auto">
+      Generate company research and personalized email sequences for every
+      outreach target.
+    </p>
+    <div className="mt-5 flex justify-center">
+      <Button
+        variant="ai"
+        size="medium"
+        onClick={onRun}
+        disabled={isRunning}
+      >
+        {isRunning && <Loader2 className="h-4 w-4 animate-spin" />}
+        {isRunning ? "Creating prospecting strategy…" : "Create prospecting strategy"}
+      </Button>
+    </div>
+  </div>
+);
 
 interface SequenceSectionPromptProps {
   isRunning: boolean;
