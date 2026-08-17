@@ -1087,6 +1087,7 @@ const ProspectingStrategy = () => {
                     companyName={currentCompany.name}
                     isRunning={isRunningResearch}
                     onRun={createStrategy}
+                    cooldownUntil={currentCompany.automationCooldownUntil}
                   />
                 ) : strategy.showFullResearch ? (
                   <>

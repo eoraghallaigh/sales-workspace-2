@@ -96,6 +96,7 @@ export interface Company {
   recommendedContacts: RecommendedContact[];
   priority?: "P1" | "P2" | "P3" | "P4";
   hasGeneratedStrategy?: boolean;
+  automationCooldownUntil?: string;
 }
 interface CompanyCardProps {
   company: Company;

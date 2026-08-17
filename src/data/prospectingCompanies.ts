@@ -2684,6 +2684,7 @@ const rawProspectingCompanies: Company[] = [
     status: "New",
     priority: "P2",
     hasGeneratedStrategy: false,
+    automationCooldownUntil: new Date(Date.now() + 42 * 60 * 1000).toISOString(),
     lastContactedDate: getRandomLastContactedDate(), signals: [SIGNALS.VIEWED_PRICING],
     tasks: [],
     touches: {

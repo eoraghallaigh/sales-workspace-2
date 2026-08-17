@@ -1039,13 +1039,28 @@ const DesignSystem = () => {
                   <CardTitle>Alert</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Alert>
-                    <AlertTitle>Default Alert</AlertTitle>
-                    <AlertDescription>This is a default alert with important information.</AlertDescription>
+                  <Alert type="info">
+                    <AlertTitle>Info Alert</AlertTitle>
+                    <AlertDescription>This is an informational alert.</AlertDescription>
                   </Alert>
-                  <Alert variant="destructive">
-                    <AlertTitle>Error Alert</AlertTitle>
+                  <Alert type="warning">
+                    <AlertTitle>Warning Alert</AlertTitle>
+                    <AlertDescription>Something needs your attention.</AlertDescription>
+                  </Alert>
+                  <Alert type="success">
+                    <AlertTitle>Success Alert</AlertTitle>
+                    <AlertDescription>The operation completed successfully.</AlertDescription>
+                  </Alert>
+                  <Alert type="danger">
+                    <AlertTitle>Danger Alert</AlertTitle>
                     <AlertDescription>Something went wrong. Please try again.</AlertDescription>
+                  </Alert>
+                  <Alert type="tip">
+                    <AlertTitle>Tip</AlertTitle>
+                    <AlertDescription>Here's a helpful tip for you.</AlertDescription>
+                  </Alert>
+                  <Alert type="warning" use="embedded">
+                    <AlertDescription>Embedded variant — no visible border.</AlertDescription>
                   </Alert>
                 </CardContent>
               </Card>
