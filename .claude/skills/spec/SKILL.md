@@ -31,18 +31,25 @@ Every spec page follows this order. Include sections that apply; skip sections t
 - Create a showcase wrapper component that manages state (useState hooks for all interactive props) and passes mock data. All callbacks should be wired up so the component is interactive.
 
 ### 3. Interaction flow (one per distinct user flow)
-- Use `HorizontalFlow` + `HorizontalFlowStep` to show the step-by-step progression.
-- **Each step must render the actual component** in that state — not a description, not a screenshot.
+
+**Default to vertical `FlowStep` layout.** Most prototype components are 500–800px wide and get crushed inside `HorizontalFlowStep`'s fixed 280px columns. Only use `HorizontalFlow` + `HorizontalFlowStep` for narrow elements (popovers, chips, badges — anything under ~300px natural width).
+
+- Wrap each group of `FlowStep`s in a recessed container: `<div className="bg-[var(--color-fill-surface-recessed)] p-8 rounded-200">`.
+- **Each step must render the actual component in that exact state** — not a description, not a placeholder, not a simplified version. A "done" step must show the full done output, not the idle component.
+- **Match actual UI widths.** Read the source to find the container width the component lives in (e.g. `w-[800px]`). Set that same width on the wrapper div inside each step. Never use arbitrary `max-w-lg` or guess at widths.
 - Steps have: `step` (number), `label` (short, e.g., "Hover on chip"), `description` (one sentence explaining what happens).
 - The last step gets `isLast` prop.
 - If the feature has a trigger element (chip, button, etc.), render it below the component in each step to show the spatial relationship.
+- The step `description` should carry the explanation. Only add `Callout` blocks for genuinely non-obvious behaviour an engineer would miss — don't annotate what the visual already shows.
 
 ### 4. Component states
-- Use `StateCard` for each distinct state of the component.
+- Use `StateCard` for each distinct state of the component. `StateCard` uses `w-fit` so it expands to fit content — don't add extra max-width constraints.
 - `label`: state name (e.g., "Detail view (default)", "Loading", "Error", "Empty").
 - `description`: when this state occurs and any notable behavior.
 - `variant`: use `"success"` for success/completion states, `"error"` for error states, `"warning"` for warnings, `"default"` for everything else.
 - Render the **actual component** inside each StateCard, not a copy.
+- **Match actual UI widths** on the wrapper div inside each StateCard, same as for flow steps.
+- **Include surrounding UI context.** When showing a button or header pattern, include the real subline text, labels, and layout that appear in the actual UI — not just the isolated element.
 
 ## Key rules
 
@@ -90,10 +97,10 @@ All imported from `./blocks`:
 | `SpecHeader` | Page title + description |
 | `SpecSection` | Titled section with description |
 | `StateCard` | Labelled state showcase (variants: default/success/warning/error) |
-| `HorizontalFlow` | Container for horizontal interaction flow |
-| `HorizontalFlowStep` | Numbered step with component inside |
-| `FlowStep` | Vertical timeline step (use for longer flows) |
-| `Callout` | Annotated note (types: info/behavior/implementation/edge-case) |
+| `FlowStep` | Vertical timeline step (**default for interaction flows**) |
+| `HorizontalFlow` | Container for horizontal flow (only for narrow elements < 300px) |
+| `HorizontalFlowStep` | Numbered step inside HorizontalFlow |
+| `Callout` | Annotated note — use sparingly (types: info/behavior/implementation/edge-case) |
 | `CodeRef` | Inline code reference |
 
 ## Example file structure
@@ -101,7 +108,7 @@ All imported from `./blocks`:
 ```tsx
 import { useState } from "react";
 import { SpecLayout } from "./SpecLayout";
-import { SpecHeader, SpecSection, StateCard, HorizontalFlow, HorizontalFlowStep } from "./blocks";
+import { SpecHeader, SpecSection, StateCard, FlowStep } from "./blocks";
 import { ActualComponent } from "@/components/ActualComponent";
 
 // Mock data
@@ -128,28 +135,28 @@ const FeatureNameSpec = () => (
       </StateCard>
     </SpecSection>
 
-    {/* Interaction flow */}
+    {/* Interaction flow — vertical by default, match actual UI width */}
     <SpecSection title="Interaction flow" description="...">
-      <HorizontalFlow>
-        <HorizontalFlowStep step={1} label="..." description="...">
-          {/* actual component in state 1 */}
-        </HorizontalFlowStep>
-        <HorizontalFlowStep step={2} label="..." description="...">
-          {/* actual component in state 2 */}
-        </HorizontalFlowStep>
-        <HorizontalFlowStep step={3} label="..." description="..." isLast>
-          {/* actual component in state 3 */}
-        </HorizontalFlowStep>
-      </HorizontalFlow>
+      <div className="bg-[var(--color-fill-surface-recessed)] p-8 rounded-200">
+        <FlowStep step={1} label="..." description="...">
+          <div className="w-[800px]">{/* actual component in state 1 */}</div>
+        </FlowStep>
+        <FlowStep step={2} label="..." description="...">
+          <div className="w-[800px]">{/* actual component in state 2 */}</div>
+        </FlowStep>
+        <FlowStep step={3} label="..." description="..." isLast>
+          <div className="w-[800px]">{/* actual component in state 3 */}</div>
+        </FlowStep>
+      </div>
     </SpecSection>
 
-    {/* Component states */}
+    {/* Component states — match actual UI width */}
     <SpecSection title="Component states" description="...">
       <StateCard label="Default" description="...">
-        {/* actual component */}
+        <div className="w-[800px]">{/* actual component */}</div>
       </StateCard>
       <StateCard label="Error" description="..." variant="error">
-        {/* actual component in error state */}
+        <div className="w-[800px]">{/* actual component in error state */}</div>
       </StateCard>
     </SpecSection>
   </SpecLayout>

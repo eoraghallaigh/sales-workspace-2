@@ -60,7 +60,7 @@ export const StateCard = ({
   children: ReactNode;
 }) => (
   <div
-    className={`border border-core-subtle rounded-200 overflow-hidden border-l-4 max-w-2xl ${stateAccents[variant]}`}
+    className={`border border-core-subtle rounded-200 overflow-hidden border-l-4 w-fit ${stateAccents[variant]}`}
   >
     <div className="px-5 py-3 bg-[var(--color-fill-surface-raised)] border-b border-core-subtle">
       <h3 className="heading-50 text-foreground">{label}</h3>
