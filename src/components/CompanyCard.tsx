@@ -71,6 +71,7 @@ export interface RecommendedContact {
   signals: SignalInstance[];
   qlData?: QLData;
   lastContactedDate?: string;
+  automationCooldownUntil?: string;
 }
 export interface Company {
   id: string;
