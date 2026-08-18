@@ -17,6 +17,8 @@ import { sig } from "@/data/signals";
 import PvsTooltip from "@/components/PvsTooltip";
 import AgentReasoningSteps from "@/components/AgentReasoningSteps";
 import { getCompanyStrategy } from "@/data/companyStrategies";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Table,
   TableBody,
@@ -80,28 +82,56 @@ const ConfigTextarea = ({ value, placeholder }: { value: string; placeholder: st
   />
 );
 
-const SaveBar = ({ isDirty, saveFlash }: { isDirty: boolean; saveFlash: boolean }) => (
-  <div className="flex items-center justify-between mt-2">
-    <div className="flex items-center gap-1">
-      <button className="p-1 rounded" style={{ color: "var(--color-icon-core-subtle)" }}>
-        <RotateCcw size={14} />
-      </button>
-      <button className="p-1 rounded" style={{ color: "var(--color-icon-core-subtle)" }}>
-        <RotateCw size={14} />
-      </button>
-    </div>
-    <div className="flex items-center gap-3">
-      {saveFlash && (
-        <span className="inline-flex items-center gap-1.5 body-100 text-trellis-green-700">
-          <Check size={12} />
-          Changes saved
-        </span>
-      )}
+const StatusText = ({ mode }: { mode: "chars" | "flash" | "timestamp" | "empty" }) => {
+  if (mode === "flash") return (
+    <span className="inline-flex items-center gap-1.5 detail-200 text-trellis-green-700">
+      <Check size={12} />
+      Changes saved
+    </span>
+  );
+  if (mode === "chars") return (
+    <span className="detail-200" style={{ color: "var(--color-text-core-subtle)" }}>
+      1,988 characters remaining
+    </span>
+  );
+  if (mode === "timestamp") return (
+    <span className="detail-200" style={{ color: "var(--color-text-core-subtle)" }}>
+      Last updated Aug 18, 2026, 4:17 PM
+    </span>
+  );
+  return <span />;
+};
+
+const SaveBar = ({ isDirty, statusMode }: { isDirty: boolean; statusMode: "chars" | "flash" | "timestamp" | "empty" }) => (
+  <>
+    <StatusText mode={statusMode} />
+    <div className="flex items-center justify-between mt-6">
+      <div className="flex items-center gap-1">
+        <button className="p-1 rounded" style={{ color: "var(--color-icon-core-subtle)" }}>
+          <RotateCcw size={14} />
+        </button>
+        <button className="p-1 rounded" style={{ color: "var(--color-icon-core-subtle)" }}>
+          <RotateCw size={14} />
+        </button>
+      </div>
       <Button variant="primary" size="small" disabled={!isDirty}>
         Save
       </Button>
     </div>
-  </div>
+  </>
+);
+
+const StaleInstructionsBanner = () => (
+  <Alert type="info">
+    <div className="flex items-center justify-between gap-3">
+      <AlertDescription>
+        This sequence was generated before you updated your agent instructions for sequences.
+      </AlertDescription>
+      <Button variant="tertiary" size="extra-small" className="shrink-0">
+        Regenerate
+      </Button>
+    </div>
+  </Alert>
 );
 
 const CompanyCardIdle = () => (
@@ -314,41 +344,74 @@ const AgentConfigurationSpec = () => (
     {/* ── Explicit save flow ──────────────────────────────────────── */}
     <SpecSection
       title="Explicit save flow"
-      description="The rep types instructions into a draft buffer. Changes are only committed when they click Save. Preview is disabled while unsaved changes exist."
+      description="The rep types instructions into a draft buffer (2,000 character limit). Changes are only committed when they click Save. Preview is disabled while unsaved changes exist."
     >
       <div className="bg-[var(--color-fill-surface-recessed)] p-8 rounded-200">
         <FlowStep
           step={1}
           label="Empty state"
-          description="Textarea with placeholder text. Save button is disabled (no unsaved changes)."
+          description="Textarea with placeholder text. No status text is shown (never been saved). Save button is disabled."
         >
           <div className="w-[800px]">
             <ConfigTextarea value="" placeholder="e.g. Focus on recent funding rounds…" />
-            <SaveBar isDirty={false} saveFlash={false} />
+            <SaveBar isDirty={false} statusMode="empty" />
           </div>
         </FlowStep>
         <FlowStep
           step={2}
           label="Typing (dirty)"
-          description="User has typed instructions. Save button is enabled. Preview button is disabled until the user saves."
+          description="Textarea is focused — status text shows character count. Save button is enabled. Preview button is disabled until the user saves."
         >
           <div className="w-[800px]">
             <ConfigTextarea value="Focus on hiring signals and leadership changes." placeholder="" />
-            <SaveBar isDirty={true} saveFlash={false} />
+            <SaveBar isDirty={true} statusMode="chars" />
           </div>
         </FlowStep>
         <FlowStep
           step={3}
           label="Just saved"
-          description="User clicked Save. Button returns to disabled, green 'Changes saved' flash appears briefly. Preview re-enables."
+          description="User clicked Save. Status text briefly shows green 'Changes saved' flash, then returns to 'Last updated' timestamp. Save button returns to disabled. Preview re-enables."
           isLast
         >
           <div className="w-[800px]">
             <ConfigTextarea value="Focus on hiring signals and leadership changes." placeholder="" />
-            <SaveBar isDirty={false} saveFlash={true} />
+            <SaveBar isDirty={false} statusMode="flash" />
           </div>
         </FlowStep>
       </div>
+    </SpecSection>
+
+    {/* ── Status text states ────────────────────────────────────── */}
+    <SpecSection
+      title="Status text states"
+      description="A single line of text below the textarea cycles between three states depending on focus, save, and idle."
+    >
+      <StateCard
+        label="Textarea focused — character count"
+        description="While the textarea is active, the status text shows how many of the 2,000 characters remain."
+      >
+        <div className="w-[800px]">
+          <StatusText mode="chars" />
+        </div>
+      </StateCard>
+
+      <StateCard
+        label="Just saved — flash"
+        description="Immediately after clicking Save, the status text shows a green 'Changes saved' confirmation for 2 seconds."
+      >
+        <div className="w-[800px]">
+          <StatusText mode="flash" />
+        </div>
+      </StateCard>
+
+      <StateCard
+        label="Idle — last updated timestamp"
+        description="When the textarea is blurred and no flash is active, the status text shows the last-saved timestamp. If never saved, no text is shown."
+      >
+        <div className="w-[800px]">
+          <StatusText mode="timestamp" />
+        </div>
+      </StateCard>
     </SpecSection>
 
     {/* ── Research preview flow ──────────────────────────────────── */}
@@ -475,7 +538,7 @@ const AgentConfigurationSpec = () => (
     {/* ── Preview button states ─────────────────────────────────── */}
     <SpecSection
       title="Preview button states"
-      description="The Preview button sits inline with the 'Run the agent' heading. Its enabled/disabled state depends on the preview lifecycle and whether unsaved changes exist."
+      description="The Preview button sits inline with the 'Run the agent' heading. When disabled, hovering shows a tooltip explaining why. The disabled cursor is also shown."
     >
       <StateCard
         label="Idle — enabled"
@@ -491,41 +554,62 @@ const AgentConfigurationSpec = () => (
       </StateCard>
 
       <StateCard
-        label="Unsaved changes — disabled"
-        description="The textarea contains unsaved edits. Preview is disabled until the user clicks Save."
+        label="Unsaved changes — disabled + tooltip"
+        description="The textarea contains unsaved edits. Preview is disabled with a tooltip: 'Save your changes before previewing'."
       >
         <div className="flex items-center justify-between">
           <div>
             <h2 className="heading-300">Run the agent</h2>
             <p className="body-100 mt-1" style={{ color: "var(--color-text-core-subtle)" }}>Test the research agent on one of your P1 companies.</p>
           </div>
-          <Button variant="ai-secondary" size="small" disabled>Preview</Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="cursor-not-allowed">
+                <Button variant="ai-secondary" size="small" disabled className="pointer-events-none">Preview</Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Save your changes before previewing</TooltipContent>
+          </Tooltip>
         </div>
       </StateCard>
 
       <StateCard
-        label="Running — disabled"
-        description="While the agent reasoning animation plays, Preview is disabled."
+        label="Running — disabled + tooltip"
+        description="While the agent reasoning animation plays, Preview is disabled with a tooltip: 'Preview is running'."
       >
         <div className="flex items-center justify-between">
           <div>
             <h2 className="heading-300">Run the agent</h2>
             <p className="body-100 mt-1" style={{ color: "var(--color-text-core-subtle)" }}>Test the research agent on one of your P1 companies.</p>
           </div>
-          <Button variant="ai-secondary" size="small" disabled>Preview</Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="cursor-not-allowed">
+                <Button variant="ai-secondary" size="small" disabled className="pointer-events-none">Preview</Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Preview is running</TooltipContent>
+          </Tooltip>
         </div>
       </StateCard>
 
       <StateCard
-        label="Done, no new saves — disabled"
-        description="Preview just completed and the rep hasn't saved new instructions yet."
+        label="Done, no new saves — disabled + tooltip"
+        description="Preview just completed. Tooltip: 'Save new changes to preview again'."
       >
         <div className="flex items-center justify-between">
           <div>
             <h2 className="heading-300">Run the agent</h2>
             <p className="body-100 mt-1" style={{ color: "var(--color-text-core-subtle)" }}>Test the research agent on one of your P1 companies.</p>
           </div>
-          <Button variant="ai-secondary" size="small" disabled>Preview</Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="cursor-not-allowed">
+                <Button variant="ai-secondary" size="small" disabled className="pointer-events-none">Preview</Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Save new changes to preview again</TooltipContent>
+          </Tooltip>
         </div>
       </StateCard>
 
@@ -544,6 +628,28 @@ const AgentConfigurationSpec = () => (
       </StateCard>
     </SpecSection>
 
+    {/* ── Stale-instructions banner ────────────────────────────── */}
+    <SpecSection
+      title="Stale-instructions banner"
+      description="When agent instructions are updated after sequences have been generated, unenrolled sequences on the company detail page show an info banner prompting the rep to regenerate. Enrolled sequences are not affected."
+    >
+      <StateCard
+        label="Unenrolled sequence — stale instructions"
+        description="An info-type Alert banner appears above the sequence card with a tertiary extra-small Regenerate button."
+      >
+        <div className="w-[800px]">
+          <StaleInstructionsBanner />
+        </div>
+      </StateCard>
+
+      <Callout type="behavior">
+        The banner only appears on sequences that are generated but <strong>not enrolled</strong>. Once a contact is enrolled in a sequence, the banner is hidden — the enrolled sequence runs as-is.
+      </Callout>
+      <Callout type="behavior">
+        Clicking "Regenerate" triggers the existing regenerate flow, re-running the sequencing agent with the updated instructions.
+      </Callout>
+    </SpecSection>
+
     {/* ── Key differences ──────────────────────────────────────── */}
     <SpecSection
       title="Differences between research and sequencing"
@@ -556,7 +662,10 @@ const AgentConfigurationSpec = () => (
         <strong>Sequencing agent:</strong> preview target is a contact (avatar, name, role, company). Output is a full OutreachSequenceCard (call, LinkedIn, 3 emails). The "Regenerate sequence" CTA is hidden — reps edit instructions and re-preview instead.
       </Callout>
       <Callout type="behavior">
-        The entity picker below the card reads "Change company" or "Change contact" depending on agent type. It is only visible in the idle state — hidden during loading and after results are shown.
+        The entity picker below the card reads "Change company" or "Change contact" depending on agent type. It is always enabled — changing the preview target does not require saving first.
+      </Callout>
+      <Callout type="behavior">
+        The description text below the heading includes a go-forward caveat: "Changes apply to new research/sequence runs only, previously generated runs are not affected."
       </Callout>
     </SpecSection>
   </SpecLayout>
