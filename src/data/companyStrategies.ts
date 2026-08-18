@@ -31,6 +31,7 @@ export interface CompanyStrategyVariant {
   sections: StrategySection[];
   researchTable?: ResearchTableRow[];
   researchConflicts?: string;
+  generatedAt?: string;
   // When true, the strategy page prints the full `sections` inline instead of the
   // TL;DR bullets + "Read full research" link. Used to contrast the condensed vs.
   // full-research treatments side by side in the prototype.
@@ -1160,13 +1161,15 @@ export const defaultStrategy: CompanyStrategy = {
   ),
 };
 
+const DEFAULT_GENERATED_AT = "Aug 15, 2026 at 9:42 AM";
+
 export const getCompanyStrategy = (companyId: string | undefined): CompanyStrategy => {
   const found = companyId ? companyStrategies[companyId] : undefined;
   if (!found) return defaultStrategy;
-  // Ensure both variants exist; fall back to default's displacement variant if missing.
+  const base = found.default ?? defaultStrategy.default;
+  const displacement = found["salesforce-displacement"] ?? defaultStrategy["salesforce-displacement"];
   return {
-    default: found.default ?? defaultStrategy.default,
-    "salesforce-displacement":
-      found["salesforce-displacement"] ?? defaultStrategy["salesforce-displacement"],
+    default: { ...base, generatedAt: base.generatedAt ?? DEFAULT_GENERATED_AT },
+    "salesforce-displacement": { ...displacement, generatedAt: displacement.generatedAt ?? DEFAULT_GENERATED_AT },
   };
 };

@@ -14,7 +14,7 @@ export const buttonSizeClasses = {
   icon: "h-10 w-10",
   medium: "min-h-[40px] px-[24px] gap-[8px] rounded-[var(--radius-button)]",
   small: "min-h-[32px] gap-[8px] rounded-[var(--radius-button)]",
-  "extra-small": "min-h-[26px] rounded-[var(--radius-button)]",
+  "extra-small": "min-h-[24px] px-[13px] rounded-[var(--radius-button)] detail-100",
 } as const;
 
 export const buttonVariantClasses = {
@@ -32,6 +32,7 @@ export const buttonVariantClasses = {
   transparent: "bg-transparent text-[var(--trellis-color-magenta-900)] hover:text-[var(--trellis-color-magenta-1000)]",
   ai: "bg-[var(--trellis-color-magenta-900)] text-white hover:bg-[var(--trellis-color-magenta-1000)] !rounded-full heading-50",
   "ai-secondary": "bg-card text-[var(--trellis-color-magenta-900)] border border-[var(--trellis-color-magenta-900)] hover:bg-[var(--trellis-color-magenta-200,#FBEAF1)] hover:text-[var(--trellis-color-magenta-1000)] hover:border-[var(--trellis-color-magenta-1000)] !rounded-full heading-50",
+  tertiary: "bg-white text-[var(--color-text-core-default)] border border-[var(--color-border-core-subtle)] hover:bg-[var(--color-fill-secondary-hover)] hover:border-[var(--color-border-core-default)]",
 } as const;
 
 const buttonVariants = cva(
@@ -46,7 +47,7 @@ const buttonVariants = cva(
         icon: "h-10 w-10",
         medium: "min-h-[40px] px-[24px] gap-[8px] rounded-[var(--radius-button)]",
         small: "min-h-[32px] gap-[8px] rounded-[var(--radius-button)]",
-        "extra-small": "min-h-[26px] rounded-[var(--radius-button)]",
+        "extra-small": "min-h-[24px] px-[13px] rounded-[var(--radius-button)] detail-100",
       },
     },
     compoundVariants: [
