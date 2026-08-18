@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Loader2, Check, RotateCcw, RotateCw } from "lucide-react";
+import { Check, RotateCcw, RotateCw } from "lucide-react";
 import { SpecLayout } from "./SpecLayout";
 import {
   SpecHeader,
@@ -80,7 +80,7 @@ const ConfigTextarea = ({ value, placeholder }: { value: string; placeholder: st
   />
 );
 
-const SaveIndicator = ({ state }: { state: "idle" | "saving" | "saved" }) => (
+const SaveBar = ({ isDirty, saveFlash }: { isDirty: boolean; saveFlash: boolean }) => (
   <div className="flex items-center justify-between mt-2">
     <div className="flex items-center gap-1">
       <button className="p-1 rounded" style={{ color: "var(--color-icon-core-subtle)" }}>
@@ -90,18 +90,17 @@ const SaveIndicator = ({ state }: { state: "idle" | "saving" | "saved" }) => (
         <RotateCw size={14} />
       </button>
     </div>
-    {state === "saving" && (
-      <span className="inline-flex items-center gap-1.5 body-100 text-muted-foreground">
-        <Loader2 size={12} className="animate-spin" />
-        Saving your changes
-      </span>
-    )}
-    {state === "saved" && (
-      <span className="inline-flex items-center gap-1.5 body-100 text-trellis-green-700">
-        <Check size={12} />
-        Changes saved
-      </span>
-    )}
+    <div className="flex items-center gap-3">
+      {saveFlash && (
+        <span className="inline-flex items-center gap-1.5 body-100 text-trellis-green-700">
+          <Check size={12} />
+          Changes saved
+        </span>
+      )}
+      <Button variant="primary" size="small" disabled={!isDirty}>
+        Save
+      </Button>
+    </div>
   </div>
 );
 
@@ -309,44 +308,44 @@ const AgentConfigurationSpec = () => (
   <SpecLayout>
     <SpecHeader
       title="Agent configuration"
-      description="Reps can give custom instructions to the research and sequencing agents, then preview the output before applying to real accounts. Found at Agents → Configure on each agent card."
+      description="Reps can give custom instructions to the research and sequencing agents, then save and preview the output before applying to real accounts. Found at Agents → Configure on each agent card."
     />
 
-    {/* ── Autosave flow ─────────────────────────────────────────── */}
+    {/* ── Explicit save flow ──────────────────────────────────────── */}
     <SpecSection
-      title="Autosave flow"
-      description="As the rep types instructions, changes autosave with a debounced indicator. Preview is disabled while saving."
+      title="Explicit save flow"
+      description="The rep types instructions into a draft buffer. Changes are only committed when they click Save. Preview is disabled while unsaved changes exist."
     >
       <div className="bg-[var(--color-fill-surface-recessed)] p-8 rounded-200">
         <FlowStep
           step={1}
           label="Empty state"
-          description="Textarea with placeholder text. Undo/redo buttons below left, no save indicator."
+          description="Textarea with placeholder text. Save button is disabled (no unsaved changes)."
         >
           <div className="w-[800px]">
             <ConfigTextarea value="" placeholder="e.g. Focus on recent funding rounds…" />
-            <SaveIndicator state="idle" />
+            <SaveBar isDirty={false} saveFlash={false} />
           </div>
         </FlowStep>
         <FlowStep
           step={2}
-          label="Typing"
-          description="Save indicator shows spinner + 'Saving your changes'. Preview button is disabled."
+          label="Typing (dirty)"
+          description="User has typed instructions. Save button is enabled. Preview button is disabled until the user saves."
         >
           <div className="w-[800px]">
             <ConfigTextarea value="Focus on hiring signals and leadership changes." placeholder="" />
-            <SaveIndicator state="saving" />
+            <SaveBar isDirty={true} saveFlash={false} />
           </div>
         </FlowStep>
         <FlowStep
           step={3}
-          label="Saved"
-          description="1.5s after typing stops, indicator shows green check + 'Changes saved'. Preview re-enables."
+          label="Just saved"
+          description="User clicked Save. Button returns to disabled, green 'Changes saved' flash appears briefly. Preview re-enables."
           isLast
         >
           <div className="w-[800px]">
             <ConfigTextarea value="Focus on hiring signals and leadership changes." placeholder="" />
-            <SaveIndicator state="saved" />
+            <SaveBar isDirty={false} saveFlash={true} />
           </div>
         </FlowStep>
       </div>
@@ -476,31 +475,31 @@ const AgentConfigurationSpec = () => (
     {/* ── Preview button states ─────────────────────────────────── */}
     <SpecSection
       title="Preview button states"
-      description="The Preview button sits inline with the 'Run the agent' heading. Its enabled/disabled state depends on the preview lifecycle and autosave state."
+      description="The Preview button sits inline with the 'Run the agent' heading. Its enabled/disabled state depends on the preview lifecycle and whether unsaved changes exist."
     >
       <StateCard
         label="Idle — enabled"
-        description="Default state. Rep has not yet previewed, or has made changes since the last preview."
+        description="Default state. Rep has not yet previewed, or has saved new instructions since the last preview."
       >
         <div className="flex items-center justify-between">
           <div>
             <h2 className="heading-300">Run the agent</h2>
             <p className="body-100 mt-1" style={{ color: "var(--color-text-core-subtle)" }}>Test the research agent on one of your P1 companies.</p>
           </div>
-          <Button variant="ai" size="small">Preview</Button>
+          <Button variant="ai-secondary" size="small">Preview</Button>
         </div>
       </StateCard>
 
       <StateCard
-        label="Saving — disabled"
-        description="While the autosave indicator shows 'Saving your changes', Preview is disabled."
+        label="Unsaved changes — disabled"
+        description="The textarea contains unsaved edits. Preview is disabled until the user clicks Save."
       >
         <div className="flex items-center justify-between">
           <div>
             <h2 className="heading-300">Run the agent</h2>
             <p className="body-100 mt-1" style={{ color: "var(--color-text-core-subtle)" }}>Test the research agent on one of your P1 companies.</p>
           </div>
-          <Button variant="ai" size="small" disabled>Preview</Button>
+          <Button variant="ai-secondary" size="small" disabled>Preview</Button>
         </div>
       </StateCard>
 
@@ -513,26 +512,26 @@ const AgentConfigurationSpec = () => (
             <h2 className="heading-300">Run the agent</h2>
             <p className="body-100 mt-1" style={{ color: "var(--color-text-core-subtle)" }}>Test the research agent on one of your P1 companies.</p>
           </div>
-          <Button variant="ai" size="small" disabled>Preview</Button>
+          <Button variant="ai-secondary" size="small" disabled>Preview</Button>
         </div>
       </StateCard>
 
       <StateCard
-        label="Done, no new changes — disabled"
-        description="Preview just completed and the rep hasn't edited instructions yet."
+        label="Done, no new saves — disabled"
+        description="Preview just completed and the rep hasn't saved new instructions yet."
       >
         <div className="flex items-center justify-between">
           <div>
             <h2 className="heading-300">Run the agent</h2>
             <p className="body-100 mt-1" style={{ color: "var(--color-text-core-subtle)" }}>Test the research agent on one of your P1 companies.</p>
           </div>
-          <Button variant="ai" size="small" disabled>Preview</Button>
+          <Button variant="ai-secondary" size="small" disabled>Preview</Button>
         </div>
       </StateCard>
 
       <StateCard
-        label="Done, instructions edited — enabled"
-        description="Rep edited instructions after the last preview. Preview re-enables so they can see updated output."
+        label="Done, new instructions saved — enabled"
+        description="Rep saved new instructions after the last preview. Preview re-enables so they can see updated output."
         variant="success"
       >
         <div className="flex items-center justify-between">
@@ -540,7 +539,7 @@ const AgentConfigurationSpec = () => (
             <h2 className="heading-300">Run the agent</h2>
             <p className="body-100 mt-1" style={{ color: "var(--color-text-core-subtle)" }}>Test the research agent on one of your P1 companies.</p>
           </div>
-          <Button variant="ai" size="small">Preview</Button>
+          <Button variant="ai-secondary" size="small">Preview</Button>
         </div>
       </StateCard>
     </SpecSection>

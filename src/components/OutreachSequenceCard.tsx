@@ -53,6 +53,7 @@ import { AiStarIcon } from "@/components/ui/ai-star-icon";
 import RegenerateSequenceModal from "@/components/RegenerateSequenceModal";
 import type { CallState, LinkedInState, EmailStatus, SequenceState } from "@/data/outreachStates";
 import { Calendar } from "@/components/ui/calendar";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const POS_DOT = "bg-[var(--color-fill-accent-green-default)]";
 const MUTED_DOT = "bg-muted-foreground";
@@ -1800,6 +1801,8 @@ export type OutreachSequenceCardProps = {
   onViewReasoning: () => void;
   onRegenerate?: (instructions: string) => void;
   enableFeedback?: boolean;
+  sequenceGeneratedAt?: string;
+  staleInstructions?: boolean;
 };
 
 const buildDefaultOrder = (contactId: string): string[] => [
@@ -1838,6 +1841,8 @@ export const OutreachSequenceCard = ({
   onViewReasoning,
   onRegenerate,
   enableFeedback,
+  sequenceGeneratedAt,
+  staleInstructions,
 }: OutreachSequenceCardProps) => {
   const firstName = contact.name.split(" ")[0];
   const pristine = isPristine(call, linkedin, sequence);
@@ -1936,7 +1941,7 @@ export const OutreachSequenceCard = ({
   const mutedAttribution = (
     <div className="flex items-center gap-1.5 ml-3">
       <Sparkles size={12} className="text-muted-foreground" aria-hidden />
-      <span className="detail-200 text-muted-foreground">Created by Sequencing Agent ·</span>
+      <span className="detail-200 text-muted-foreground">Created by Sequencing Agent{sequenceGeneratedAt ? ` · ${sequenceGeneratedAt}` : ""} ·</span>
       <button
         type="button"
         onClick={onViewReasoning}
@@ -2015,6 +2020,20 @@ export const OutreachSequenceCard = ({
           <Megaphone className="h-3 w-3" />
           Part of {playProvenanceLabel} play
         </Badge>
+      )}
+      {staleInstructions && !isEnrolled && (
+        <Alert type="info" className="mb-3">
+          <div className="flex items-center justify-between gap-3">
+            <AlertDescription>
+              This sequence was generated before you updated your agent instructions for sequences.
+            </AlertDescription>
+            {onRegenerate && (
+              <Button variant="tertiary" size="extra-small" className="shrink-0" onClick={() => onRegenerate("")}>
+                Regenerate
+              </Button>
+            )}
+          </div>
+        </Alert>
       )}
       <div className="overflow-hidden">
         <div className="flex flex-wrap items-center gap-2 py-3">

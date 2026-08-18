@@ -1105,6 +1105,9 @@ const ProspectingStrategy = () => {
                         <CollapsibleTrigger className="flex items-center gap-2 w-full group">
                           <TrellisIcon name="downCarat" size={12} className="text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
                           <h3 className="heading-200 text-foreground">{section.heading}</h3>
+                          {idx === 0 && strategy.generatedAt && (
+                            <span className="detail-200 text-muted-foreground ml-auto font-normal">{strategy.generatedAt}</span>
+                          )}
                         </CollapsibleTrigger>
                         <CollapsibleContent className="mt-3">
                           <ResearchSectionBody body={section.body} />
@@ -1117,6 +1120,9 @@ const ProspectingStrategy = () => {
                     <CollapsibleTrigger className="flex items-center gap-2 w-full group">
                       <TrellisIcon name="downCarat" size={12} className="text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
                       <h3 className="heading-200 text-foreground">Company Research</h3>
+                      {strategy.generatedAt && (
+                        <span className="detail-200 text-muted-foreground ml-auto font-normal">{strategy.generatedAt}</span>
+                      )}
                     </CollapsibleTrigger>
                     <CollapsibleContent className="mt-3">
                       <ul className="list-disc pl-5 flex flex-col gap-2.5">
@@ -1340,6 +1346,8 @@ const ProspectingStrategy = () => {
                                   initials: contact.initials,
                                   avatarColor: contact.avatarColor,
                                 }}
+                                sequenceGeneratedAt={strategy.generatedAt}
+                                staleInstructions
                                 playProvenanceLabel={playProvenanceLabel}
                                 callBullets={
                                   editedCallBullets[contact.id] ??

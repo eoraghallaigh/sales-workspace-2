@@ -2,8 +2,9 @@ import { Layout } from "@/components/Layout";
 import WorkspaceHeader from "@/components/WorkspaceHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, RotateCcw, RotateCw, Loader2, Check } from "lucide-react";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { ChevronDown, RotateCcw, RotateCw, Check } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useCyclePath } from "@/hooks/useCyclePath";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -82,15 +83,17 @@ const BoldText = ({ text }: { text: string }) => {
 const AGENT_CONFIG: Record<string, { title: string; description: string; placeholder: string }> = {
   research: {
     title: "Company research agent",
-    description: "Define your research priorities and output structure.",
+    description: "Define your research priorities and output structure. Changes apply to new research runs only, previously generated research is not affected.",
     placeholder: "e.g. Focus on recent funding rounds, leadership changes, and technology stack. Format the output as bullet points grouped by category.",
   },
   sequencing: {
     title: "Sequencing agent",
-    description: "Define your outreach style and sequence preferences.",
+    description: "Define your outreach style and sequence preferences. Changes apply to new sequences only, previously generated sequences are not affected.",
     placeholder: "e.g. Keep emails under 100 words. Use a casual but professional tone. Reference the prospect's recent LinkedIn activity when possible.",
   },
 };
+
+const CHAR_LIMIT = 2000;
 
 const AgentDetail = () => {
   const { agentId } = useParams<{ agentId: string }>();
@@ -99,14 +102,16 @@ const AgentDetail = () => {
 
   const isSequencing = agentId === "sequencing";
 
-  const [instructions, setInstructions] = useState("");
+  const [draft, setDraft] = useState("");
+  const [savedInstructions, setSavedInstructions] = useState("");
+  const [saveFlash, setSaveFlash] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [textareaFocused, setTextareaFocused] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(PREVIEW_COMPANIES[0]);
   const [selectedContact, setSelectedContact] = useState(PREVIEW_CONTACTS[0]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [previewState, setPreviewState] = useState<"idle" | "running" | "done">("idle");
-  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
-  const [hasChangedSincePreview, setHasChangedSincePreview] = useState(false);
-  const saveTimerRef = useRef<number | null>(null);
+  const [previewedInstructions, setPreviewedInstructions] = useState<string | null>(null);
 
   const [expandedTouches, setExpandedTouches] = useState<Record<string, boolean>>({});
   const [scriptMode, setScriptMode] = useState<"script" | "bullets">("script");
@@ -122,23 +127,34 @@ const AgentDetail = () => {
   const setEditable = useCallback((key: string, value: string) =>
     setEditedContent((prev) => ({ ...prev, [key]: value })), []);
 
+  const isDirty = draft !== savedInstructions;
+  const hasSavedChangesSincePreview = savedInstructions !== previewedInstructions;
+
   const handleInstructionsChange = (value: string) => {
-    setInstructions(value);
-    setSaveState("saving");
-    setHasChangedSincePreview(true);
-    if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = window.setTimeout(() => setSaveState("saved"), 1500);
+    setDraft(value);
   };
 
-  useEffect(() => {
-    return () => { if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current); };
-  }, []);
+  const handleSave = () => {
+    setSavedInstructions(draft);
+    setLastSavedAt(new Date());
+    setSaveFlash(true);
+    setTimeout(() => setSaveFlash(false), 2000);
+  };
 
-  const isSaving = saveState === "saving";
+  const charsRemaining = CHAR_LIMIT - draft.length;
+
+  const previewDisabled = isDirty || previewState === "running" || (previewState === "done" && !hasSavedChangesSincePreview);
+  const previewDisabledReason = isDirty
+    ? "Save your changes before previewing"
+    : previewState === "running"
+      ? "Preview is running"
+      : previewState === "done" && !hasSavedChangesSincePreview
+        ? "Save new changes to preview again"
+        : undefined;
 
   const startPreview = () => {
     setPreviewState("running");
-    setHasChangedSincePreview(false);
+    setPreviewedInstructions(savedInstructions);
     setTimeout(() => setPreviewState("done"), 18000);
   };
 
@@ -174,14 +190,34 @@ const AgentDetail = () => {
               </p>
 
               <textarea
-                value={instructions}
+                value={draft}
                 onChange={(e) => handleInstructionsChange(e.target.value)}
+                onFocus={() => setTextareaFocused(true)}
+                onBlur={() => setTextareaFocused(false)}
+                maxLength={CHAR_LIMIT}
                 placeholder={config.placeholder}
                 className="w-full min-h-[240px] rounded-[var(--radius-card)] border border-[var(--color-border-core-subtle)] bg-[var(--color-fill-secondary-default)] p-4 body-100 resize-y focus:outline-none focus:border-[var(--color-border-interactive-pressed)] placeholder:text-[14px] placeholder:leading-[24px] placeholder:font-light placeholder:[font-family:var(--trellis-font-sans)]"
                 style={{ color: "var(--color-text-core-default)" }}
               />
 
-              <div className="flex items-center justify-between mt-2">
+              <div className="flex items-center justify-between mt-1">
+                {saveFlash ? (
+                  <span className="inline-flex items-center gap-1.5 detail-200 text-trellis-green-700">
+                    <Check size={12} />
+                    Changes saved
+                  </span>
+                ) : textareaFocused ? (
+                  <span className="detail-200" style={{ color: "var(--color-text-core-subtle)" }}>
+                    {charsRemaining.toLocaleString()} characters remaining
+                  </span>
+                ) : lastSavedAt ? (
+                  <span className="detail-200" style={{ color: "var(--color-text-core-subtle)" }}>
+                    Last updated {lastSavedAt.toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}
+                  </span>
+                ) : (
+                  <span />
+                )}
+
                 <div className="flex items-center gap-1">
                   <button
                     className="p-1 rounded hover:bg-[var(--color-fill-surface-default-hover)]"
@@ -195,20 +231,10 @@ const AgentDetail = () => {
                   >
                     <RotateCw size={14} />
                   </button>
+                  <Button variant="primary" size="small" onClick={handleSave} disabled={!isDirty} className="ml-2">
+                    Save
+                  </Button>
                 </div>
-
-                {saveState === "saving" && (
-                  <span className="inline-flex items-center gap-1.5 body-100 text-muted-foreground">
-                    <Loader2 size={12} className="animate-spin" />
-                    Saving your changes
-                  </span>
-                )}
-                {saveState === "saved" && (
-                  <span className="inline-flex items-center gap-1.5 body-100 text-trellis-green-700">
-                    <Check size={12} />
-                    Changes saved
-                  </span>
-                )}
               </div>
             </div>
 
@@ -226,9 +252,22 @@ const AgentDetail = () => {
                       : "Test the research agent on one of your P1 companies."}
                   </p>
                 </div>
-                <Button variant="ai" size="small" onClick={startPreview} disabled={isSaving || previewState === "running" || (previewState === "done" && !hasChangedSincePreview)}>
-                  Preview
-                </Button>
+                {previewDisabled ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="cursor-not-allowed">
+                        <Button variant="ai-secondary" size="small" disabled className="pointer-events-none">
+                          Preview
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>{previewDisabledReason}</TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Button variant="ai-secondary" size="small" onClick={startPreview}>
+                    Preview
+                  </Button>
+                )}
               </div>
 
               {isSequencing ? (
@@ -437,9 +476,9 @@ const AgentDetail = () => {
               )}
 
               <div className="flex items-baseline justify-end mt-5">
-                {previewState === "idle" && <Popover open={pickerOpen} onOpenChange={isSaving ? undefined : setPickerOpen}>
+                {previewState === "idle" && <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
                   <PopoverTrigger asChild>
-                    <button className="inline-flex items-center gap-1.5 body-100 font-medium shrink-0 disabled:opacity-50 disabled:cursor-not-allowed" disabled={isSaving}>
+                    <button className="inline-flex items-center gap-1.5 body-100 font-medium shrink-0">
                       {isSequencing ? "Change contact" : "Change company"}
                       <ChevronDown size={14} />
                     </button>

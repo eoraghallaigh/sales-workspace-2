@@ -12,7 +12,6 @@ const agentsData = [
     name: "Company Research Agent",
     description:
       "Your personal prospect researcher. Tell it what you want it to focus on and how to format its output.",
-    stats: ["50 companies researched this week", "50 new contacts with talking points"],
     icon: "blogResearch" as TrellisIconName,
   },
   {
@@ -20,7 +19,6 @@ const agentsData = [
     name: "Sequencing Agent",
     description:
       "The agent that crafts your outreach. Customise it to your style.",
-    stats: ["50 sequences created this week"],
     icon: "sequences" as TrellisIconName,
   },
 ];
@@ -39,7 +37,7 @@ const Agents = () => {
             padding: "48px",
           }}
         >
-          <div className="flex gap-12 items-start">
+          <div className="flex gap-12 items-stretch">
             {agentsData.map((agent) => (
               <AgentCard
                 key={agent.id}
@@ -74,36 +72,12 @@ const AgentCard = ({ agent, onConfigure }: AgentCardProps) => {
         <h2 className="heading-500">{agent.name}</h2>
       </div>
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 flex-1">
         <p className="body-100" style={{ color: "var(--color-text-core-default)" }}>
           {agent.description}
         </p>
 
-        <div className="flex items-center gap-3">
-          {agent.stats.map((stat, i) => (
-            <span key={i} className="flex items-center gap-3">
-              {i > 0 && (
-                <span
-                  className="rounded-full"
-                  style={{
-                    width: 4,
-                    height: 4,
-                    backgroundColor: "var(--color-fill-primary-default)",
-                    flexShrink: 0,
-                  }}
-                />
-              )}
-              <span
-                className="body-100 whitespace-nowrap"
-                style={{ color: "var(--color-text-core-subtle)" }}
-              >
-                {stat}
-              </span>
-            </span>
-          ))}
-        </div>
-
-        <div>
+        <div className="mt-auto">
           <Button variant="primary" size="medium" onClick={onConfigure}>
             Configure
           </Button>
