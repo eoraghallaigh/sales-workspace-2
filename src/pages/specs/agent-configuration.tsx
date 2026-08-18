@@ -103,22 +103,20 @@ const StatusText = ({ mode }: { mode: "chars" | "flash" | "timestamp" | "empty" 
 };
 
 const SaveBar = ({ isDirty, statusMode }: { isDirty: boolean; statusMode: "chars" | "flash" | "timestamp" | "empty" }) => (
-  <>
+  <div className="flex items-center justify-between mt-1">
     <StatusText mode={statusMode} />
-    <div className="flex items-center justify-between mt-6">
-      <div className="flex items-center gap-1">
-        <button className="p-1 rounded" style={{ color: "var(--color-icon-core-subtle)" }}>
-          <RotateCcw size={14} />
-        </button>
-        <button className="p-1 rounded" style={{ color: "var(--color-icon-core-subtle)" }}>
-          <RotateCw size={14} />
-        </button>
-      </div>
-      <Button variant="primary" size="small" disabled={!isDirty}>
+    <div className="flex items-center gap-1">
+      <button className="p-1 rounded" style={{ color: "var(--color-icon-core-subtle)" }}>
+        <RotateCcw size={14} />
+      </button>
+      <button className="p-1 rounded" style={{ color: "var(--color-icon-core-subtle)" }}>
+        <RotateCw size={14} />
+      </button>
+      <Button variant="primary" size="small" disabled={!isDirty} className="ml-2">
         Save
       </Button>
     </div>
-  </>
+  </div>
 );
 
 const StaleInstructionsBanner = () => (
@@ -359,7 +357,7 @@ const AgentConfigurationSpec = () => (
         </FlowStep>
         <FlowStep
           step={2}
-          label="Typing (dirty)"
+          label="Typing"
           description="Textarea is focused — status text shows character count. Save button is enabled. Preview button is disabled until the user saves."
         >
           <div className="w-[800px]">
