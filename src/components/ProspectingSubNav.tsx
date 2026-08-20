@@ -6,6 +6,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, PanelLeftClose, ArrowRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { usePlays } from "@/contexts/PlaysContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
@@ -175,7 +182,24 @@ const ProspectingSubNav = ({
               </CollapsibleTrigger>
               <CollapsibleContent className={contentSpacing}>
                 {plays.map(item => (
-                  <Row key={item.id} isAlpha={isAlpha} label={item.label} indented selected={activeItem === item.id} onClick={() => setActiveItem(item.id)} />
+                  <Row
+                    key={item.id}
+                    isAlpha={isAlpha}
+                    label={item.label}
+                    indented
+                    selected={activeItem === item.id}
+                    onClick={() => setActiveItem(item.id)}
+                    trailing={item.isPotm ? (
+                      <TooltipProvider delayDuration={200}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span><Badge variant="status-orange" className="text-[10px] leading-[14px] px-1.5 py-0">POTM</Badge></span>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">Play of the Month</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : undefined}
+                  />
                 ))}
                 <Row
                   isAlpha={isAlpha}
