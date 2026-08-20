@@ -2706,7 +2706,6 @@ const CreateViewModal = ({
   }]);
   const [viewName, setViewName] = useState("");
   const [viewDescription, setViewDescription] = useState("");
-  const [enablementSummary, setEnablementSummary] = useState("");
   const [editingFilter, setEditingFilter] = useState<{
     groupId: string;
     filterId: string;
@@ -2797,11 +2796,6 @@ const CreateViewModal = ({
   );
   const previewRep: RepPersona | null = previewRepId ? repPersonas.find(r => r.id === previewRepId) || null : null;
 
-  // Enablement materials
-  const [enablementMaterials, setEnablementMaterials] = useState<EnablementMaterial[]>([]);
-  const [newMaterialTitle, setNewMaterialTitle] = useState("");
-  const [newMaterialUrl, setNewMaterialUrl] = useState("");
-  const [newMaterialType, setNewMaterialType] = useState<EnablementMaterial["type"]>("case-study");
   
   // Columns step state
   const [selectedColumns, setSelectedColumns] = useState<ColumnItem[]>([]);
@@ -2878,7 +2872,6 @@ const CreateViewModal = ({
       setExpiryDate(initialPlay.endDate ? new Date(initialPlay.endDate) : undefined);
       setLaunchDate(initialPlay.startDate ? new Date(initialPlay.startDate) : undefined);
       setSelectedSegment(initialPlay.marketSegment?.[0] ?? "");
-      setEnablementMaterials(initialPlay.enablementMaterials);
       const materialLinks = initialPlay.enablementMaterials.map((m) => m.description);
       setHeroLink(materialLinks[0] ?? "");
       setEnablementLinks([
@@ -2901,7 +2894,6 @@ const CreateViewModal = ({
       setExpiryDate(undefined);
       setLaunchDate(undefined);
       setSelectedSegment("");
-      setEnablementMaterials([]);
       setHeroLink("");
       setEnablementLinks(["", "", "", ""]);
       setHeroLoading(false);
@@ -3285,23 +3277,6 @@ const CreateViewModal = ({
     }
   }, [chatMessages, agentStatus]);
 
-  const handleAddEnablementMaterial = () => {
-    if (!newMaterialTitle.trim()) return;
-    const material: EnablementMaterial = {
-      id: `em-new-${Date.now()}`,
-      title: newMaterialTitle.trim(),
-      type: newMaterialType,
-      description: newMaterialUrl.trim() || "Added during play creation",
-    };
-    setEnablementMaterials(prev => [...prev, material]);
-    setNewMaterialTitle("");
-    setNewMaterialUrl("");
-  };
-
-  const handleRemoveEnablementMaterial = (id: string) => {
-    setEnablementMaterials(prev => prev.filter(m => m.id !== id));
-  };
-
   // Build a Play object from current state
   const buildPlay = useCallback((): Play => {
     const allActiveFilters = filterGroups.flatMap(g => g.filters);
@@ -3344,10 +3319,15 @@ const CreateViewModal = ({
       metrics: initialPlay?.metrics ?? { totalCompanies: previewCompanies.length, worked: 0, meetings: 0, target: previewCompanies.length, contactsEngaged: 0, contactsInPlay: 0, pipelineCreated: 0 },
       status: playStatus,
       owner: initialPlay?.owner ?? defaultViewerLabel,
-      geo: initialPlay?.geo,
+      geo: (() => {
+        if (selectedTeams.length === 0) return initialPlay?.geo;
+        const geoMap: Record<string, string> = { nam: "NAM", emea: "EMEA", latam: "LATAM", apac: "APAC" };
+        return [...new Set(selectedTeams.map(id => geoMap[id.split("-")[0]]).filter(Boolean))];
+      })(),
       marketSegment: selectedSegment ? [selectedSegment] : initialPlay?.marketSegment,
       teams: selectedTeams.length > 0 ? selectedTeams : undefined,
       filters,
+      sequence: initialPlay?.sequence ?? `${(viewName.trim() || "Untitled Play")} Sequence`,
     };
   }, [filterGroups, viewName, viewDescription, launchDate, expiryDate, selectedSegment, completionAction, completionCount, completionPer, heroLink, enablementLinks, previewCompanies.length, selectedTeams, playStatus, initialPlay]);
   const handleAddFilterToGroup = (filter: FilterItem, groupId: string) => {
@@ -4236,7 +4216,7 @@ const CreateViewModal = ({
             <motion.div
               key="landing"
               style={{ width: leftPanelWidth }}
-              className="relative shrink-0 flex flex-col ml-12 my-6 rounded-lg shadow-100 border border-core-subtle bg-card overflow-hidden"
+              className="relative shrink-0 flex flex-col ml-12 mt-6 mb-1 rounded-lg shadow-100 border border-core-subtle bg-card overflow-hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -4312,7 +4292,7 @@ const CreateViewModal = ({
             <motion.div
               key="agent"
               style={{ width: leftPanelWidth }}
-              className="relative shrink-0 flex flex-col ml-12 my-6 rounded-lg shadow-100 border border-core-subtle bg-card overflow-hidden"
+              className="relative shrink-0 flex flex-col ml-12 mt-6 mb-1 rounded-lg shadow-100 border border-core-subtle bg-card overflow-hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -4389,7 +4369,7 @@ const CreateViewModal = ({
             <motion.div
               key="wizard-filters"
               style={{ width: leftPanelWidth }}
-              className="relative shrink-0 flex flex-col ml-12 my-6 rounded-lg shadow-100 border border-core-subtle bg-card overflow-hidden"
+              className="relative shrink-0 flex flex-col ml-12 mt-6 mb-1 rounded-lg shadow-100 border border-core-subtle bg-card overflow-hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -4620,7 +4600,7 @@ const CreateViewModal = ({
           <motion.div
             key="wizard-columns"
             style={{ width: leftPanelWidth }}
-            className="relative shrink-0 flex flex-col ml-12 my-6 rounded-lg shadow-100 border border-core-subtle bg-card overflow-hidden"
+            className="relative shrink-0 flex flex-col ml-12 mt-6 mb-1 rounded-lg shadow-100 border border-core-subtle bg-card overflow-hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -4730,7 +4710,7 @@ const CreateViewModal = ({
           <motion.div
             key="wizard-settings"
             style={{ width: leftPanelWidth }}
-            className="relative shrink-0 flex flex-col ml-12 my-6 rounded-lg shadow-100 border border-core-subtle bg-card overflow-hidden"
+            className="relative shrink-0 flex flex-col ml-12 mt-6 mb-1 rounded-lg shadow-100 border border-core-subtle bg-card overflow-hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -4992,26 +4972,6 @@ const CreateViewModal = ({
                   </FormControl>
                 ))}
 
-                {/* Enablement Summary */}
-                <FormControl
-                  label="Enablement Summary"
-                  helpText={
-                    <>
-                      Create your enablement summary using this{" "}
-                      <a className="text-text-interactive hover:text-text-interactive-hover underline cursor-pointer">
-                        Claude project
-                      </a>
-                    </>
-                  }
-                >
-                  <textarea
-                    placeholder="Paste or write the enablement summary reps should see for this play."
-                    value={enablementSummary}
-                    onChange={(e) => setEnablementSummary(e.target.value)}
-                    rows={4}
-                    className="w-full rounded-[3px] border border-[var(--color-border-core-default,#8A8A8A)] bg-[var(--color-fill-field-default,#FFF)] body-200 text-[var(--color-text-core-default)] placeholder:text-[var(--color-text-core-subtle)] px-3 py-2 resize-y outline-none focus:border-[var(--color-border-interactive-default)]"
-                  />
-                </FormControl>
               </div>
             </ScrollArea>
             {wizardFooter}

@@ -31,6 +31,13 @@ const specs: SpecEntry[] = [
       "Custom instructions for the research and sequencing agents, with a live preview of agent output.",
     category: "Interaction flows",
   },
+  {
+    slug: "play-lifecycle",
+    title: "Play creation & lifecycle",
+    description:
+      "Play creation form footer, draft/publish flow, status transitions, POTM designation, and the plays table with inline status changes.",
+    category: "Interaction flows",
+  },
 ];
 
 const categories = [...new Set(specs.map((s) => s.category))];
