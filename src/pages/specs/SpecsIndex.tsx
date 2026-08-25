@@ -32,6 +32,13 @@ const specs: SpecEntry[] = [
     category: "Interaction flows",
   },
   {
+    slug: "play-lifecycle",
+    title: "Play creation & lifecycle",
+    description:
+      "Play creation form footer, draft/publish flow, status transitions, POTM designation, and the plays table with inline status changes.",
+    category: "Interaction flows",
+  },
+  {
     slug: "contact-views",
     title: "Contact views",
     description:

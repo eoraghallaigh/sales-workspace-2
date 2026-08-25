@@ -4,7 +4,14 @@ import { Layout } from "@/components/Layout";
 import WorkspaceHeader from "@/components/WorkspaceHeader";
 import CreateViewModal from "@/components/CreateViewModal";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { StatusIndicator } from "@/components/ui/status-indicator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useCyclePath } from "@/hooks/useCyclePath";
 import { usePlays } from "@/contexts/PlaysContext";
 import { Play, PlayStatus } from "@/data/playData";
@@ -41,6 +48,7 @@ const PlayBuilder = () => {
   // Whether the user has actually edited a form field. Stays false through the
   // mount emit, so backing straight out of a fresh form saves nothing.
   const hasEditedRef = useRef(false);
+  const [isPotm, setIsPotm] = useState(editing?.isPotm ?? false);
 
   const handlePlayChange = useCallback((play: Play, publishable: boolean) => {
     setLatestPlay(play);
@@ -75,10 +83,10 @@ const PlayBuilder = () => {
       if (draftIdRef.current) {
         // Pin the id: in create mode buildPlay regenerates it each keystroke, so
         // keep updating the same draft row rather than spawning duplicates.
-        updatePlay(draftIdRef.current, { ...latestPlay, id: draftIdRef.current });
+        updatePlay(draftIdRef.current, { ...latestPlay, isPotm, id: draftIdRef.current });
       } else {
         draftIdRef.current = latestPlay.id;
-        addPlay({ ...latestPlay, status: "draft" });
+        addPlay({ ...latestPlay, isPotm, status: "draft" });
       }
       lastSavedRef.current = serialized;
       setSaveState("saved");
@@ -91,7 +99,7 @@ const PlayBuilder = () => {
     if (!latestPlay || !canPublish) return;
     const today = new Date().toISOString().slice(0, 10);
     const status: PlayStatus = latestPlay.startDate > today ? "scheduled" : "live";
-    const published = { ...latestPlay, status };
+    const published = { ...latestPlay, status, isPotm };
     if (draftIdRef.current) {
       updatePlay(draftIdRef.current, { ...published, id: draftIdRef.current });
     } else {
@@ -100,15 +108,30 @@ const PlayBuilder = () => {
     navigate(cyclePath("/plays"));
   };
 
+  const handleSaveDraft = () => {
+    if (!latestPlay) return;
+    const draft: Play = {
+      ...latestPlay,
+      label: latestPlay.label.trim() || "Untitled Play",
+      status: "draft",
+      isPotm,
+    };
+    if (draftIdRef.current) {
+      updatePlay(draftIdRef.current, { ...draft, id: draftIdRef.current });
+    } else {
+      draftIdRef.current = draft.id;
+      addPlay(draft);
+    }
+    navigate(cyclePath("/plays"));
+  };
+
   const handleClose = () => {
-    // Backing out persists the work-in-progress only if the user actually edited
-    // something. A brand-new play is saved as a Draft (Untitled Play if unnamed);
-    // an existing play keeps its current status so editing never demotes it.
     if (hasEditedRef.current && latestPlay) {
       const finalPlay: Play = {
         ...latestPlay,
         label: latestPlay.label.trim() || "Untitled Play",
         status: isEditMode ? latestPlay.status : "draft",
+        isPotm,
       };
       if (draftIdRef.current) {
         updatePlay(draftIdRef.current, { ...finalPlay, id: draftIdRef.current });
@@ -120,33 +143,61 @@ const PlayBuilder = () => {
     navigate(cyclePath("/plays"));
   };
 
+  const publishTooltip = (() => {
+    if (!latestPlay?.startDate) return null;
+    const today = new Date().toISOString().slice(0, 10);
+    if (latestPlay.startDate > today) {
+      const formatted = new Date(latestPlay.startDate + "T00:00:00").toLocaleDateString(
+        undefined,
+        { month: "short", day: "numeric", year: "numeric" }
+      );
+      return `Reps won't see the play until ${formatted}`;
+    }
+    return "Reps will see this play immediately";
+  })();
+
   const formFooter = (
-    <div className="border-t border-[var(--color-border-container-default)] p-3">
-      <div className="flex items-center justify-between gap-4">
-        <Button
-          variant="primary"
-          size="medium"
-          onClick={handlePublish}
-          disabled={!canPublish}
-        >
-          Publish play
-        </Button>
-        {saveState !== "idle" && (
-          <StatusIndicator
-            key={saveState}
-            className="animate-fade-in"
-            loading={saveState === "saving"}
-            dotClassName="bg-trellis-green-600"
-            label={saveState === "saving" ? "Saving changes" : "Changes saved"}
-          />
-        )}
+    <div className="border-t border-[var(--color-border-container-default)]">
+      <div className="flex items-center justify-between p-3">
+        <div className="flex items-center gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="primary"
+                  size="medium"
+                  onClick={handlePublish}
+                  disabled={!canPublish}
+                >
+                  Publish
+                </Button>
+              </TooltipTrigger>
+              {canPublish && publishTooltip && (
+                <TooltipContent side="top">
+                  {publishTooltip}
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
+          <Button
+            variant="secondary"
+            size="medium"
+            onClick={handleSaveDraft}
+          >
+            Save as Draft
+          </Button>
+        </div>
+        <label className="flex items-center gap-1.5 cursor-pointer body-75 text-[var(--color-text-core-default)]">
+          <Checkbox checked={isPotm} onCheckedChange={(v) => setIsPotm(v === true)} />
+          POTM
+        </label>
       </div>
     </div>
   );
 
   return (
     <Layout>
-      <div className="flex flex-col h-[var(--page-content-height)] overflow-hidden bg-muted/30">
+      <div className="flex flex-col h-[var(--page-content-height)] overflow-hidden bg-muted/30 pb-4">
         <WorkspaceHeader
           backLink={{ to: cyclePath("/plays"), label: "Plays" }}
           title={isEditMode ? "Edit play" : "Create play"}
@@ -161,6 +212,17 @@ const PlayBuilder = () => {
             initialPlay={editing ?? undefined}
           />
         </div>
+        {saveState !== "idle" && (
+          <div className="ml-12 pb-1">
+            <StatusIndicator
+              key={saveState}
+              className="animate-fade-in"
+              loading={saveState === "saving"}
+              dotClassName="bg-trellis-green-600"
+              label={saveState === "saving" ? "Saving changes" : "Changes saved"}
+            />
+          </div>
+        )}
       </div>
     </Layout>
   );

@@ -44,6 +44,8 @@ export interface Play {
   marketSegment?: string[];
   teams?: string[];
   filters?: PlayFilter[];
+  sequence?: string;
+  isPotm?: boolean;
 }
 
 // The state shown to users is derived: a play is a Draft until published, then
@@ -63,7 +65,7 @@ export const getPlayState = (play: Play): PlayState => {
 };
 
 // Ended plays are read-only; Draft, Upcoming and Active plays can be edited.
-export const isPlayEditable = (play: Play): boolean => getPlayState(play) !== "ended";
+export const isPlayEditable = (_play: Play): boolean => true;
 
 export const plays: Play[] = [
   {
@@ -115,14 +117,15 @@ export const plays: Play[] = [
     status: "live",
     owner: "Sarah Chen",
     geo: ["US"],
-    marketSegment: ["Mid-Market"]
+    marketSegment: ["Mid-Market"],
+    sequence: "SF Rip & Replace (play2)"
   },
   {
     id: "q3-aeo-push",
     label: "Q3 AEO Push",
     description: "Accelerate pipeline for the AEO product line ahead of Q3 targets. Prioritize companies with 500+ employees that have shown intent signals around AI-powered analytics. Leadership wants 15 meetings booked by end of play.",
-    startDate: "2026-03-01",
-    endDate: "2026-05-31",
+    startDate: "2026-09-01",
+    endDate: "2026-11-30",
     createdBy: "Marcus Johnson (Dir. Sales)",
     completionCriteria: "2 cold calls + 1 email sequence per company",
     enablementMaterials: [
@@ -145,24 +148,25 @@ export const plays: Play[] = [
     micrositePreview: aeoMicrositePreview,
     metrics: {
       totalCompanies: 48,
-      worked: 8,
-      meetings: 2,
+      worked: 0,
+      meetings: 0,
       target: 15,
-      contactsEngaged: 21,
+      contactsEngaged: 0,
       contactsInPlay: 340,
-      pipelineCreated: 95000
+      pipelineCreated: 0
     },
-    status: "live",
+    status: "scheduled",
     owner: "Marcus Johnson",
     geo: ["US", "EMEA"],
-    marketSegment: ["Mid-Market", "Enterprise"]
+    marketSegment: ["Mid-Market", "Enterprise"],
+    sequence: "AEO Outbound - Q3"
   },
   {
     id: "enterprise-expansion",
     label: "Enterprise Expansion",
     description: "Identify and engage enterprise accounts ($50M+ revenue) in our install base that are using fewer than 3 hubs. Cross-sell and upsell opportunity — coordinate with CSMs before outreach.",
-    startDate: "2026-01-15",
-    endDate: "2026-06-30",
+    startDate: "2026-07-01",
+    endDate: "2026-10-31",
     createdBy: "Sarah Chen (VP Sales)",
     completionCriteria: "1 meeting booked with expansion champion",
     enablementMaterials: [
@@ -200,7 +204,9 @@ export const plays: Play[] = [
     status: "live",
     owner: "Sarah Chen",
     geo: ["US", "EMEA", "APAC"],
-    marketSegment: ["Enterprise"]
+    marketSegment: ["Enterprise"],
+    sequence: "MH Pro/Ent (play1)",
+    isPotm: true
   },
   {
     id: "smb-winback",
@@ -239,7 +245,45 @@ export const plays: Play[] = [
     status: "live",
     owner: "Lisa Park",
     geo: ["US"],
-    marketSegment: ["SMB"]
+    marketSegment: ["SMB"],
+    sequence: "SMB Winback Reactivation"
+  },
+  {
+    id: "marketo-displacement",
+    label: "Marketo Displacement",
+    description: "Target mid-market companies on Marketo whose contracts are up for renewal in Q4. Lead with the simplicity and total-cost-of-ownership story — Marketo's complexity and Adobe pricing are the main pain points.",
+    startDate: "2026-10-01",
+    endDate: "2026-12-31",
+    createdBy: "Marcus Johnson (Dir. Sales)",
+    completionCriteria: "1 discovery call per company",
+    enablementMaterials: [
+      {
+        id: "em-12",
+        title: "Marketo vs HubSpot Battle Card",
+        type: "battle-card",
+        description: "Key differentiators, objection handling, and TCO comparison"
+      },
+      {
+        id: "em-13",
+        title: "Marketo Migration Talk Track",
+        type: "talk-track",
+        description: "Discovery questions and positioning for Marketo displacement"
+      }
+    ],
+    metrics: {
+      totalCompanies: 0,
+      worked: 0,
+      meetings: 0,
+      target: 10,
+      contactsEngaged: 0,
+      contactsInPlay: 0,
+      pipelineCreated: 0
+    },
+    status: "draft",
+    owner: "Marcus Johnson",
+    geo: ["US", "EMEA"],
+    marketSegment: ["Mid-Market"],
+    sequence: "Marketo Rip & Replace (play1)"
   }
 ];
 
