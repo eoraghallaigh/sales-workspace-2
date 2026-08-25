@@ -31,6 +31,7 @@ import SpecsIndex from "./pages/specs/SpecsIndex";
 import FeedbackPopoverSpec from "./pages/specs/feedback-popover";
 import SequenceCustomisationSpec from "./pages/specs/sequence-customisation";
 import AgentConfigurationSpec from "./pages/specs/agent-configuration";
+import ContactViewsSpec from "./pages/specs/contact-views";
 import PlayLifecycleSpec from "./pages/specs/play-lifecycle";
 import DesignMode from "./sandbox/DesignMode";
 import Inspector from "./inspector/Inspector";
@@ -74,6 +75,7 @@ const App = () => (
             <Route path="/specs/feedback-popover" element={<FeedbackPopoverSpec />} />
             <Route path="/specs/sequence-customisation" element={<SequenceCustomisationSpec />} />
             <Route path="/specs/agent-configuration" element={<AgentConfigurationSpec />} />
+            <Route path="/specs/contact-views" element={<ContactViewsSpec />} />
             <Route path="/specs/play-lifecycle" element={<PlayLifecycleSpec />} />
           </Routes>
           <GuidedTour />

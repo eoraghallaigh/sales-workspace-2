@@ -24,6 +24,9 @@ import { Info, ChevronDown, ListFilter, X, ExternalLink, FileEdit, Mail, Phone, 
 import CompanyCard from "@/components/CompanyCard";
 import CompanyCardVariantC from "@/components/CompanyCardVariantC";
 import CompaniesTableView from "@/components/CompaniesTableView";
+import ContactsTableView from "@/components/ContactsTableView";
+import ViewController, { type EntityView } from "@/components/ViewController";
+import CreateCallTaskPanel from "@/components/CreateCallTaskPanel";
 import FullCustomerBook from "@/components/FullCustomerBook";
 import FullProspectBook from "@/components/FullProspectBook";
 import { companyStrategies, defaultStrategy } from "@/data/companyStrategies";
@@ -45,6 +48,7 @@ import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { Company } from "@/components/CompanyCard";
 import { calculateCompanyStatus } from "@/utils/companyStatusUtils";
 import { useVariant, type CardVariant } from "@/contexts/VariantContext";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const formatPlayPipeline = (amount: number) => {
   if (amount >= 1_000_000) {
@@ -57,6 +61,13 @@ const formatPlayPipeline = (amount: number) => {
 
 // Human-readable labels for the prospecting sub-nav views, used to label the
 // back button on the company detail page so it names the view you came from.
+const PRIORITY_DESCRIPTIONS: Record<string, string> = {
+  P1: "P1s are your top priority leads, with high value and high intent.",
+  P2: "P2s are high value leads with low intent. They require some nurturing.",
+  P3: "P3s have high intent but lower value.",
+  P4: "P4s have low intent and low value.",
+};
+
 const VIEW_LABELS: Record<string, string> = {
   "qls": "QLs",
   "full-prospect-book": "Full Prospect Book",
@@ -114,15 +125,24 @@ const Prospecting = () => {
   const viewParam = searchParams.get("view");
   const [activeNavItem, setActiveNavItem] = useState<string>(playId || viewParam || "p1-now");
   const { variant: cardVariant } = useVariant();
+  const [entityView, setEntityView] = useState<EntityView>("companies");
+  const [isCallTaskPanelOpen, setIsCallTaskPanelOpen] = useState(false);
+  const [callTaskContactCount, setCallTaskContactCount] = useState(0);
+  const [callTaskContactIds, setCallTaskContactIds] = useState<string[]>([]);
+  const [activeCallTasks, setActiveCallTasks] = useState<Record<string, number>>({});
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { plays } = usePlays();
   useEffect(() => {
     if (playId) {
       setActiveNavItem(playId);
+      setEntityView("companies");
     }
   }, [playId]);
   useEffect(() => {
     if (viewParam) {
       setActiveNavItem(viewParam);
+      setEntityView("companies");
     }
   }, [viewParam]);
   const activePlay = plays.find(c => c.id === activeNavItem) || null;
@@ -553,6 +573,17 @@ const Prospecting = () => {
   }
 
   return <Layout>
+      {successMessage && (
+        <div className="fixed top-0 left-0 right-0 z-[100] flex justify-center px-6 pt-4 pointer-events-none">
+          <Alert
+            type="success"
+            onClose={() => setSuccessMessage(null)}
+            className="pointer-events-auto w-auto max-w-lg shadow-lg animate-in slide-in-from-top-2 duration-300"
+          >
+            <AlertDescription type="success">{successMessage}</AlertDescription>
+          </Alert>
+        </div>
+      )}
       <div className="flex flex-col h-[var(--page-content-height)] bg-[var(--page-bg)] overflow-hidden">
         <WorkspaceHeader activeTab="prospecting" />
         <div className="flex flex-1 overflow-hidden relative">
@@ -574,7 +605,7 @@ const Prospecting = () => {
             )}
             {/* Top Metrics - hidden when expanded panel is active or when a Full Book view is shown */}
             {activeNavItem !== "full-customer-book" && activeNavItem !== "full-prospect-book" && (
-            <div className={`${expandedPanelCompanyId ? 'px-0 py-0' : 'max-w-[1440px] px-6 py-6'}`}>
+            <div className={`${expandedPanelCompanyId ? 'px-0 py-0' : 'px-6 py-6'}`}>
               {!expandedPanelCompanyId && !activePlay && <div className="grid grid-cols-4 gap-4 mb-6">
                 <DataWell label="Total book size" value="497" tooltip="Total book size" />
                 <DataWell label="Book worked" value="52%" secondary="Target: 33%" tooltip="Percentage of book worked" />
@@ -618,114 +649,136 @@ const Prospecting = () => {
               {/* Company Cards Section */}
               <div>
               {/* Header */}
-              {!expandedPanelCompanyId && <div className="flex items-center justify-between mb-6">
+              {!expandedPanelCompanyId && <div className="flex flex-col gap-4 mb-6">
                 <div>
                   <h2 className="heading-300">{activePlay ? activePlay.label : `${activePriority ?? 'P1'} Prospects`}</h2>
-                  <p className="body-100 text-muted-foreground">{companiesWithCalculatedStatus.length} leads</p>
+                  <p className="detail-100 text-muted-foreground">{companiesWithCalculatedStatus.length} {companiesWithCalculatedStatus.length === 1 ? "company" : "companies"}</p>
+                  {!activePlay && activePriority && PRIORITY_DESCRIPTIONS[activePriority] && (
+                    <p className="body-100 text-muted-foreground mt-2">
+                      {PRIORITY_DESCRIPTIONS[activePriority]} <span className="text-foreground font-semibold cursor-pointer">Learn more.</span>
+                    </p>
+                  )}
                 </div>
-                
-                <div className="flex gap-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="medium" className="border border-transparent heading-50">
-                        Worked Status{selectedWorkedStatuses.size > 0 && ` (${selectedWorkedStatuses.size})`} <TrellisIcon name="downCarat" size={12} />
-                        {selectedWorkedStatuses.size > 0 && <Button variant="ghost" size="icon" className="ml-1 h-5 w-5" onClick={e => {
-                          e.stopPropagation();
-                          clearWorkedStatuses();
-                        }}>
-                            <X className="h-3 w-3" />
-                          </Button>}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-48 bg-card border border-border shadow-lg">
-                      <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 cursor-pointer" onSelect={e => {
-                        e.preventDefault();
-                        toggleWorkedStatus("NEW");
-                      }}>
-                        <div className={`w-4 h-4 border border-foreground rounded-sm flex items-center justify-center ${selectedWorkedStatuses.has("NEW") ? "bg-foreground" : ""}`}>
-                          {selectedWorkedStatuses.has("NEW") && <Check className="h-3 w-3 text-background" />}
-                        </div>
-                        <span className="body-100">NEW</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 cursor-pointer" onSelect={e => {
-                        e.preventDefault();
-                        toggleWorkedStatus("UNWORKED_P1");
-                      }}>
-                        <div className={`w-4 h-4 border border-foreground rounded-sm flex items-center justify-center ${selectedWorkedStatuses.has("UNWORKED_P1") ? "bg-foreground" : ""}`}>
-                          {selectedWorkedStatuses.has("UNWORKED_P1") && <Check className="h-3 w-3 text-background" />}
-                        </div>
-                        <span className="body-100">UNWORKED P1</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 cursor-pointer" onSelect={e => {
-                        e.preventDefault();
-                        toggleWorkedStatus("IN PROGRESS");
-                      }}>
-                        <div className={`w-4 h-4 border border-foreground rounded-sm flex items-center justify-center ${selectedWorkedStatuses.has("IN PROGRESS") ? "bg-foreground" : ""}`}>
-                          {selectedWorkedStatuses.has("IN PROGRESS") && <Check className="h-3 w-3 text-background" />}
-                        </div>
-                        <span className="body-100">IN PROGRESS</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 cursor-pointer" onSelect={e => {
-                        e.preventDefault();
-                        toggleWorkedStatus("OVER_SLA");
-                      }}>
-                        <div className={`w-4 h-4 border border-foreground rounded-sm flex items-center justify-center ${selectedWorkedStatuses.has("OVER_SLA") ? "bg-foreground" : ""}`}>
-                          {selectedWorkedStatuses.has("OVER_SLA") && <Check className="h-3 w-3 text-background" />}
-                        </div>
-                        <span className="body-100">OVER SLA</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 cursor-pointer" onSelect={e => {
-                        e.preventDefault();
-                        toggleWorkedStatus("WORKED");
-                      }}>
-                        <div className={`w-4 h-4 border border-foreground rounded-sm flex items-center justify-center ${selectedWorkedStatuses.has("WORKED") ? "bg-foreground" : ""}`}>
-                          {selectedWorkedStatuses.has("WORKED") && <Check className="h-3 w-3 text-background" />}
-                        </div>
-                        <span className="body-100">WORKED</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 cursor-pointer" onSelect={e => {
-                        e.preventDefault();
-                        toggleWorkedStatus("SNOOZED");
-                      }}>
-                        <div className={`w-4 h-4 border border-foreground rounded-sm flex items-center justify-center ${selectedWorkedStatuses.has("SNOOZED") ? "bg-foreground" : ""}`}>
-                          {selectedWorkedStatuses.has("SNOOZED") && <Check className="h-3 w-3 text-background" />}
-                        </div>
-                        <span className="body-100">SNOOZED</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 cursor-pointer" onSelect={e => {
-                        e.preventDefault();
-                        toggleWorkedStatus("DISMISSED");
-                      }}>
-                        <div className={`w-4 h-4 border border-foreground rounded-sm flex items-center justify-center ${selectedWorkedStatuses.has("DISMISSED") ? "bg-foreground" : ""}`}>
-                          {selectedWorkedStatuses.has("DISMISSED") && <Check className="h-3 w-3 text-background" />}
-                        </div>
-                        <span className="body-100">DISMISSED</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="medium" className="border border-transparent heading-50">
-                        All industries <TrellisIcon name="downCarat" size={12} />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem>All industries</DropdownMenuItem>
-                      <DropdownMenuItem>Technology</DropdownMenuItem>
-                      <DropdownMenuItem>Healthcare</DropdownMenuItem>
-                      <DropdownMenuItem>Finance</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
 
-                  <FilterPill label="Signals" hasCarat options={["All signals", ...SIGNAL_LABELS]} />
+                <div className="flex items-center gap-2">
+                  <ViewController value={entityView} onChange={setEntityView} />
+                  {entityView === "companies" ? (
+                    <>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="medium" className="border border-transparent heading-50">
+                            Worked Status{selectedWorkedStatuses.size > 0 && ` (${selectedWorkedStatuses.size})`} <TrellisIcon name="downCarat" size={12} />
+                            {selectedWorkedStatuses.size > 0 && <Button variant="ghost" size="icon" className="ml-1 h-5 w-5" onClick={e => {
+                              e.stopPropagation();
+                              clearWorkedStatuses();
+                            }}>
+                                <X className="h-3 w-3" />
+                              </Button>}
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-48 bg-card border border-border shadow-lg">
+                          <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 cursor-pointer" onSelect={e => {
+                            e.preventDefault();
+                            toggleWorkedStatus("NEW");
+                          }}>
+                            <div className={`w-4 h-4 border border-foreground rounded-sm flex items-center justify-center ${selectedWorkedStatuses.has("NEW") ? "bg-foreground" : ""}`}>
+                              {selectedWorkedStatuses.has("NEW") && <Check className="h-3 w-3 text-background" />}
+                            </div>
+                            <span className="body-100">NEW</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 cursor-pointer" onSelect={e => {
+                            e.preventDefault();
+                            toggleWorkedStatus("UNWORKED_P1");
+                          }}>
+                            <div className={`w-4 h-4 border border-foreground rounded-sm flex items-center justify-center ${selectedWorkedStatuses.has("UNWORKED_P1") ? "bg-foreground" : ""}`}>
+                              {selectedWorkedStatuses.has("UNWORKED_P1") && <Check className="h-3 w-3 text-background" />}
+                            </div>
+                            <span className="body-100">UNWORKED P1</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 cursor-pointer" onSelect={e => {
+                            e.preventDefault();
+                            toggleWorkedStatus("IN PROGRESS");
+                          }}>
+                            <div className={`w-4 h-4 border border-foreground rounded-sm flex items-center justify-center ${selectedWorkedStatuses.has("IN PROGRESS") ? "bg-foreground" : ""}`}>
+                              {selectedWorkedStatuses.has("IN PROGRESS") && <Check className="h-3 w-3 text-background" />}
+                            </div>
+                            <span className="body-100">IN PROGRESS</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 cursor-pointer" onSelect={e => {
+                            e.preventDefault();
+                            toggleWorkedStatus("OVER_SLA");
+                          }}>
+                            <div className={`w-4 h-4 border border-foreground rounded-sm flex items-center justify-center ${selectedWorkedStatuses.has("OVER_SLA") ? "bg-foreground" : ""}`}>
+                              {selectedWorkedStatuses.has("OVER_SLA") && <Check className="h-3 w-3 text-background" />}
+                            </div>
+                            <span className="body-100">OVER SLA</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 cursor-pointer" onSelect={e => {
+                            e.preventDefault();
+                            toggleWorkedStatus("WORKED");
+                          }}>
+                            <div className={`w-4 h-4 border border-foreground rounded-sm flex items-center justify-center ${selectedWorkedStatuses.has("WORKED") ? "bg-foreground" : ""}`}>
+                              {selectedWorkedStatuses.has("WORKED") && <Check className="h-3 w-3 text-background" />}
+                            </div>
+                            <span className="body-100">WORKED</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 cursor-pointer" onSelect={e => {
+                            e.preventDefault();
+                            toggleWorkedStatus("SNOOZED");
+                          }}>
+                            <div className={`w-4 h-4 border border-foreground rounded-sm flex items-center justify-center ${selectedWorkedStatuses.has("SNOOZED") ? "bg-foreground" : ""}`}>
+                              {selectedWorkedStatuses.has("SNOOZED") && <Check className="h-3 w-3 text-background" />}
+                            </div>
+                            <span className="body-100">SNOOZED</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 cursor-pointer" onSelect={e => {
+                            e.preventDefault();
+                            toggleWorkedStatus("DISMISSED");
+                          }}>
+                            <div className={`w-4 h-4 border border-foreground rounded-sm flex items-center justify-center ${selectedWorkedStatuses.has("DISMISSED") ? "bg-foreground" : ""}`}>
+                              {selectedWorkedStatuses.has("DISMISSED") && <Check className="h-3 w-3 text-background" />}
+                            </div>
+                            <span className="body-100">DISMISSED</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
 
-                   <Button variant="ghost" size="medium" className="border border-transparent heading-50">
-                    <ListFilter className="h-4 w-4" />
-                    Advanced Filters
-                  </Button>
-                  {/* View toggle: new (Variant C) vs. original */}
-                  <ViewToggle />
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="medium" className="border border-transparent heading-50">
+                            All industries <TrellisIcon name="downCarat" size={12} />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem>All industries</DropdownMenuItem>
+                          <DropdownMenuItem>Technology</DropdownMenuItem>
+                          <DropdownMenuItem>Healthcare</DropdownMenuItem>
+                          <DropdownMenuItem>Finance</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      <FilterPill label="Signals" hasCarat options={["All signals", ...SIGNAL_LABELS]} />
+
+                      <Button variant="ghost" size="medium" className="border border-transparent heading-50">
+                        <ListFilter className="h-4 w-4" />
+                        Advanced Filters
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <FilterPill label="Job Title" hasCarat options={["All titles", "C-Suite", "VP", "Director", "Manager", "Individual Contributor"]} />
+                      <FilterPill label="In Sequence" hasCarat options={["All", "Yes", "No"]} />
+                      <FilterPill label="Signals" hasCarat options={["All signals", ...SIGNAL_LABELS]} />
+                      <FilterPill label="Touches since PPF" hasCarat options={["Any", "0", "1–2", "3–5", "6+"]} />
+                      <FilterPill label="Industry" hasCarat options={["All industries", "Technology", "Data Analytics", "Healthcare", "Finance", "Commercial Technology"]} />
+                      <Button variant="ghost" size="medium" className="border border-transparent heading-50">
+                        <ListFilter className="h-4 w-4" />
+                        Advanced Filters
+                      </Button>
+                    </>
+                  )}
+                  <div className="flex-1" />
+                  {entityView === "companies" && <ViewToggle />}
                 </div>
               </div>}
 
@@ -747,6 +800,16 @@ const Prospecting = () => {
                     </Button>
                   ))}
                 </nav>
+              ) : entityView === "contacts" ? (
+                <ContactsTableView
+                  companies={companiesWithCalculatedStatus}
+                  activeCallTasks={activeCallTasks}
+                  onCreateCallTasks={(contacts) => {
+                    setCallTaskContactCount(contacts.length);
+                    setCallTaskContactIds(contacts.map((c) => c.contact.id));
+                    setIsCallTaskPanelOpen(true);
+                  }}
+                />
               ) : cardVariant === "table" ? (
                 <CompaniesTableView
                   companies={companiesWithCalculatedStatus}
@@ -1828,18 +1891,38 @@ const Prospecting = () => {
 
 
       </div>
+      <CreateCallTaskPanel
+        open={isCallTaskPanelOpen}
+        contactCount={callTaskContactCount}
+        defaultTitle={`${activePlay ? activePlay.label : `${activePriority ?? "P1"}`} call queue`}
+        onOpenChange={setIsCallTaskPanelOpen}
+        onCreated={() => {
+          setActiveCallTasks((prev) => {
+            const next = { ...prev };
+            for (const id of callTaskContactIds) {
+              next[id] = (next[id] ?? 0) + 1;
+            }
+            return next;
+          });
+          const count = callTaskContactIds.length;
+          setSuccessMessage(`Created ${count} call task${count !== 1 ? "s" : ""}`);
+          if (successTimerRef.current) clearTimeout(successTimerRef.current);
+          successTimerRef.current = setTimeout(() => setSuccessMessage(null), 3000);
+          setCallTaskContactIds([]);
+        }}
+      />
       <ProspectingAgent />
       </Layout>;
 };
-const viewToggleOptions: { value: CardVariant; icon: string; label: string }[] = [
-  { value: "current", icon: "documents", label: "Card view" },
-  { value: "table", icon: "table", label: "Table view" },
+const viewToggleOptions: { value: CardVariant; label: string }[] = [
+  { value: "current", label: "Cards" },
+  { value: "table", label: "Table" },
 ];
 
 const ViewToggle = () => {
   const { variant, setVariant } = useVariant();
   return (
-    <div className="flex items-start" role="group" aria-label="Switch list view">
+    <div className="flex items-center" role="group" aria-label="Switch list view">
       {viewToggleOptions.map((opt, i) => {
         const isActive = variant === opt.value;
         const isFirst = i === 0;
@@ -1850,9 +1933,8 @@ const ViewToggle = () => {
               <button
                 type="button"
                 aria-pressed={isActive}
-                aria-label={opt.label}
                 onClick={() => setVariant(opt.value)}
-                className={`relative flex items-center justify-center p-2.5 border border-core-subtle transition-colors ${
+                className={`relative flex items-center px-3 py-1.5 detail-200 border border-core-subtle transition-colors ${
                   isFirst ? "rounded-l-[4px] -mr-px" : isLast ? "rounded-r-[4px]" : "-mr-px"
                 } ${
                   isActive
@@ -1860,7 +1942,7 @@ const ViewToggle = () => {
                     : "bg-card text-muted-foreground hover:bg-[var(--page-bg)]"
                 }`}
               >
-                <TrellisIcon name={opt.icon} size={16} />
+                {opt.label}
               </button>
             </TooltipTrigger>
             <TooltipContent>{opt.label}</TooltipContent>

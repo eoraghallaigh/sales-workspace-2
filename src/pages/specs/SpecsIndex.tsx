@@ -38,6 +38,13 @@ const specs: SpecEntry[] = [
       "Play creation form footer, draft/publish flow, status transitions, POTM designation, and the plays table with inline status changes.",
     category: "Interaction flows",
   },
+  {
+    slug: "contact-views",
+    title: "Contact views",
+    description:
+      "Toggle between company and contact views in prospecting, with bulk call task creation, AI agent activity tracking, and a slide-out task panel.",
+    category: "Interaction flows",
+  },
 ];
 
 const categories = [...new Set(specs.map((s) => s.category))];
