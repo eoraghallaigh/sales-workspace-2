@@ -31,6 +31,13 @@ const specs: SpecEntry[] = [
       "Custom instructions for the research and sequencing agents, with a live preview of agent output.",
     category: "Interaction flows",
   },
+  {
+    slug: "contact-views",
+    title: "Contact views",
+    description:
+      "Toggle between company and contact views in prospecting, with bulk call task creation, AI agent activity tracking, and a slide-out task panel.",
+    category: "Interaction flows",
+  },
 ];
 
 const categories = [...new Set(specs.map((s) => s.category))];
