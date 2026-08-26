@@ -45,6 +45,13 @@ const specs: SpecEntry[] = [
       "Toggle between company and contact views in prospecting, with bulk call task creation, AI agent activity tracking, and a slide-out task panel.",
     category: "Interaction flows",
   },
+  {
+    slug: "osa-delay",
+    title: "1-hr delay on OSA enrollment + PA monitoring indicator",
+    description:
+      "After a signal fires on a contact, preserve a 1-hour window for Email Team Automation before the OSA can suggest or execute outreach.",
+    category: "Interaction flows",
+  },
 ];
 
 const categories = [...new Set(specs.map((s) => s.category))];
