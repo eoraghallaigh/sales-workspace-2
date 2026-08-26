@@ -275,7 +275,7 @@ const RescheduleModalDemo = () => {
 const PlayLifecycleSpec = () => (
   <SpecLayout>
     <SpecHeader
-      title="Play creation & lifecycle management"
+      title="Self-service play creation and editing for Ops"
       description="The play creation form footer (publish / save as draft / POTM), the plays table with inline status changes, status transition rules, and all confirmation modals."
     />
 

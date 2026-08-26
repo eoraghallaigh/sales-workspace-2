@@ -117,7 +117,7 @@ const EnrolledShowcase = () => {
 const SequenceCustomisationSpec = () => (
   <SpecLayout>
     <SpecHeader
-      title="Sequence customisation"
+      title="Sequences flexibility: add/remove steps, schedule, re-prompt individual steps"
       description="Give reps more control over sequences: scheduled starts, adjustable timing between steps, add/remove/reorder steps, and non-blocking manual tasks. Reps can customise an AI-generated sequence before enrolling a contact."
     />
 

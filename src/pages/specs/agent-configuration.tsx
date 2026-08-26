@@ -335,7 +335,7 @@ const SequencePreviewDone = () => {
 const AgentConfigurationSpec = () => (
   <SpecLayout>
     <SpecHeader
-      title="Agent configuration"
+      title="Agent customization / rep preferences (custom instructions)"
       description="Reps can give custom instructions to the research and sequencing agents, then save and preview the output before applying to real accounts. Found at Agents → Configure on each agent card."
     />
 

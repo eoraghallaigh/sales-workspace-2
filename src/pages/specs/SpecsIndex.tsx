@@ -19,28 +19,28 @@ const specs: SpecEntry[] = [
   },
   {
     slug: "sequence-customisation",
-    title: "Sequence customisation",
+    title: "Sequences flexibility: add/remove steps, schedule, re-prompt individual steps",
     description:
       "Scheduled starts, adjustable step timing, add/remove/reorder steps, and non-blocking manual tasks.",
     category: "Interaction flows",
   },
   {
     slug: "agent-configuration",
-    title: "Agent configuration",
+    title: "Agent customization / rep preferences (custom instructions)",
     description:
       "Custom instructions for the research and sequencing agents, with a live preview of agent output.",
     category: "Interaction flows",
   },
   {
     slug: "play-lifecycle",
-    title: "Play creation & lifecycle",
+    title: "Self-service play creation and editing for Ops",
     description:
       "Play creation form footer, draft/publish flow, status transitions, POTM designation, and the plays table with inline status changes.",
     category: "Interaction flows",
   },
   {
     slug: "contact-views",
-    title: "Contact views",
+    title: "August play: bulk enrollment to Nooks pipeline",
     description:
       "Toggle between company and contact views in prospecting, with bulk call task creation, AI agent activity tracking, and a slide-out task panel.",
     category: "Interaction flows",
