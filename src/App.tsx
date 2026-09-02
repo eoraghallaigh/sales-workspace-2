@@ -33,6 +33,7 @@ import SequenceCustomisationSpec from "./pages/specs/sequence-customisation";
 import AgentConfigurationSpec from "./pages/specs/agent-configuration";
 import ContactViewsSpec from "./pages/specs/contact-views";
 import PlayLifecycleSpec from "./pages/specs/play-lifecycle";
+import WorkingHighVolumeSpec from "./pages/specs/working-high-volume";
 import DesignMode from "./sandbox/DesignMode";
 import Inspector from "./inspector/Inspector";
 
@@ -77,6 +78,7 @@ const App = () => (
             <Route path="/specs/agent-configuration" element={<AgentConfigurationSpec />} />
             <Route path="/specs/contact-views" element={<ContactViewsSpec />} />
             <Route path="/specs/play-lifecycle" element={<PlayLifecycleSpec />} />
+            <Route path="/specs/working-high-volume" element={<WorkingHighVolumeSpec />} />
           </Routes>
           <GuidedTour />
           {import.meta.env.DEV && <DesignMode />}

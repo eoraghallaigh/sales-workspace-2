@@ -21,6 +21,7 @@ interface ProspectingSubNavProps {
   onCollapse?: () => void;
   isCollapsed?: boolean;
   onActiveItemChange?: (itemId: string) => void;
+  viewCounts?: Record<string, number>;
 }
 
 /*
@@ -83,6 +84,7 @@ const ProspectingSubNav = ({
   onCollapse,
   isCollapsed = false,
   onActiveItemChange,
+  viewCounts,
 }: ProspectingSubNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -119,6 +121,12 @@ const ProspectingSubNav = ({
   ];
   const installBaseItems = [{ id: "full-customer-book", label: "Full Customer Book" }];
 
+  const countBadge = (id: string) => {
+    const count = viewCounts?.[id];
+    if (count == null || count <= 0) return undefined;
+    return <Badge className="text-[10px] leading-[14px] px-1.5 py-0 bg-[#e6e6e6] text-[#333333] hover:bg-[#e6e6e6]">{count}</Badge>;
+  };
+
   const chevron = (open: boolean) => (
     <ChevronDown className={cn("h-4 w-4 transition-transform", isAlpha ? "text-[#666666]" : "text-muted-foreground", !open && "-rotate-90")} />
   );
@@ -147,7 +155,8 @@ const ProspectingSubNav = ({
 
           {/* Navigation Items */}
           <div className={cn("py-3", isAlpha ? "pl-4" : "pl-12")}>
-            <Row isAlpha={isAlpha} label="QLs" selected={activeItem === "qls"} onClick={() => setActiveItem("qls")} className={isAlpha ? "mb-1" : "mb-2"} />
+            <Row isAlpha={isAlpha} label="QLs" selected={activeItem === "qls"} onClick={() => setActiveItem("qls")} className={isAlpha ? "mb-1" : "mb-2"} trailing={countBadge("qls")} />
+            <Row isAlpha={isAlpha} label="Recently Generated" selected={activeItem === "recently-generated"} onClick={() => setActiveItem("recently-generated")} className={isAlpha ? "mb-1" : "mb-2"} trailing={countBadge("recently-generated")} />
 
             {/* Net New */}
             <Collapsible open={isNetNewOpen} onOpenChange={setIsNetNewOpen}>
@@ -156,7 +165,7 @@ const ProspectingSubNav = ({
               </CollapsibleTrigger>
               <CollapsibleContent className={contentSpacing}>
                 {netNewItems.map(item => (
-                  <Row key={item.id} isAlpha={isAlpha} label={item.label} indented selected={activeItem === item.id} onClick={() => setActiveItem(item.id)} />
+                  <Row key={item.id} isAlpha={isAlpha} label={item.label} indented selected={activeItem === item.id} onClick={() => setActiveItem(item.id)} trailing={countBadge(item.id)} />
                 ))}
               </CollapsibleContent>
             </Collapsible>
@@ -168,7 +177,7 @@ const ProspectingSubNav = ({
               </CollapsibleTrigger>
               <CollapsibleContent className={contentSpacing}>
                 {installBaseItems.map(item => (
-                  <Row key={item.id} isAlpha={isAlpha} label={item.label} indented selected={activeItem === item.id} onClick={() => setActiveItem(item.id)} />
+                  <Row key={item.id} isAlpha={isAlpha} label={item.label} indented selected={activeItem === item.id} onClick={() => setActiveItem(item.id)} trailing={countBadge(item.id)} />
                 ))}
               </CollapsibleContent>
             </Collapsible>
@@ -189,16 +198,19 @@ const ProspectingSubNav = ({
                     indented
                     selected={activeItem === item.id}
                     onClick={() => setActiveItem(item.id)}
-                    trailing={item.isPotm ? (
-                      <TooltipProvider delayDuration={200}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span><Badge variant="status-orange" className="text-[10px] leading-[14px] px-1.5 py-0">POTM</Badge></span>
-                          </TooltipTrigger>
-                          <TooltipContent side="right">Play of the Month</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ) : undefined}
+                    trailing={<span className="flex items-center gap-1.5">
+                      {countBadge(item.id)}
+                      {item.isPotm && (
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span><Badge variant="status-orange" className="text-[10px] leading-[14px] px-1.5 py-0">POTM</Badge></span>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">Play of the Month</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </span>}
                   />
                 ))}
                 <Row

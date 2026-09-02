@@ -70,6 +70,7 @@ const PRIORITY_DESCRIPTIONS: Record<string, string> = {
 
 const VIEW_LABELS: Record<string, string> = {
   "qls": "QLs",
+  "recently-generated": "Recently Generated",
   "full-prospect-book": "Full Prospect Book",
   "p1-now": "P1 - Now",
   "p2-next": "P2 - Next",
@@ -225,6 +226,10 @@ const Prospecting = () => {
       .map(id => companiesWithStatus.find(c => c.id === id))
       .filter((c): c is Company => c !== undefined);
 
+    if (activeNavItem === "recently-generated") {
+      return sortedCompanies.filter(c => c.hasGeneratedStrategy !== false);
+    }
+
     // Filter to show New, Unworked P1, In Progress, and Over SLA companies
     const workable = sortedCompanies.filter(c => c.status === "New" || c.status === "Unworked P1" || c.status === "In Progress" || c.status === "Over SLA");
 
@@ -235,7 +240,32 @@ const Prospecting = () => {
     return !activePriority
       ? workable
       : workable.filter(c => (c.priority ?? "P1") === activePriority);
-  }, [prospectingCompanies, completedTasks, initialSortOrder, activePriority, activePlay]);
+  }, [prospectingCompanies, completedTasks, initialSortOrder, activePriority, activePlay, activeNavItem]);
+
+  const viewCounts = useMemo(() => {
+    const companiesWithStatus = prospectingCompanies.map(company => ({
+      ...company,
+      status: calculateCompanyStatus(company, completedTasks)
+    }));
+    const workable = companiesWithStatus.filter(c =>
+      c.status === "New" || c.status === "Unworked P1" || c.status === "In Progress" || c.status === "Over SLA"
+    );
+    const counts: Record<string, number> = {
+      "qls": workable.filter(c => c.recommendedContacts.some(rc => rc.qlData !== undefined)).length,
+      "recently-generated": companiesWithStatus.filter(c => c.hasGeneratedStrategy !== false).length,
+      "full-prospect-book": 312,
+      "p1-now": workable.filter(c => (c.priority ?? "P1") === "P1").length,
+      "p2-next": workable.filter(c => c.priority === "P2").length,
+      "p3-later": workable.filter(c => c.priority === "P3").length,
+      "p4-last": workable.filter(c => c.priority === "P4").length,
+      "full-customer-book": 185,
+    };
+    for (const play of plays) {
+      counts[play.id] = workable.filter(c => getPlayIdsForCompany(c.id).includes(play.id)).length;
+    }
+    return counts;
+  }, [prospectingCompanies, completedTasks, plays]);
+
   const incrementCompanyTouch = (taskId: string) => {
     setProspectingCompanies(prevCompanies => prevCompanies.map(company => {
       const hasTask = company.tasks.some(task => task.id === taskId);
@@ -588,7 +618,7 @@ const Prospecting = () => {
         <WorkspaceHeader activeTab="prospecting" />
         <div className="flex flex-1 overflow-hidden relative">
           {/* Left Sidebar - No margin, right against left nav */}
-          {!expandedPanelCompanyId && <ProspectingSubNav isCollapsed={(isPanelOpen || isContactPanelOpen || isTaskPanelOpen) && isSubNavNarrow} onActiveItemChange={setActiveNavItem} />}
+          {!expandedPanelCompanyId && <ProspectingSubNav isCollapsed={(isPanelOpen || isContactPanelOpen || isTaskPanelOpen) && isSubNavNarrow} onActiveItemChange={setActiveNavItem} viewCounts={viewCounts} />}
 
           {/* Main Content Area - Only scrolling element */}
           <div ref={listScrollRef} className={`${expandedPanelCompanyId ? 'w-[240px] flex-shrink-0' : 'flex-1'} overflow-y-auto overscroll-contain transition-all duration-300 ${!expandedPanelCompanyId && (isPanelOpen || isContactPanelOpen || isTaskPanelOpen) ? 'mr-[569px]' : 'mr-0'}`}>
@@ -606,7 +636,7 @@ const Prospecting = () => {
             {/* Top Metrics - hidden when expanded panel is active or when a Full Book view is shown */}
             {activeNavItem !== "full-customer-book" && activeNavItem !== "full-prospect-book" && (
             <div className={`${expandedPanelCompanyId ? 'px-0 py-0' : 'px-6 py-6'}`}>
-              {!expandedPanelCompanyId && !activePlay && <div className="grid grid-cols-4 gap-4 mb-6">
+              {!expandedPanelCompanyId && !activePlay && activeNavItem !== "recently-generated" && <div className="grid grid-cols-4 gap-4 mb-6">
                 <DataWell label="Total book size" value="497" tooltip="Total book size" />
                 <DataWell label="Book worked" value="52%" secondary="Target: 33%" tooltip="Percentage of book worked" />
                 <DataWell label="P1 worked within SLA" value="84%" secondary="Target: 100%" tooltip="P1 priority worked" />
@@ -651,8 +681,13 @@ const Prospecting = () => {
               {/* Header */}
               {!expandedPanelCompanyId && <div className="flex flex-col gap-4 mb-6">
                 <div>
-                  <h2 className="heading-300">{activePlay ? activePlay.label : `${activePriority ?? 'P1'} Prospects`}</h2>
+                  <h2 className="heading-300">{activePlay ? activePlay.label : activeNavItem === "recently-generated" ? "Recently Generated" : `${activePriority ?? 'P1'} Prospects`}</h2>
                   <p className="detail-100 text-muted-foreground">{companiesWithCalculatedStatus.length} {companiesWithCalculatedStatus.length === 1 ? "company" : "companies"}</p>
+                  {activeNavItem === "recently-generated" && (
+                    <p className="body-100 text-muted-foreground mt-2">
+                      Companies with strategies generated by the Outreach Strategy Agent in the last 24 hours.
+                    </p>
+                  )}
                   {!activePlay && activePriority && PRIORITY_DESCRIPTIONS[activePriority] && (
                     <p className="body-100 text-muted-foreground mt-2">
                       {PRIORITY_DESCRIPTIONS[activePriority]} <span className="text-foreground font-semibold cursor-pointer">Learn more.</span>

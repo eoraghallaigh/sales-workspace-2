@@ -103,7 +103,7 @@ const CompaniesTableView = ({
     },
     {
       key: "contacts",
-      header: "Contacts",
+      header: "Sequence Summary",
       minWidth: 160,
       render: (c) => <ContactOutreachAvatars contacts={c.recommendedContacts} align="start" />,
     },

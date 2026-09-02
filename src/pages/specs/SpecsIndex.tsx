@@ -45,6 +45,13 @@ const specs: SpecEntry[] = [
       "Toggle between company and contact views in prospecting, with bulk call task creation, AI agent activity tracking, and a slide-out task panel.",
     category: "Interaction flows",
   },
+  {
+    slug: "working-high-volume",
+    title: "Working High Volume Efficiently",
+    description:
+      "Recently Generated view to find companies with finished strategies, and a simplified Sequence Summary column that rolls per-channel outreach into one workflow status per contact.",
+    category: "Interaction flows",
+  },
 ];
 
 const categories = [...new Set(specs.map((s) => s.category))];
