@@ -5,7 +5,7 @@ description: Generate an engineer-facing spec page documenting a feature's inter
 
 # Generate Spec Page
 
-Generate an engineer-facing spec page that documents a feature's interaction flows, component states, and wider context — so engineers can see exactly what to build without clicking through the prototype.
+Generate a spec page that documents a feature's interaction flows, component states, and wider context — so engineers can see exactly what to build without clicking through the prototype. This is a **design prototype**, not production code. Engineers will decide the final implementation; the spec communicates **what** the feature does and **why**, not **how** it should be coded.
 
 ## When to use
 
@@ -52,6 +52,11 @@ Every spec page follows this order. Include sections that apply; skip sections t
 - **Include surrounding UI context.** When showing a button or header pattern, include the real subline text, labels, and layout that appear in the actual UI — not just the isolated element.
 
 ## Key rules
+
+### No implementation details
+- **Do not include code references, variable names, function names, file paths, or resolution-logic tables.** The spec audience is engineers who will build the real thing from scratch — they don't need to know how the prototype is wired up.
+- **Do** explain business logic and user-facing states (e.g., the possible sequence enrollment statuses and what each means), but describe them in plain language, not in terms of code conditions or data shapes.
+- If a section would only be useful to someone reading the prototype source, leave it out.
 
 ### Use real components
 - Import and render the **actual prototype components** — never recreate markup that already exists as a component.
