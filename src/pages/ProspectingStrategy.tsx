@@ -40,6 +40,9 @@ import CompanyResearchPanel from "@/components/CompanyResearchPanel";
 import { OutreachSequenceCard } from "@/components/OutreachSequenceCard";
 import { TouchDots, type TouchStatus } from "@/components/TouchDot";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import HubSummaryCard from "@/components/HubSummaryCard";
+import RecentConversionsCard from "@/components/RecentConversionsCard";
+import { getHubSummary, getRecentConversions } from "@/data/companyCards";
 
 import { getCompanyStrategy } from "@/data/companyStrategies";
 import { getContactDossier } from "@/data/contactDossier";
@@ -275,6 +278,23 @@ const ProspectingStrategy = () => {
 
   const currentCompany = companies.find((c) => c.id === companyId) || companies[0];
   const currentCompanyDetails = companyDetails[currentCompany?.id || "1"];
+
+  const hubSummary = useMemo(() => getHubSummary(currentCompany?.id ?? ""), [currentCompany?.id]);
+  const recentConversions = useMemo(() => getRecentConversions(currentCompany?.id ?? ""), [currentCompany?.id]);
+
+  const companyNotes = useMemo(() => {
+    const allContacts = currentCompany?.recommendedContacts ?? [];
+    const notes: Array<{ id: string; content: string; date: string; time: string; contactName: string }> = [];
+    for (const c of allContacts) {
+      const detail = contactDetails[c.id];
+      if (detail?.notes) {
+        for (const n of detail.notes) {
+          notes.push({ ...n, contactName: c.name });
+        }
+      }
+    }
+    return notes;
+  }, [currentCompany?.id]);
 
   const { plays } = usePlays();
   const companyPlays = useMemo(
@@ -765,12 +785,60 @@ const ProspectingStrategy = () => {
       </div>
   );
 
-  const notesBody = (
-    <p className="body-100 text-muted-foreground">Notes content coming soon.</p>
+  const notesBody = companyNotes.length > 0 ? (
+    <div className="flex flex-col gap-4">
+      {companyNotes.map((note) => (
+        <div key={note.id} className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <span className="heading-50 text-foreground">{note.contactName}</span>
+            <span className="detail-200 text-muted-foreground">{note.date} at {note.time}</span>
+          </div>
+          <p className="body-100 text-foreground">{note.content}</p>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <p className="body-100 text-muted-foreground">No notes yet.</p>
   );
 
-  const comingSoon = (label: string) => (
-    <p className="body-100 text-muted-foreground">{label} content coming soon.</p>
+
+  const linkedInContacts = useMemo(() => {
+    const allContacts = currentCompany?.recommendedContacts ?? [];
+    return allContacts
+      .map((c) => {
+        const detail = contactDetails[c.id];
+        if (!detail?.linkedInInfo) return null;
+        return { id: c.id, name: c.name, role: detail.linkedInInfo.role, location: detail.linkedInInfo.location, yearsInRole: detail.linkedInInfo.yearsInRole, previousCompanies: detail.linkedInInfo.previousCompanies };
+      })
+      .filter(Boolean) as Array<{ id: string; name: string; role: string; location: string; yearsInRole: string; previousCompanies: string }>;
+  }, [currentCompany?.id]);
+
+  const linkedInBody = (
+    <div className="flex flex-col gap-4">
+      <div className="border border-[#0A66C2] rounded overflow-hidden">
+        <div className="bg-[#EDF3F8] px-3 py-2 border-b border-[#0A66C2] flex items-center gap-2">
+          <svg className="w-4 h-4 text-[#0A66C2]" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+          </svg>
+          <span className="text-xs font-semibold text-[#0A66C2] tracking-wider">SALES NAVIGATOR</span>
+        </div>
+        <div className="p-4">
+          <div className="mb-3">
+            <img src={companyLogoPlaceholder} alt={`${currentCompany.name} logo`} className="w-12 h-12 rounded-full object-cover" />
+          </div>
+          <a href="#" className="text-[#0A66C2] hover:underline text-base font-normal mb-1 block">{currentCompany.name}</a>
+          <p className="text-muted-foreground text-sm mb-3">{currentCompany.industry}</p>
+          <Button variant="outline" className="mb-4 border-[#0A66C2] text-[#0A66C2] hover:bg-[#EDF3F8] w-auto px-4" size="small">
+            View in Sales Navigator
+          </Button>
+          <div className="flex gap-4 pt-3 border-t border-core-subtle">
+            <a href="#" className="text-muted-foreground text-sm hover:underline">Help</a>
+            <a href="#" className="text-muted-foreground text-sm hover:underline">Privacy and Terms</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
   );
 
   const companyBody = (() => {
@@ -1046,25 +1114,25 @@ const ProspectingStrategy = () => {
 
             <Tabs value={leftTabValue} onValueChange={setActiveTab} className="w-full">
               {isNarrow ? (
-              <div className="px-6 pt-4">
-              <TabsList ref={tabsListRef} className="relative w-full justify-start border-b border-border-subtle rounded-none bg-transparent px-0 h-auto gap-0">
-                {["Strategy", "Company Data", "Activity", `Deals (${currentCompanyDetails?.deals?.length || 0})`, "Notes"].map((tab) => {
-                    const tabValue = tab.toLowerCase().split(" ")[0].replace("(", "");
-                    const isStrategy = tabValue === "strategy";
-                    return (
+              <div className="px-6 pt-4 overflow-x-auto scrollbar-hide">
+              <TabsList ref={tabsListRef} className="relative w-max min-w-full justify-start border-b border-border-subtle rounded-none bg-transparent px-0 h-auto gap-0">
+                {([
+                  { label: "Strategy", value: "strategy" },
+                  { label: "Company Data", value: "company" },
+                  { label: "LinkedIn", value: "linkedin" },
+                  { label: "Hub Summary", value: "hub-summary" },
+                  { label: "Conversions", value: "conversions" },
+                  { label: "Activity", value: "activity" },
+                  { label: `Deals (${currentCompanyDetails?.deals?.length || 0})`, value: "deals" },
+                  { label: "Notes", value: "notes" },
+                ] as const).map((tab) => (
                       <TabsTrigger
-                        key={tab}
-                        value={tabValue === "deals" ? "deals" : tabValue}
-                        disabled={!isStrategy}
-                        className={`rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-transparent px-4 heading-50 text-muted-foreground data-[state=active]:text-foreground disabled:opacity-100 ${isStrategy ? "py-3" : "flex-col h-auto py-2 gap-0.5"}`}>
-
-                      {tab}
-                      {!isStrategy && (
-                        <span className="detail-100 font-normal text-muted-foreground">Coming soon</span>
-                      )}
-                    </TabsTrigger>);
-
-                  })}
+                        key={tab.value}
+                        value={tab.value}
+                        className="rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:after:bg-transparent px-4 py-3 heading-50 text-muted-foreground data-[state=active]:text-foreground whitespace-nowrap shrink-0">
+                      {tab.label}
+                    </TabsTrigger>)
+                  )}
                 <span
                   aria-hidden
                   className="pointer-events-none absolute bottom-0 h-[3px] rounded-full bg-[var(--color-fill-primary-default,#141414)]"
@@ -1499,7 +1567,15 @@ const ProspectingStrategy = () => {
                   {companyBody}
                 </TabsContent>
               )}
-
+              {isNarrow && (
+                <TabsContent value="linkedin" className="px-6 pt-6 pb-6 mt-0">{linkedInBody}</TabsContent>
+              )}
+              {isNarrow && (
+                <TabsContent value="hub-summary" className="px-6 pt-6 pb-6 mt-0"><HubSummaryCard summary={hubSummary} /></TabsContent>
+              )}
+              {isNarrow && (
+                <TabsContent value="conversions" className="px-6 pt-6 pb-6 mt-0"><RecentConversionsCard conversions={recentConversions} onContactClick={setContactDrawerId} /></TabsContent>
+              )}
               {isNarrow && (
                 <TabsContent value="activity" className="px-6 pt-12 pb-6 mt-0">{activityBody}</TabsContent>
               )}
@@ -1513,12 +1589,13 @@ const ProspectingStrategy = () => {
             </div>
             {!isNarrow && (
               <div className="flex flex-col gap-4 flex-[4_1_0%] min-w-0">
-                <InfoCard title="Company data" maxHeight="max-h-[640px]" collapsible>{comingSoon("Company data")}</InfoCard>
-                <InfoCard title="Hub summary" maxHeight="max-h-[640px]" collapsible>{comingSoon("Hub summary")}</InfoCard>
-                <InfoCard title="Recent conversions" maxHeight="max-h-[480px]" collapsible>{comingSoon("Recent conversions")}</InfoCard>
-                <InfoCard title="Activity" maxHeight="max-h-[640px]" collapsible>{comingSoon("Activity")}</InfoCard>
-                <InfoCard title="Deals" maxHeight="max-h-[480px]" collapsible>{comingSoon("Deals")}</InfoCard>
-                <InfoCard title="Notes" maxHeight="max-h-[320px]" collapsible>{comingSoon("Notes")}</InfoCard>
+                <InfoCard title="Company data" maxHeight="max-h-[640px]" collapsible>{companyBody}</InfoCard>
+                <InfoCard title="LinkedIn Sales Navigator" maxHeight="max-h-[640px]" collapsible>{linkedInBody}</InfoCard>
+                <InfoCard title="Hub summary" maxHeight="max-h-[640px]" collapsible><HubSummaryCard summary={hubSummary} /></InfoCard>
+                <InfoCard title="Recent conversions" maxHeight="max-h-[480px]" collapsible><RecentConversionsCard conversions={recentConversions} onContactClick={setContactDrawerId} /></InfoCard>
+                <InfoCard title="Activity" maxHeight="max-h-[640px]" collapsible>{activityBody}</InfoCard>
+                <InfoCard title="Deals" maxHeight="max-h-[480px]" collapsible>{dealsBody}</InfoCard>
+                <InfoCard title="Notes" maxHeight="max-h-[320px]" collapsible>{notesBody}</InfoCard>
               </div>
             )}
             </div>

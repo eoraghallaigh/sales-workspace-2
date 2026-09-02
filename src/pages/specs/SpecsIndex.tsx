@@ -52,6 +52,13 @@ const specs: SpecEntry[] = [
       "Recently Generated view to find companies with finished strategies, and a simplified Sequence Summary column that rolls per-channel outreach into one workflow status per contact.",
     category: "Interaction flows",
   },
+  {
+    slug: "company-sidebar-cards",
+    title: "Company sidebar cards",
+    description:
+      "The right-hand sidebar on the company strategy page: Company Data, LinkedIn Sales Navigator, Hub Summary, Recent Conversions, Activity, Deals, and Notes.",
+    category: "Component states",
+  },
 ];
 
 const categories = [...new Set(specs.map((s) => s.category))];
