@@ -4,11 +4,13 @@ import {
   SpecHeader,
   SpecSection,
   StateCard,
+  FlowStep,
   HorizontalFlow,
   HorizontalFlowStep,
   Callout,
 } from "./blocks";
 import { OutreachSequenceCard } from "@/components/OutreachSequenceCard";
+import { Button } from "@/components/ui/button";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import { GripVertical } from "lucide-react";
 import type { SequenceState } from "@/data/outreachStates";
@@ -259,48 +261,113 @@ const SequenceCustomisationSpec = () => (
 
     <SpecSection
       title="Step editing"
-      description="Expanding a call or LinkedIn step reveals a 'Task title' and 'Task notes' editor. Email steps show 'Subject' and 'Body'. Click anywhere on the step content to enter edit mode. The task title is shown inline in the collapsed header next to the icon."
+      description="Expanding a step reveals its content as readable text with Edit and Delete buttons at the bottom-right. Clicking Edit enters an inline editor; clicking Delete removes the step. The step content is always readable without needing to interact — no hover overlay or blur."
     >
-      <StateCard
-        label="Call task — expanded edit state"
-        description="Task title input, task notes textarea with rich-text toolbar (bold, italic, underline, link), and delete/cancel/save actions."
-      >
-        <div className="bg-white rounded-200 border border-border">
-          <div className="px-4 py-3 flex items-center gap-4 border-b border-border">
-            <GripVertical size={14} className="text-muted-foreground shrink-0" />
-            <div className="flex-1 min-w-0 -space-y-0.5">
-              <div className="flex items-center gap-2">
-                <TrellisIcon name="calling" size={16} className="text-foreground shrink-0" />
-                <span className="body-100 text-foreground">Follow up call</span>
+      <div className="bg-[var(--color-fill-surface-recessed)] p-8 rounded-200">
+        <FlowStep
+          step={1}
+          label="Expand step"
+          description="Click the collapsed row to expand. The step content is immediately readable. Edit and Delete buttons sit at the bottom-right."
+        >
+          <div className="bg-white rounded-200 border border-border">
+            <div className="px-4 py-3 flex items-center gap-4 border-b border-border">
+              <GripVertical size={14} className="text-muted-foreground shrink-0" />
+              <div className="flex-1 min-w-0 -space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <TrellisIcon name="calling" size={16} />
+                  <span className="body-100 text-foreground">Follow up call</span>
+                </div>
+                <p className="detail-200 text-muted-foreground">First step will execute <span className="font-semibold text-foreground">same day as ˅</span> enrollment. This task will not block subsequent steps.</p>
               </div>
-              <p className="detail-200 text-muted-foreground">First step will execute <span className="font-semibold text-foreground">same day as ˅</span> enrollment. This task will not block subsequent steps.</p>
             </div>
-          </div>
-          <div className="px-4 py-4 pl-10 space-y-4">
-            <div className="flex flex-col gap-1">
-              <label className="heading-50 text-foreground">Task title</label>
-              <div className="border border-border rounded-[4px] px-3 py-2 body-100 text-foreground bg-white">Follow up call</div>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="heading-50 text-foreground">Task notes</label>
-              <div className="border border-border rounded-[4px] px-3 py-2 body-100 text-foreground bg-white min-h-[80px] leading-relaxed">"Hi Keisha — congrats on the new role — the first 90 days are usually when the stack gets a hard look."</div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-0.5 text-muted-foreground">
-                <span className="p-1.5 rounded hover:bg-[var(--color-fill-surface-recessed)]"><strong>B</strong></span>
-                <span className="p-1.5 rounded hover:bg-[var(--color-fill-surface-recessed)]"><em>I</em></span>
-                <span className="p-1.5 rounded hover:bg-[var(--color-fill-surface-recessed)]"><u>U</u></span>
-                <span className="p-1.5 rounded hover:bg-[var(--color-fill-surface-recessed)]">🔗</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="detail-200 text-destructive">Delete step</span>
-                <span className="detail-200 text-muted-foreground px-2 py-1 border border-border rounded-full">Cancel</span>
-                <span className="detail-200 text-white bg-foreground px-2 py-1 rounded-full">Save</span>
+            <div className="px-4 py-4 pl-10">
+              <div className="flex flex-col gap-2">
+                <p className="heading-50 text-foreground">Follow up call</p>
+                <p className="body-100 text-foreground leading-relaxed whitespace-pre-line">"Hi Keisha — congrats on the new role. The first 90 days are usually when the stack gets a hard look. HubSpot gives reps a CRM they'll actually use."</p>
+                <div className="flex items-center justify-end gap-1">
+                  <Button variant="secondary" size="extra-small">Edit</Button>
+                  <Button variant="ghost" size="extra-small" className="text-destructive hover:text-destructive">Delete</Button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </StateCard>
+        </FlowStep>
+
+        <FlowStep
+          step={2}
+          label="Click Edit"
+          description="The read view is replaced by an inline editor with title input, notes textarea, rich-text toolbar, and Cancel/Save actions."
+        >
+          <div className="bg-white rounded-200 border border-border">
+            <div className="px-4 py-3 flex items-center gap-4 border-b border-border">
+              <GripVertical size={14} className="text-muted-foreground shrink-0" />
+              <div className="flex-1 min-w-0 -space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <TrellisIcon name="calling" size={16} />
+                  <span className="body-100 text-foreground">Follow up call</span>
+                </div>
+                <p className="detail-200 text-muted-foreground">First step will execute <span className="font-semibold text-foreground">same day as ˅</span> enrollment. This task will not block subsequent steps.</p>
+              </div>
+            </div>
+            <div className="px-4 py-4 pl-10 space-y-4">
+              <div className="flex flex-col gap-1">
+                <label className="heading-50 text-foreground">Task title</label>
+                <div className="border border-border rounded-[4px] px-3 py-2 body-100 text-foreground bg-white">Follow up call</div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="heading-50 text-foreground">Task notes</label>
+                <div className="border border-border rounded-[4px] px-3 py-2 body-100 text-foreground bg-white min-h-[80px] leading-relaxed">"Hi Keisha — congrats on the new role — the first 90 days are usually when the stack gets a hard look."</div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-0.5 text-muted-foreground">
+                  <span className="p-1.5 rounded hover:bg-[var(--color-fill-surface-recessed)]"><strong>B</strong></span>
+                  <span className="p-1.5 rounded hover:bg-[var(--color-fill-surface-recessed)]"><em>I</em></span>
+                  <span className="p-1.5 rounded hover:bg-[var(--color-fill-surface-recessed)]"><u>U</u></span>
+                  <span className="p-1.5 rounded hover:bg-[var(--color-fill-surface-recessed)]">🔗</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="detail-200 text-muted-foreground px-2 py-1 border border-border rounded-full">Cancel</span>
+                  <span className="detail-200 text-white bg-foreground px-2 py-1 rounded-full">Save</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </FlowStep>
+
+        <FlowStep
+          step={3}
+          label="Save or Cancel"
+          description="Save commits edits and returns to the read view. Cancel discards changes. Both return the step to the readable state with Edit/Delete buttons."
+          isLast
+        >
+          <div className="bg-white rounded-200 border border-border">
+            <div className="px-4 py-3 flex items-center gap-4 border-b border-border">
+              <GripVertical size={14} className="text-muted-foreground shrink-0" />
+              <div className="flex-1 min-w-0 -space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <TrellisIcon name="calling" size={16} />
+                  <span className="body-100 text-foreground">Follow up call</span>
+                </div>
+                <p className="detail-200 text-muted-foreground">First step will execute <span className="font-semibold text-foreground">same day as ˅</span> enrollment. This task will not block subsequent steps.</p>
+              </div>
+            </div>
+            <div className="px-4 py-4 pl-10">
+              <div className="flex flex-col gap-2">
+                <p className="heading-50 text-foreground">Follow up call</p>
+                <p className="body-100 text-foreground leading-relaxed whitespace-pre-line">"Hi Keisha — congrats on the new role. The first 90 days are usually when the stack gets a hard look. HubSpot gives reps a CRM they'll actually use."</p>
+                <div className="flex items-center justify-end gap-1">
+                  <Button variant="secondary" size="extra-small">Edit</Button>
+                  <Button variant="ghost" size="extra-small" className="text-destructive hover:text-destructive">Delete</Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </FlowStep>
+      </div>
+
+      <Callout type="behavior">
+        The Edit and Delete buttons are always visible on an expanded step — no hover required. This lets reps read step content without accidentally triggering an edit. Delete removes the step immediately; the editor only has Cancel and Save.
+      </Callout>
     </SpecSection>
 
     <SpecSection
@@ -342,7 +409,7 @@ const SequenceCustomisationSpec = () => (
 
       <StateCard
         label="Reorder steps"
-        description="Drag the grip handle on any step to reorder. Drag is constrained to vertical axis within the sequence. Delete is available via the expanded edit view toolbar."
+        description="Drag the grip handle on any step to reorder. Drag is constrained to vertical axis within the sequence. Delete is available via the Delete button on any expanded step."
       >
         <div className="bg-white rounded-200 border border-border divide-y divide-border">
           <div className="px-4 py-3 flex items-center gap-4">
