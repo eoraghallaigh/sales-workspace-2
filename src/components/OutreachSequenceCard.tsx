@@ -536,11 +536,6 @@ const EmailEditor = ({ initialSubject, initialBody, onSave, onDiscard, onDelete 
             >
               <Redo2 size={14} />
             </button>
-            {onDelete && (
-              <Button variant="ghost" size="extra-small" className="mr-2 text-destructive hover:text-destructive" onClick={onDelete}>
-                Delete step
-              </Button>
-            )}
             <Button variant="secondary" size="extra-small" className="mr-2" onClick={onDiscard}>
               Cancel
             </Button>
@@ -585,23 +580,17 @@ const EditableEmailBody = ({ subject, body, onSave, onDelete }: EditableEmailBod
   }
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      className="relative group cursor-pointer rounded-[var(--borderRadius-100)]"
-      onClick={() => setIsEditing(true)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          setIsEditing(true);
-        }
-      }}
-    >
+    <div className="flex flex-col gap-2">
       <p className="body-100 text-foreground leading-relaxed whitespace-pre-line">{body}</p>
-      <div className="absolute -inset-4 flex items-center justify-center bg-white/40 backdrop-blur opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-        <Button variant="primary" size="small" tabIndex={-1} aria-hidden>
-          Click to edit
+      <div className="flex items-center justify-end gap-1">
+        <Button variant="secondary" size="extra-small" onClick={(e: React.MouseEvent) => { e.stopPropagation(); setIsEditing(true); }}>
+          Edit
         </Button>
+        {onDelete && (
+          <Button variant="ghost" size="extra-small" className="text-destructive hover:text-destructive" onClick={(e: React.MouseEvent) => { e.stopPropagation(); onDelete(); }}>
+            Delete
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -609,28 +598,24 @@ const EditableEmailBody = ({ subject, body, onSave, onDelete }: EditableEmailBod
 
 const ClickToEditView = ({
   onActivate,
+  onDelete,
   children,
 }: {
   onActivate: () => void;
+  onDelete?: () => void;
   children: ReactNode;
 }) => (
-  <div
-    role="button"
-    tabIndex={0}
-    className="relative group cursor-pointer rounded-[var(--borderRadius-100)]"
-    onClick={onActivate}
-    onKeyDown={(e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        onActivate();
-      }
-    }}
-  >
+  <div className="flex flex-col gap-2">
     {children}
-    <div className="absolute -inset-4 flex items-center justify-center bg-white/40 backdrop-blur opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-      <Button variant="primary" size="small" tabIndex={-1} aria-hidden>
-        Click to edit
+    <div className="flex items-center justify-end gap-1">
+      <Button variant="secondary" size="extra-small" onClick={(e: React.MouseEvent) => { e.stopPropagation(); onActivate(); }}>
+        Edit
       </Button>
+      {onDelete && (
+        <Button variant="ghost" size="extra-small" className="text-destructive hover:text-destructive" onClick={(e: React.MouseEvent) => { e.stopPropagation(); onDelete(); }}>
+          Delete
+        </Button>
+      )}
     </div>
   </div>
 );
@@ -736,11 +721,6 @@ const SingleFieldEditor = ({ initialValue, label, onSave, onDiscard, onDelete }:
           >
             <Redo2 size={14} />
           </button>
-          {onDelete && (
-            <Button variant="ghost" size="extra-small" className="mr-2 text-destructive hover:text-destructive" onClick={onDelete}>
-              Delete step
-            </Button>
-          )}
           <Button variant="secondary" size="extra-small" className="mr-2" onClick={onDiscard}>
             Cancel
           </Button>
@@ -782,7 +762,7 @@ const EditableText = ({ value, label, onSave, onDelete }: EditableTextProps) => 
     );
   }
   return (
-    <ClickToEditView onActivate={() => setIsEditing(true)}>
+    <ClickToEditView onActivate={() => setIsEditing(true)} onDelete={onDelete}>
       <p className="body-100 text-foreground leading-relaxed whitespace-pre-line">{value}</p>
     </ClickToEditView>
   );
@@ -815,11 +795,6 @@ const BulletsEditor = ({ initialBullets, onSave, onDiscard, onDelete }: BulletsE
         ))}
       </ul>
       <div className="flex items-center justify-end gap-1">
-        {onDelete && (
-          <Button variant="ghost" size="extra-small" className="mr-2 text-destructive hover:text-destructive" onClick={onDelete}>
-            Delete step
-          </Button>
-        )}
         <Button variant="secondary" size="extra-small" className="mr-2" onClick={onDiscard}>
           Cancel
         </Button>
@@ -860,7 +835,7 @@ const EditableBullets = ({
     );
   }
   return (
-    <ClickToEditView onActivate={() => setIsEditing(true)}>
+    <ClickToEditView onActivate={() => setIsEditing(true)} onDelete={onDelete}>
       <ul className="list-disc pl-4 space-y-1.5">
         {bullets.map((b, i) => (
           <li key={i} className="body-100 text-foreground leading-relaxed whitespace-pre-line">
@@ -974,16 +949,6 @@ const CallTaskEditor = ({
             </button>
           </div>
           <div className="flex items-center gap-1">
-            {onDelete && (
-              <Button
-                variant="ghost"
-                size="extra-small"
-                className="mr-2 text-destructive hover:text-destructive"
-                onClick={onDelete}
-              >
-                Delete step
-              </Button>
-            )}
             <Button variant="secondary" size="extra-small" className="mr-2" onClick={onDiscard}>
               Cancel
             </Button>
@@ -1034,7 +999,7 @@ const EditableCallTask = ({
   }
 
   return (
-    <ClickToEditView onActivate={() => setIsEditing(true)}>
+    <ClickToEditView onActivate={() => setIsEditing(true)} onDelete={onDelete}>
       <p className="heading-50 text-foreground mb-2">{title}</p>
       <p className="body-100 text-foreground leading-relaxed whitespace-pre-line">{script}</p>
     </ClickToEditView>
