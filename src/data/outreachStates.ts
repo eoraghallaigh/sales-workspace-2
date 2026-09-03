@@ -326,11 +326,104 @@ export function getOutreachState(
           ],
         },
       };
+    case "c10": // Lisa Thompson — enrolled in external marketing sequence
+      return {
+        call: { kind: "not-attempted" },
+        linkedin: { kind: "not-sent" },
+        sequence: {
+          kind: "active",
+          statuses: [
+            { kind: "sent", sentAt: "Sep 1", opens: 3, clicks: 1 },
+            { kind: "sent", sentAt: "Sep 3", opens: 1, clicks: 0 },
+            { kind: "scheduled", sendsAt: "Mon Sep 8, 9:00am" },
+          ],
+        },
+      };
     case "c48": // Victoria Lin — early prospect
       return {
         call: { kind: "not-attempted" },
         linkedin: { kind: "accepted", acceptedAt: "yesterday" },
         sequence: { kind: "not-enrolled" },
+      };
+    case "c50": // Priya Patel — replied on first email (interested)
+      return {
+        call: { kind: "not-attempted" },
+        linkedin: { kind: "not-sent" },
+        sequence: {
+          kind: "unenrolled",
+          reason: `Sequence ended because ${firstName} replied`,
+          statuses: [
+            {
+              kind: "sent",
+              sentAt: "Aug 20",
+              opens: 4,
+              clicks: 1,
+              reply: {
+                at: "Aug 20, 3:42pm",
+                preview:
+                  "Hey — good timing actually. We've been evaluating alternatives to Salesforce since our renewal is up in Q1. Would you be free for a 20-min call Thursday afternoon?",
+              },
+            },
+            { kind: "cancelled" },
+            { kind: "cancelled" },
+          ],
+        },
+      };
+    case "c51": // Nadia Reyes — replied on second email (redirecting)
+      return {
+        call: {
+          kind: "no-answer",
+          attempts: 1,
+          lastAttemptAt: "Aug 19",
+        },
+        linkedin: { kind: "pending", sentAt: "Aug 19", daysWaiting: 3 },
+        sequence: {
+          kind: "unenrolled",
+          reason: `Sequence ended because ${firstName} replied`,
+          statuses: [
+            { kind: "sent", sentAt: "Aug 18", opens: 2, clicks: 0 },
+            {
+              kind: "sent",
+              sentAt: "Aug 21",
+              opens: 3,
+              clicks: 1,
+              reply: {
+                at: "Aug 22, 10:15am",
+                preview:
+                  "I appreciate the outreach but I'm not the right person for vendor evaluations anymore — our VP of Revenue Ops, David Nguyen, handles all CRM decisions now. Happy to make an intro if you'd like.",
+              },
+            },
+            { kind: "cancelled" },
+          ],
+        },
+      };
+    case "c52": // Tyler Brooks — replied on second email (polite decline)
+      return {
+        call: {
+          kind: "no-answer",
+          attempts: 2,
+          lastAttemptAt: "Aug 17",
+        },
+        linkedin: { kind: "pending", sentAt: "Aug 16", daysWaiting: 4 },
+        sequence: {
+          kind: "unenrolled",
+          reason: `Sequence ended because ${firstName} replied`,
+          statuses: [
+            { kind: "sent", sentAt: "Aug 15", opens: 5, clicks: 2 },
+            {
+              kind: "sent",
+              sentAt: "Aug 18",
+              opens: 1,
+              clicks: 0,
+              reply: {
+                at: "Aug 19, 9:30am",
+                preview:
+                  "Thanks for the follow-ups. We actually just signed a 3-year deal with Salesforce so the timing doesn't work for us. If things change down the road I'll reach out.",
+              },
+            },
+            { kind: "cancelled" },
+          ],
+        },
       };
     default:
       return pristine;

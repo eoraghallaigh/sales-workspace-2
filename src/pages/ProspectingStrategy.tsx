@@ -38,6 +38,8 @@ import EmailCommunicator from "@/components/EmailCommunicator";
 import ProspectingAgent from "@/components/ProspectingAgent";
 import CompanyResearchPanel from "@/components/CompanyResearchPanel";
 import { OutreachSequenceCard } from "@/components/OutreachSequenceCard";
+import SequenceRefusalBanner from "@/components/SequenceRefusalBanner";
+import type { RefusalReason } from "@/components/SequenceRefusalBanner";
 import { TouchDots, type TouchStatus } from "@/components/TouchDot";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import HubSummaryCard from "@/components/HubSummaryCard";
@@ -65,6 +67,14 @@ function isContactCooldownActive(cooldownUntil?: string): boolean {
   if (!cooldownUntil) return false;
   return new Date(cooldownUntil).getTime() > Date.now();
 }
+
+const EXTERNAL_SEQUENCES: Record<string, string> = {
+  c10: "MKTG | RLDP | BoB | NAM (en) | NB | SB | GS | P1 | Non-QL | CRM Signup",
+};
+
+const REFUSED_CONTACTS: Record<string, RefusalReason> = {
+  c10a: "not-real-individual",
+};
 
 const REWRITE_STATUS_MESSAGES = [
   "Reading account history…",
@@ -269,6 +279,7 @@ const ProspectingStrategy = () => {
       .filter((c) =>
         c.status === "New" ||
         c.status === "Unworked P1" ||
+        c.status === "Unworked QL" ||
         c.status === "In Progress" ||
         c.status === "Over SLA"
       )
@@ -1369,6 +1380,16 @@ const ProspectingStrategy = () => {
                               </AlertDescription>
                             </Alert>
                           </div>
+                        ) : REFUSED_CONTACTS[contact.id] ? (
+                          <div key={`refused-${contact.id}`} className="px-6 pt-4 pb-4 bg-card animate-fade-in">
+                            <p className="body-100 text-foreground leading-relaxed mb-4">
+                              {dossier.blurb}
+                            </p>
+                            <SequenceRefusalBanner
+                              reason={REFUSED_CONTACTS[contact.id]}
+                              onViewReasoning={() => setReasoningContactId(contact.id)}
+                            />
+                          </div>
                         ) : (
                         <div key={`content-${contact.id}`} className="px-6 pt-4 pb-0 bg-card animate-fade-in">
                           {/* Description */}
@@ -1493,6 +1514,7 @@ const ProspectingStrategy = () => {
                                 onViewReasoning={() => setReasoningContactId(contact.id)}
                                 onRegenerate={() => handleRegenerateSequence(contact.id)}
                                 enableFeedback
+                                externalSequenceName={EXTERNAL_SEQUENCES[contact.id]}
                               />
                             );
                           })()}

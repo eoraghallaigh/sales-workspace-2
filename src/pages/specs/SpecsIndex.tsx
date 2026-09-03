@@ -59,6 +59,13 @@ const specs: SpecEntry[] = [
       "The right-hand sidebar on the company strategy page: Company Data, LinkedIn Sales Navigator, Hub Summary, Recent Conversions, Activity, Deals, and Notes.",
     category: "Component states",
   },
+  {
+    slug: "sequence-clarity",
+    title: "Sequence Clarity",
+    description:
+      "Status badge logic, reply visibility with multiple examples, external (non-agent) sequences, and agent refusal banners with reasoning links.",
+    category: "Interaction flows",
+  },
 ];
 
 const categories = [...new Set(specs.map((s) => s.category))];

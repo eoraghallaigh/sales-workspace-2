@@ -35,6 +35,7 @@ import ContactViewsSpec from "./pages/specs/contact-views";
 import PlayLifecycleSpec from "./pages/specs/play-lifecycle";
 import WorkingHighVolumeSpec from "./pages/specs/working-high-volume";
 import CompanySidebarCardsSpec from "./pages/specs/company-sidebar-cards";
+import SequenceClaritySpec from "./pages/specs/sequence-clarity";
 import DesignMode from "./sandbox/DesignMode";
 import Inspector from "./inspector/Inspector";
 
@@ -81,6 +82,7 @@ const App = () => (
             <Route path="/specs/play-lifecycle" element={<PlayLifecycleSpec />} />
             <Route path="/specs/working-high-volume" element={<WorkingHighVolumeSpec />} />
             <Route path="/specs/company-sidebar-cards" element={<CompanySidebarCardsSpec />} />
+            <Route path="/specs/sequence-clarity" element={<SequenceClaritySpec />} />
           </Routes>
           <GuidedTour />
           {import.meta.env.DEV && <DesignMode />}
