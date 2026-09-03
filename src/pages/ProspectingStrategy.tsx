@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback, useEffect, type ReactNode } from "react";
-import { Plus, Loader2, FileEdit, Mail, Phone, ListTodo, Calendar, MoreHorizontal, ChevronLeft, ChevronDown } from "lucide-react";
+import { Plus, Loader2, FileEdit, Mail, Phone, ListTodo, Calendar, MoreHorizontal, ChevronLeft, ChevronDown, RotateCw } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
 import ContactFeedbackModal from "@/components/ContactFeedbackModal";
@@ -75,6 +75,8 @@ const EXTERNAL_SEQUENCES: Record<string, string> = {
 const REFUSED_CONTACTS: Record<string, RefusalReason> = {
   c10a: "not-real-individual",
 };
+
+const SEQUENCE_FAILED_CONTACTS = new Set(["c8"]);
 
 const REWRITE_STATUS_MESSAGES = [
   "Reading account history…",
@@ -413,15 +415,17 @@ const ProspectingStrategy = () => {
 
   const handleAddToOutreach = useCallback((contactId: string) => {
     setAddedContactIds(prev => new Set(prev).add(contactId));
-    setLoadingContactIds(prev => new Set(prev).add(contactId));
-    setTimeout(() => {
-      setLoadingContactIds(prev => {
-        const next = new Set(prev);
-        next.delete(contactId);
-        return next;
-      });
-    }, 3000);
-  }, []);
+    if (hasResearch) {
+      setLoadingContactIds(prev => new Set(prev).add(contactId));
+      setTimeout(() => {
+        setLoadingContactIds(prev => {
+          const next = new Set(prev);
+          next.delete(contactId);
+          return next;
+        });
+      }, 3000);
+    }
+  }, [hasResearch]);
 
   // Regenerating a sequence reruns the sequencing agent for that one contact,
   // showing the same "Building … sequence" loading state used at creation.
@@ -1389,6 +1393,28 @@ const ProspectingStrategy = () => {
                               reason={REFUSED_CONTACTS[contact.id]}
                               onViewReasoning={() => setReasoningContactId(contact.id)}
                             />
+                          </div>
+                        ) : SEQUENCE_FAILED_CONTACTS.has(contact.id) && !regeneratingContactIds.has(contact.id) ? (
+                          <div key={`seq-error-${contact.id}`} className="px-6 pt-4 pb-4 bg-card animate-fade-in">
+                            <p className="body-100 text-foreground leading-relaxed mb-4">
+                              {dossier.blurb}
+                            </p>
+                            <Alert type="warning">
+                              <AlertDescription>
+                                <p className="body-100 text-foreground mb-1">
+                                  <span className="font-semibold">Sequence not generated</span>
+                                </p>
+                                <p className="body-100 text-foreground">
+                                  The sequencing agent encountered an error while creating {contact.name.split(" ")[0]}'s sequence. This is a pipeline error, not an intentional decision by the agent.
+                                </p>
+                                <div className="mt-3">
+                                  <Button variant="primary" size="extra-small" onClick={() => handleRegenerateSequence(contact.id)}>
+                                    <RotateCw className="mr-1.5 h-3 w-3" />
+                                    Try again
+                                  </Button>
+                                </div>
+                              </AlertDescription>
+                            </Alert>
                           </div>
                         ) : (
                         <div key={`content-${contact.id}`} className="px-6 pt-4 pb-0 bg-card animate-fade-in">

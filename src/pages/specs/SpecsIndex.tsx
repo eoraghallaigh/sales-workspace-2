@@ -66,6 +66,13 @@ const specs: SpecEntry[] = [
       "Status badge logic, reply visibility with multiple examples, external (non-agent) sequences, and agent refusal banners with reasoning links.",
     category: "Interaction flows",
   },
+  {
+    slug: "outreach-target-decoupling",
+    title: "Outreach Target decoupling",
+    description:
+      "Decoupling Outreach Targets from sequence generation so contacts appear as targets even when research or sequencing has not completed or has failed.",
+    category: "Interaction flows",
+  },
 ];
 
 const categories = [...new Set(specs.map((s) => s.category))];
