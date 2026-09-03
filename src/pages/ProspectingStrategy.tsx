@@ -1306,7 +1306,7 @@ const ProspectingStrategy = () => {
                               >
                                 {contact.name}
                               </button>
-                              <div className="body-100 text-muted-foreground">{contact.role}</div>
+                              <div className="body-100 text-muted-foreground">{contact.role}{contact.lastContactedDate && <> | Last contacted: {contact.lastContactedDate}</>}</div>
                             </div>
                           </div>
 
