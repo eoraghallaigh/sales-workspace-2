@@ -307,7 +307,7 @@ const ScriptModeToggle = ({
 const stripReasonPrefix = (reason: string): string =>
   reason.replace(/^Sequence ended because /, "");
 
-type SequenceStatus = "enrolled" | "paused" | "replied" | "ended";
+type SequenceStatus = "enrolled" | "paused" | "replied" | "ended" | "unenrolled";
 type LocalOverride = SequenceStatus | "removed" | null;
 
 const classifyStatus = (
@@ -358,6 +358,13 @@ const renderStatusBadgeStack = (
   } else if (status === "replied") {
     badge = <Badge variant="status-green">Replied</Badge>;
     text = sequence.kind === "unenrolled" ? stripReasonPrefix(sequence.reason) : "Replied";
+  } else if (status === "unenrolled") {
+    badge = <Badge variant="status-orange">Unenrolled</Badge>;
+    if (localOverride === "unenrolled" && sequence.kind === "active") {
+      text = `Manually unenrolled at ${stepTextFromActive(sequence)}`;
+    } else {
+      text = "Manually unenrolled by rep";
+    }
   } else if (status === "ended") {
     badge = <Badge variant="status-gray">Ended</Badge>;
     text = "All 5 touches sent";
@@ -1345,21 +1352,21 @@ const SortableRow = ({
                   </Avatar>
                   <span className="heading-50 text-foreground">{contact.name} replied</span>
                   <span className="detail-200 text-muted-foreground">· {reply.at}</span>
-                  {onReply && (
-                    <Button
-                      variant="secondary"
-                      size="extra-small"
-                      className="ml-auto"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onReply();
-                      }}
-                    >
-                      <TrellisIcon name="email" size={12} className="mr-1" /> Reply
-                    </Button>
-                  )}
                 </div>
                 <p className="body-100 text-foreground whitespace-pre-line">{reply.preview}</p>
+                {onReply && (
+                  <Button
+                    variant="secondary"
+                    size="extra-small"
+                    className="mt-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onReply();
+                    }}
+                  >
+                    <TrellisIcon name="email" size={12} className="mr-1" /> Reply
+                  </Button>
+                )}
               </div>
             )}
           </CollapsibleContent>
@@ -1478,21 +1485,21 @@ const SortableRow = ({
                 </Avatar>
                 <span className="heading-50 text-foreground">{contact.name} replied</span>
                 <span className="detail-200 text-muted-foreground">· {reply.at}</span>
-                {onReply && (
-                  <Button
-                    variant="secondary"
-                    size="extra-small"
-                    className="ml-auto"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onReply();
-                    }}
-                  >
-                    <TrellisIcon name="email" size={12} className="mr-1" /> Reply
-                  </Button>
-                )}
               </div>
               <p className="body-100 text-foreground whitespace-pre-line">{reply.preview}</p>
+              {onReply && (
+                <Button
+                  variant="secondary"
+                  size="extra-small"
+                  className="mt-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onReply();
+                  }}
+                >
+                  <TrellisIcon name="email" size={12} className="mr-1" /> Reply
+                </Button>
+              )}
             </div>
           )}
         </CollapsibleContent>
@@ -1768,6 +1775,7 @@ export type OutreachSequenceCardProps = {
   enableFeedback?: boolean;
   sequenceGeneratedAt?: string;
   staleInstructions?: boolean;
+  externalSequenceName?: string;
 };
 
 const buildDefaultOrder = (contactId: string): string[] => [
@@ -1808,6 +1816,7 @@ export const OutreachSequenceCard = ({
   enableFeedback,
   sequenceGeneratedAt,
   staleInstructions,
+  externalSequenceName,
 }: OutreachSequenceCardProps) => {
   const firstName = contact.name.split(" ")[0];
   const pristine = isPristine(call, linkedin, sequence);
@@ -2029,7 +2038,9 @@ export const OutreachSequenceCard = ({
             </DropdownMenu>
           )}
           <div className="flex-1" />
-          {mutedAttribution}
+          {externalSequenceName ? (
+            <button type="button" className="detail-200 text-text-interactive hover:underline ml-3 truncate">{externalSequenceName}</button>
+          ) : mutedAttribution}
         </div>
           <div className="pb-0">
             <DndContext
@@ -2166,7 +2177,7 @@ export const OutreachSequenceCard = ({
                     () => setLocalOverride("paused"),
                     () => setLocalOverride("enrolled"),
                     () => setLocalOverride("ended"),
-                    () => setLocalOverride("removed"),
+                    () => setLocalOverride("unenrolled"),
                   )}
                 </div>
               )}
