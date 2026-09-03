@@ -2697,6 +2697,9 @@ const rawProspectingCompanies: Company[] = [
       { id: "c21a", name: "Hannah Reeves", initials: "HR", role: "VP Operations", avatarColor: "bg-trellis-blue-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 1, lastContactedDate: getRandomLastContactedDate(), signals: [SIGNALS.VIEWED_PRICING] },
       { id: "c21b", name: "Daniel Park", initials: "DP", role: "Director of Logistics", avatarColor: "bg-trellis-teal-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, lastContactedDate: getRandomLastContactedDate(), signals: [] },
       { id: "c21c", name: "Renata Costa", initials: "RC", role: "Procurement Lead", avatarColor: "bg-trellis-orange-500", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, lastContactedDate: getRandomLastContactedDate(), signals: [SIGNALS.ATTENDED_WEBINAR] },
+      { id: "c21d", name: "Fiona Gallagher", initials: "FG", role: "Supply Chain Analyst", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: false, recentConversions: 0, lastContactedDate: getRandomLastContactedDate(), signals: [SIGNALS.RECENT_HIRE] },
+      { id: "c21e", name: "Marcus Webb", initials: "MW", role: "Warehouse Operations Manager", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: false, recentConversions: 0, lastContactedDate: getRandomLastContactedDate(), signals: [] },
+      { id: "c21f", name: "Nora Lindqvist", initials: "NL", role: "Fleet Coordinator", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: false, recentConversions: 1, lastContactedDate: getRandomLastContactedDate(), signals: [SIGNALS.VIEWED_PRICING] },
     ],
   },
   {
@@ -2722,6 +2725,9 @@ const rawProspectingCompanies: Company[] = [
       { id: "c22a", name: "Owen Caldwell", initials: "OC", role: "Head of Growth", avatarColor: "bg-trellis-green-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, lastContactedDate: getRandomLastContactedDate(), signals: [SIGNALS.RECENT_HIRE] },
       { id: "c22b", name: "Marisol Vega", initials: "MV", role: "Director of Marketing", avatarColor: "bg-trellis-pink-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, lastContactedDate: getRandomLastContactedDate(), signals: [] },
       { id: "c22c", name: "Theo Nakamura", initials: "TN", role: "Revenue Operations", avatarColor: "bg-trellis-purple-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, lastContactedDate: getRandomLastContactedDate(), signals: [SIGNALS.VIEWED_PRICING] },
+      { id: "c22d", name: "Elise Fournier", initials: "EF", role: "Sustainability Lead", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: false, recentConversions: 0, lastContactedDate: getRandomLastContactedDate(), signals: [SIGNALS.ATTENDED_WEBINAR] },
+      { id: "c22e", name: "Jamal Osei", initials: "JO", role: "Project Engineer", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: false, recentConversions: 0, lastContactedDate: getRandomLastContactedDate(), signals: [SIGNALS.VIEWED_PRICING] },
+      { id: "c22f", name: "Katrina Volkov", initials: "KV", role: "Business Development Rep", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: false, recentConversions: 1, lastContactedDate: getRandomLastContactedDate(), signals: [] },
     ],
   },
   {
@@ -2747,6 +2753,9 @@ const rawProspectingCompanies: Company[] = [
       { id: "c23a", name: "Ines Pereira", initials: "IP", role: "Chief of Staff", avatarColor: "bg-trellis-indigo-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 1, lastContactedDate: getRandomLastContactedDate(), signals: [SIGNALS.RECENT_QL] },
       { id: "c23b", name: "Andre Walters", initials: "AW", role: "VP Marketing", avatarColor: "bg-trellis-magenta-800", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, lastContactedDate: getRandomLastContactedDate(), signals: [SIGNALS.ATTENDED_WEBINAR] },
       { id: "c23c", name: "Sasha Petrov", initials: "SP", role: "Director, Demand Gen", avatarColor: "bg-trellis-blue-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, lastContactedDate: getRandomLastContactedDate(), signals: [] },
+      { id: "c23d", name: "Tomás Herrera", initials: "TH", role: "Clinical Operations", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: false, recentConversions: 0, lastContactedDate: getRandomLastContactedDate(), signals: [SIGNALS.PAST_HUBSPOT_USER] },
+      { id: "c23e", name: "Anika Sharma", initials: "AS", role: "Product Manager", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: false, recentConversions: 0, lastContactedDate: getRandomLastContactedDate(), signals: [SIGNALS.RECENT_HIRE] },
+      { id: "c23f", name: "Devon Mitchell", initials: "DM", role: "Sales Development Rep", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: false, recentConversions: 0, lastContactedDate: getRandomLastContactedDate(), signals: [] },
     ],
   },
   {
@@ -2772,6 +2781,9 @@ const rawProspectingCompanies: Company[] = [
       { id: "c24a", name: "Priscilla Hayes", initials: "PH", role: "Head of E-commerce", avatarColor: "bg-trellis-orange-500", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, lastContactedDate: getRandomLastContactedDate(), signals: [SIGNALS.PAST_HUBSPOT_USER] },
       { id: "c24b", name: "Mateo Alvarez", initials: "MA", role: "VP, Brand", avatarColor: "bg-trellis-green-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, lastContactedDate: getRandomLastContactedDate(), signals: [] },
       { id: "c24c", name: "Lola Bennett", initials: "LB", role: "CRM Manager", avatarColor: "bg-trellis-teal-600", recentTouches: 0, enrolledInSequence: false, recentConversions: 0, lastContactedDate: getRandomLastContactedDate(), signals: [SIGNALS.VIEWED_PRICING] },
+      { id: "c24d", name: "Riku Tanaka", initials: "RT", role: "Digital Marketing Specialist", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: false, recentConversions: 0, lastContactedDate: getRandomLastContactedDate(), signals: [SIGNALS.ATTENDED_WEBINAR] },
+      { id: "c24e", name: "Camille Dupont", initials: "CD", role: "Category Manager", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: false, recentConversions: 0, lastContactedDate: getRandomLastContactedDate(), signals: [SIGNALS.RECENT_HIRE] },
+      { id: "c24f", name: "Brendan Kelly", initials: "BK", role: "Trade Marketing Lead", avatarColor: getRandomColor(), recentTouches: 0, enrolledInSequence: false, recentConversions: 0, lastContactedDate: getRandomLastContactedDate(), signals: [] },
     ],
   },
 ];

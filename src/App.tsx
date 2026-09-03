@@ -36,6 +36,7 @@ import PlayLifecycleSpec from "./pages/specs/play-lifecycle";
 import WorkingHighVolumeSpec from "./pages/specs/working-high-volume";
 import CompanySidebarCardsSpec from "./pages/specs/company-sidebar-cards";
 import SequenceClaritySpec from "./pages/specs/sequence-clarity";
+import OutreachTargetDecouplingSpec from "./pages/specs/outreach-target-decoupling";
 import DesignMode from "./sandbox/DesignMode";
 import Inspector from "./inspector/Inspector";
 
@@ -83,6 +84,7 @@ const App = () => (
             <Route path="/specs/working-high-volume" element={<WorkingHighVolumeSpec />} />
             <Route path="/specs/company-sidebar-cards" element={<CompanySidebarCardsSpec />} />
             <Route path="/specs/sequence-clarity" element={<SequenceClaritySpec />} />
+            <Route path="/specs/outreach-target-decoupling" element={<OutreachTargetDecouplingSpec />} />
           </Routes>
           <GuidedTour />
           {import.meta.env.DEV && <DesignMode />}
