@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
-import { StatusIndicator } from "@/components/ui/status-indicator";
 import {
   Tooltip,
   TooltipContent,
@@ -106,6 +105,35 @@ const FormFooterDemo = ({ canPublish, isPotm, tooltipText }: { canPublish: boole
   );
 };
 
+const EditFooterDemo = ({ tooltipText, showMoveToDraft = true }: { state?: PlayState; tooltipText?: string; showMoveToDraft?: boolean }) => {
+  const [potm, setPotm] = useState(false);
+  return (
+    <div className="border-t border-[var(--color-border-container-default)] bg-card rounded-b-lg">
+      <div className="flex items-center justify-between p-3">
+        <div className="flex items-center gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="primary" size="medium">Save</Button>
+              </TooltipTrigger>
+              {tooltipText && (
+                <TooltipContent side="top">{tooltipText}</TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
+          {showMoveToDraft && (
+            <Button variant="secondary" size="medium">Move to Draft</Button>
+          )}
+        </div>
+        <label className="flex items-center gap-1.5 cursor-pointer body-75 text-[var(--color-text-core-default)]">
+          <Checkbox checked={potm} onCheckedChange={(v) => setPotm(v === true)} />
+          POTM
+        </label>
+      </div>
+    </div>
+  );
+};
+
 const TableRowDemo = ({ name, state, isPotm, sequence }: { name: string; state: PlayState; isPotm?: boolean; sequence?: string }) => (
   <tr className="bg-card">
     <td className="border-b border-border px-6 py-3 align-middle hover:bg-fill-surface-recessed transition-colors">
@@ -194,7 +222,7 @@ const TransitionTable = () => (
 );
 
 const ModalDemo = ({ title, description, actionLabel, onClose }: { title: string; description: string; actionLabel: string; onClose?: () => void }) => (
-  <div className="bg-background border border-border rounded-lg p-6 shadow-lg max-w-lg space-y-4">
+  <div className="bg-[var(--color-fill-surface-default)] border border-border rounded-lg p-6 shadow-lg max-w-lg space-y-4">
     <div className="space-y-2">
       <h3 className="heading-300">{title}</h3>
       <p className="body-100 text-muted-foreground">{description}</p>
@@ -209,7 +237,7 @@ const ModalDemo = ({ title, description, actionLabel, onClose }: { title: string
 const ReactivateModalDemo = () => {
   const [date, setDate] = useState<Date | undefined>(undefined);
   return (
-    <div className="bg-background border border-border rounded-lg p-6 shadow-lg max-w-md space-y-4">
+    <div className="bg-[var(--color-fill-surface-default)] border border-border rounded-lg p-6 shadow-lg max-w-md space-y-4">
       <div className="space-y-2">
         <h3 className="heading-300">Reactivate this play</h3>
         <p className="body-100 text-muted-foreground">Set an end date for this play. Reps in US, EMEA will see it immediately.</p>
@@ -228,7 +256,7 @@ const ReactivateModalDemo = () => {
 const RelaunchModalDemo = () => {
   const [range, setRange] = useState<{ from?: Date; to?: Date } | undefined>(undefined);
   return (
-    <div className="bg-background border border-border rounded-lg p-6 shadow-lg max-w-md space-y-4">
+    <div className="bg-[var(--color-fill-surface-default)] border border-border rounded-lg p-6 shadow-lg max-w-md space-y-4">
       <div className="space-y-2">
         <h3 className="heading-300">Schedule this play again</h3>
         <p className="body-100 text-muted-foreground">Pick a launch date and an expiry date.</p>
@@ -256,7 +284,7 @@ const RelaunchModalDemo = () => {
 const RescheduleModalDemo = () => {
   const [date, setDate] = useState<Date | undefined>(undefined);
   return (
-    <div className="bg-background border border-border rounded-lg p-6 shadow-lg max-w-md space-y-4">
+    <div className="bg-[var(--color-fill-surface-default)] border border-border rounded-lg p-6 shadow-lg max-w-md space-y-4">
       <div className="space-y-2">
         <h3 className="heading-300">Reschedule launch</h3>
         <p className="body-100 text-muted-foreground">What date do you want this play to launch on?</p>
@@ -276,11 +304,11 @@ const PlayLifecycleSpec = () => (
   <SpecLayout>
     <SpecHeader
       title="Self-service play creation and editing for Ops"
-      description="The play creation form footer (publish / save as draft / POTM), the plays table with inline status changes, status transition rules, and all confirmation modals."
+      description="The play form footer adapts to the play's current lifecycle state — Publish + Save as Draft for create/draft, Save + Move to Draft for upcoming/active, Save-only for ended. Lifecycle changes implied by dates show a tooltip on Save, or a confirmation modal when reps lose access. The plays table provides inline status changes with its own confirmation modals."
     />
 
-    {/* --- Form Footer --- */}
-    <SpecSection title="Form footer" description="The bottom of the play creation / edit form. Contains the primary Publish CTA, a secondary Save as Draft, and a POTM checkbox aligned right.">
+    {/* --- Form Footer: Create / Draft --- */}
+    <SpecSection title="Form footer — Create / Draft" description="Used when creating a new play or editing a Draft. Publish sets the play live (or scheduled); Save as Draft preserves it as a draft.">
       <StateCard label="Publish disabled" description="Required fields are incomplete. Publish button is disabled; Save as Draft is always available.">
         <div className="w-[500px]">
           <FormFooterDemo canPublish={false} isPotm={false} />
@@ -298,24 +326,40 @@ const PlayLifecycleSpec = () => (
           <FormFooterDemo canPublish={true} isPotm={true} tooltipText="Reps will see this play immediately" />
         </div>
       </StateCard>
+    </SpecSection>
 
-      <StateCard label="POTM checked" description="Marks this play as Play of the Month. Adds a POTM badge in the plays table and prospecting sub-nav.">
+    {/* --- Form Footer: Upcoming / Active --- */}
+    <SpecSection title="Form footer — Upcoming / Active" description="Used when editing an Upcoming or Active play. Save preserves edits (status derived from dates). Move to Draft demotes the play. If Save would change the lifecycle and reps lose access (Active → Ended/Upcoming), a confirmation modal appears. Otherwise a tooltip on Save previews the transition.">
+      <StateCard label="Upcoming — no date change" description="Dates still imply Upcoming. Save just persists edits.">
         <div className="w-[500px]">
-          <FormFooterDemo canPublish={true} isPotm={true} />
+          <EditFooterDemo state="upcoming" />
+        </div>
+      </StateCard>
+
+      <StateCard label="Upcoming — dates imply Active" description="User changed the launch date to today or past. Tooltip on Save explains the transition.">
+        <div className="w-[500px]">
+          <EditFooterDemo state="upcoming" tooltipText="This will move the play from Upcoming to Active" />
+        </div>
+      </StateCard>
+
+      <StateCard label="Active — dates imply Ended" description="User changed the expiry date to the past. Save shows a confirmation modal because reps lose access.">
+        <div className="w-[500px]">
+          <EditFooterDemo state="active" tooltipText="This will move the play from Active to Ended" />
         </div>
       </StateCard>
     </SpecSection>
 
-    {/* --- Autosave Indicator --- */}
-    <SpecSection title="Autosave indicator" description="Appears below the form after the first edit. Debounced at 1 second — shows 'Saving changes' immediately on edit, then settles to 'Changes saved' once the draft is persisted.">
-      <StateCard label="Saving" description="User is actively editing. Shown with a loading spinner.">
-        <div className="w-[300px]">
-          <StatusIndicator loading dotClassName="bg-trellis-green-600" label="Saving changes" />
+    {/* --- Form Footer: Ended --- */}
+    <SpecSection title="Form footer — Ended" description="Used when editing an Ended play. Save only — Move to Draft is blocked (Ended → Draft is not an allowed transition). If the user changes dates to imply Active or Upcoming, a tooltip on Save previews the transition.">
+      <StateCard label="Ended — dates imply Active" description="User changed the expiry date to the future and launch date is today or past.">
+        <div className="w-[500px]">
+          <EditFooterDemo state="ended" showMoveToDraft={false} tooltipText="This will move the play from Ended to Active" />
         </div>
       </StateCard>
-      <StateCard label="Saved" description="Draft persisted after 1 second of inactivity." variant="success">
-        <div className="w-[300px]">
-          <StatusIndicator dotClassName="bg-trellis-green-600" label="Changes saved" />
+
+      <StateCard label="Ended — no date change" description="Dates still imply Ended. Save just persists edits.">
+        <div className="w-[500px]">
+          <EditFooterDemo state="ended" showMoveToDraft={false} />
         </div>
       </StateCard>
     </SpecSection>
@@ -382,8 +426,34 @@ const PlayLifecycleSpec = () => (
       <TransitionTable />
     </SpecSection>
 
-    {/* --- Confirmation Modals --- */}
-    <SpecSection title="Confirmation modals" description="Transitions that affect rep visibility or require date input show a confirmation dialog before applying.">
+    {/* --- Form Confirmation Modals --- */}
+    <SpecSection title="Form confirmation modals" description="When the form's Save button would change rep visibility — either reps gain access (→ Active) or lose it (Active →) — a confirmation modal appears. Transitions that don't touch Active (e.g. Upcoming → Ended, Ended → Upcoming) use a tooltip on Save instead.">
+
+      <StateCard label="Upcoming → Active (via Save)" description="User changed the launch date to today or past. Reps will gain access.">
+        <ModalDemo title="This will activate the play" description="The dates you've chosen will move this play from Upcoming to Active. Reps will see this play immediately." actionLabel="Save & Activate" />
+      </StateCard>
+
+      <StateCard label="Ended → Active (via Save)" description="User changed dates so the play is within its active window again. Reps will gain access.">
+        <ModalDemo title="This will activate the play" description="The dates you've chosen will move this play from Ended to Active. Reps will see this play immediately." actionLabel="Save & Activate" />
+      </StateCard>
+
+      <StateCard label="Active → Ended (via Save)" description="User changed the expiry date to the past. Reps will lose access.">
+        <ModalDemo title="This will end the play" description="The dates you've chosen will move this play from Active to Ended. Reps will lose access." actionLabel="Save & End Play" />
+      </StateCard>
+
+      <StateCard label="Active → Upcoming (via Save)" description="User changed the launch date to a future date. Reps will lose access until the new launch date.">
+        <ModalDemo title="This will reschedule the play" description="The dates you've chosen will move this play from Active to Upcoming. Reps will lose access until the new launch date." actionLabel="Save & Reschedule" />
+      </StateCard>
+
+      <StateCard label="Active → Draft (via Move to Draft)" description="User clicked Move to Draft on an active play. Reps will lose access immediately.">
+        <ModalDemo title="Move to draft?" description="Reps will lose access to this play immediately. You can re-publish it later." actionLabel="Move to Draft" />
+      </StateCard>
+
+      <Callout type="behavior">Transitions that don&rsquo;t change rep visibility (e.g. Upcoming → Ended, Ended → Upcoming) do not show a modal. The Save button shows a tooltip previewing the state change instead.</Callout>
+    </SpecSection>
+
+    {/* --- Table Confirmation Modals --- */}
+    <SpecSection title="Table confirmation modals" description="Transitions triggered from the plays table's inline status dropdown. These fire on direct state changes, not date-implied ones.">
 
       <StateCard label="Draft → Active" description="Publish a draft. If the launch date is in the future, the message reflects the date instead of 'immediately'.">
         <ModalDemo title="Activate this play?" description="This play will be visible to 16 reps in US, EMEA immediately." actionLabel="Activate" />
@@ -426,11 +496,7 @@ const PlayLifecycleSpec = () => (
             <FormFooterDemo canPublish={false} isPotm={false} />
           </div>
         </FlowStep>
-        <FlowStep step={2} label="Fill required fields" description="As the user fills fields, the form auto-saves as a Draft every 1 second of inactivity. The autosave indicator appears below the form.">
-          <div className="w-[300px]">
-            <StatusIndicator dotClassName="bg-trellis-green-600" label="Changes saved" />
-          </div>
-        </FlowStep>
+        <FlowStep step={2} label="Fill required fields" description="User fills the required fields: name, description, segment, teams, launch date, and enablement hero link. Publish remains disabled until all are complete." />
         <FlowStep step={3} label="Publish or save as draft" description="Once all required fields are filled, Publish enables. Hovering shows a tooltip about when reps will see the play. User can also explicitly Save as Draft.">
           <div className="w-[500px]">
             <FormFooterDemo canPublish={true} isPotm={false} tooltipText="Reps won't see the play until Oct 1, 2026" />

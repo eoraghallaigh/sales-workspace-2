@@ -68,7 +68,7 @@ export const StateCard = ({
         <p className="detail-200 text-muted-foreground mt-0.5">{description}</p>
       )}
     </div>
-    <div className="p-5 bg-[var(--color-fill-surface-recessed)]">{children}</div>
+    <div className="p-5 bg-[var(--color-fill-surface-default)]">{children}</div>
   </div>
 );
 

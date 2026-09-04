@@ -4923,7 +4923,7 @@ const CreateViewModal = ({
                           setExpiryDate(date);
                           setExpiryDateOpen(false);
                         }}
-                        disabled={(date) => date < new Date()}
+                        disabled={() => false}
                         classNames={{ day_today: "" }}
                         className="p-3 pointer-events-auto"
                       />
