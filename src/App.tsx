@@ -37,6 +37,8 @@ import WorkingHighVolumeSpec from "./pages/specs/working-high-volume";
 import CompanySidebarCardsSpec from "./pages/specs/company-sidebar-cards";
 import SequenceClaritySpec from "./pages/specs/sequence-clarity";
 import OutreachTargetDecouplingSpec from "./pages/specs/outreach-target-decoupling";
+import OutreachOnCrmRecordSpec from "./pages/specs/outreach-on-crm-record";
+import Company from "./pages/Company";
 import DesignMode from "./sandbox/DesignMode";
 import Inspector from "./inspector/Inspector";
 
@@ -70,6 +72,7 @@ const App = () => (
             <Route path="/power-hour/review" element={<PowerHourReview />} />
             <Route path="/sales-workspace" element={<SalesWorkspace />} />
             <Route path="/deals" element={<Deals />} />
+            <Route path="/company" element={<Company />} />
             <Route path="/agents" element={<Agents />} />
             <Route path="/agents/:agentId" element={<AgentDetail />} />
             <Route path="/dashboard" element={<Dashboard />} />
@@ -85,6 +88,7 @@ const App = () => (
             <Route path="/specs/company-sidebar-cards" element={<CompanySidebarCardsSpec />} />
             <Route path="/specs/sequence-clarity" element={<SequenceClaritySpec />} />
             <Route path="/specs/outreach-target-decoupling" element={<OutreachTargetDecouplingSpec />} />
+            <Route path="/specs/outreach-on-crm-record" element={<OutreachOnCrmRecordSpec />} />
           </Routes>
           <GuidedTour />
           {import.meta.env.DEV && <DesignMode />}
