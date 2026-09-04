@@ -73,6 +73,13 @@ const specs: SpecEntry[] = [
       "Decoupling Outreach Targets from sequence generation so contacts appear as targets even when research or sequencing has not completed or has failed.",
     category: "Interaction flows",
   },
+  {
+    slug: "outreach-on-crm-record",
+    title: "Outreach strategy on the CRM record",
+    description:
+      "Surfacing the outreach strategy — company research and ranked outreach targets — in the middle content area of the company CRM record, so reps outside the prospecting workspace can find and use it.",
+    category: "Interaction flows",
+  },
 ];
 
 const categories = [...new Set(specs.map((s) => s.category))];
