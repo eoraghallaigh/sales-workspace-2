@@ -190,7 +190,7 @@ const ProspectingStrategy = () => {
   const [activeTab, setActiveTab] = useState("strategy");
   const [expandedEmails, setExpandedEmails] = useState<Record<string, boolean>>({});
   const [editedContent, setEditedContent] = useState<Record<string, string>>({});
-  const [addedContactIds, setAddedContactIds] = useState<Set<string>>(new Set());
+  const [addedContactIds, setAddedContactIds] = useState<Set<string>>(new Set(["c10g", "c10h"]));
   const [loadingContactIds, setLoadingContactIds] = useState<Set<string>>(new Set());
   const [regeneratingContactIds, setRegeneratingContactIds] = useState<Set<string>>(new Set());
   const [removedContactIds, setRemovedContactIds] = useState<Set<string>>(new Set());
