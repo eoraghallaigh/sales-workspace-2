@@ -326,6 +326,56 @@ export function getOutreachState(
           ],
         },
       };
+    case "c10f": // Priya Nair — replied to email 2 (interested)
+      return {
+        call: { kind: "no-answer", attempts: 1, lastAttemptAt: "2 days ago" },
+        linkedin: { kind: "pending", sentAt: "4 days ago", daysWaiting: 4 },
+        sequence: {
+          kind: "unenrolled",
+          reason: `Sequence ended because ${firstName} replied`,
+          statuses: [
+            { kind: "sent", sentAt: "Apr 24", opens: 3, clicks: 1 },
+            {
+              kind: "sent",
+              sentAt: "Apr 28",
+              opens: 4,
+              clicks: 2,
+              reply: {
+                at: "Apr 29, 11:03am",
+                preview: `Thanks for reaching out — good timing. We're standing up Revenue Pulse right now and our reporting is scattered across three tools, so the AI insights angle is interesting. Could you share how that piece works? Happy to grab 20 minutes next week.`,
+              },
+            },
+            { kind: "cancelled" },
+          ],
+        },
+      };
+    case "c10g": // Marcus Webb — full sequence sent, no reply (completed)
+      return {
+        call: { kind: "no-answer", attempts: 2, lastAttemptAt: "today" },
+        linkedin: { kind: "pending", sentAt: "6 days ago", daysWaiting: 6 },
+        sequence: {
+          kind: "completed",
+          statuses: [
+            { kind: "sent", sentAt: "Apr 16", opens: 2, clicks: 0 },
+            { kind: "sent", sentAt: "Apr 22", opens: 1, clicks: 0 },
+            { kind: "sent", sentAt: "Apr 28", opens: 0, clicks: 0 },
+          ],
+        },
+      };
+    case "c10h": // Hana Kimura — LinkedIn accepted ended the sequence (unenrolled)
+      return {
+        call: { kind: "voicemail", lastAttemptAt: "yesterday" },
+        linkedin: { kind: "accepted", acceptedAt: "yesterday" },
+        sequence: {
+          kind: "unenrolled",
+          reason: `Sequence ended because ${firstName} accepted your LinkedIn request`,
+          statuses: [
+            { kind: "sent", sentAt: "Apr 25", opens: 2, clicks: 1 },
+            { kind: "cancelled" },
+            { kind: "cancelled" },
+          ],
+        },
+      };
     case "c10": // Lisa Thompson — enrolled in external marketing sequence
       return {
         call: { kind: "not-attempted" },
