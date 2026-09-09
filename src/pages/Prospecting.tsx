@@ -15,21 +15,19 @@ import { DataWell } from "@/components/ui/data-well";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { TableHeaderCell } from "@/components/ui/table-header-cell";
 import { TableDataCell } from "@/components/ui/table-data-cell";
 import { Info, ChevronDown, ListFilter, X, ExternalLink, FileEdit, Mail, Phone, ListTodo, Calendar, MoreHorizontal, Copy, Search, ArrowUpDown, ChevronRight, Check } from "lucide-react";
-import CompanyCard from "@/components/CompanyCard";
-import CompanyCardVariantC from "@/components/CompanyCardVariantC";
 import CompaniesTableView from "@/components/CompaniesTableView";
 import ContactsTableView from "@/components/ContactsTableView";
 import ViewController, { type EntityView } from "@/components/ViewController";
 import CreateCallTaskPanel from "@/components/CreateCallTaskPanel";
 import FullCustomerBook from "@/components/FullCustomerBook";
+import InstallBaseView from "@/components/installbase/InstallBaseView";
+import type { IbTier } from "@/data/installBase";
 import FullProspectBook from "@/components/FullProspectBook";
-import { companyStrategies, defaultStrategy } from "@/data/companyStrategies";
 import Tag from "@/components/Tag";
 import CollapsibleSection from "@/components/CollapsibleSection";
 import QLSummary from "@/components/QLSummary";
@@ -47,7 +45,6 @@ import { TrellisIcon } from "@/components/ui/trellis-icon";
 import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { Company } from "@/components/CompanyCard";
 import { calculateCompanyStatus } from "@/utils/companyStatusUtils";
-import { useVariant, type CardVariant } from "@/contexts/VariantContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const formatPlayPipeline = (amount: number) => {
@@ -77,6 +74,18 @@ const VIEW_LABELS: Record<string, string> = {
   "p3-later": "P3 - Later",
   "p4-last": "P4 - Last",
   "full-customer-book": "Full Customer Book",
+  "ib-p1": "P1 - Now",
+  "ib-p2": "P2 - Next",
+  "ib-p3": "P3 - Later",
+  "ib-p4": "P4 - Last",
+};
+
+// Install-base tier sub-nav items → PPF tier.
+const IB_NAV_TO_TIER: Record<string, IbTier> = {
+  "ib-p1": "P1",
+  "ib-p2": "P2",
+  "ib-p3": "P3",
+  "ib-p4": "P4",
 };
 
 const Prospecting = () => {
@@ -125,7 +134,6 @@ const Prospecting = () => {
   const [searchParams] = useSearchParams();
   const viewParam = searchParams.get("view");
   const [activeNavItem, setActiveNavItem] = useState<string>(playId || viewParam || "p1-now");
-  const { variant: cardVariant } = useVariant();
   const [entityView, setEntityView] = useState<EntityView>("companies");
   const [isCallTaskPanelOpen, setIsCallTaskPanelOpen] = useState(false);
   const [callTaskContactCount, setCallTaskContactCount] = useState(0);
@@ -301,6 +309,16 @@ const Prospecting = () => {
       state: { from, fromLabel, playId: activePlay?.id },
     });
   };
+  // Install Base companies open the same outreach strategy page as Net New
+  // (they're adapted into the strategy dataset). Carries from/label for the
+  // back button.
+  const handleIbCompanyClick = (companyId: string) => {
+    const from = cyclePath(`/prospecting?view=${activeNavItem}`);
+    const fromLabel = VIEW_LABELS[activeNavItem] ?? "Install Base";
+    navigate(cyclePath(`/prospecting/strategy/${companyId}`), {
+      state: { from, fromLabel },
+    });
+  };
   const handleCompanyNameClick = (companyId: string, companyName?: string) => {
     setSelectedCompanyId(companyId);
     setPreviewCompanyName(companyName ?? null);
@@ -313,12 +331,6 @@ const Prospecting = () => {
     setIsContactPanelOpen(true);
     setIsPanelOpen(false);
     setIsTaskPanelOpen(false);
-  };
-  const handleTaskClick = (taskId: string) => {
-    setSelectedTaskId(taskId);
-    setIsTaskPanelOpen(true);
-    setIsPanelOpen(false);
-    setIsContactPanelOpen(false);
   };
   const handleCallClick = (contactId: string, taskId?: string) => {
     setSelectedContactId(contactId);
@@ -347,14 +359,6 @@ const Prospecting = () => {
     }
   };
 
-  const handlePrepForCallClick = (contactId: string) => {
-    setCallPrepContactId(contactId);
-    setIsCallPrepPanelOpen(true);
-    // Close other panels
-    setIsPanelOpen(false);
-    setIsContactPanelOpen(false);
-    setIsTaskPanelOpen(false);
-  };
 
   // Helper: resolve contact ID by name
   const resolveContactIdByName = (name?: string) => {
@@ -624,8 +628,8 @@ const Prospecting = () => {
           <div ref={listScrollRef} className={`${expandedPanelCompanyId ? 'w-[240px] flex-shrink-0' : 'flex-1'} overflow-y-auto overscroll-contain transition-all duration-300 ${!expandedPanelCompanyId && (isPanelOpen || isContactPanelOpen || isTaskPanelOpen) ? 'mr-[569px]' : 'mr-0'}`}>
             {/* Full Customer Book / Full Prospect Book views replace the default cards layout */}
             {!expandedPanelCompanyId && activeNavItem === "full-customer-book" && (
-              <div className="max-w-[1440px] px-6 py-6">
-                <FullCustomerBook onPreview={handleCompanyNameClick} />
+              <div className="px-6 py-6">
+                <FullCustomerBook onWork={handleIbCompanyClick} onContactClick={handleContactClick} />
               </div>
             )}
             {!expandedPanelCompanyId && activeNavItem === "full-prospect-book" && (
@@ -633,8 +637,18 @@ const Prospecting = () => {
                 <FullProspectBook onNameClick={handleCompanyClick} onPreview={handleCompanyNameClick} />
               </div>
             )}
+            {/* Install Base PPF tier views (P1–P4) */}
+            {!expandedPanelCompanyId && IB_NAV_TO_TIER[activeNavItem] && (
+              <div className="px-6 py-6">
+                <InstallBaseView
+                  tier={IB_NAV_TO_TIER[activeNavItem]}
+                  onWork={handleIbCompanyClick}
+                  onContactClick={handleContactClick}
+                />
+              </div>
+            )}
             {/* Top Metrics - hidden when expanded panel is active or when a Full Book view is shown */}
-            {activeNavItem !== "full-customer-book" && activeNavItem !== "full-prospect-book" && (
+            {activeNavItem !== "full-customer-book" && activeNavItem !== "full-prospect-book" && !IB_NAV_TO_TIER[activeNavItem] && (
             <div className={`${expandedPanelCompanyId ? 'px-0 py-0' : 'px-6 py-6'}`}>
               {!expandedPanelCompanyId && !activePlay && activeNavItem !== "recently-generated" && <div className="grid grid-cols-4 gap-4 mb-6">
                 <DataWell label="Total book size" value="497" tooltip="Total book size" />
@@ -813,7 +827,6 @@ const Prospecting = () => {
                     </>
                   )}
                   <div className="flex-1" />
-                  {entityView === "companies" && <ViewToggle />}
                 </div>
               </div>}
 
@@ -845,48 +858,18 @@ const Prospecting = () => {
                     setIsCallTaskPanelOpen(true);
                   }}
                 />
-              ) : cardVariant === "table" ? (
+              ) : (
                 <CompaniesTableView
                   companies={companiesWithCalculatedStatus}
                   onCompanyClick={handleCompanyClick}
                   onNameClick={handleCompanyClick}
                   onPreview={handleCompanyNameClick}
                   currentPlayId={activePlay?.id}
+                  onContactClick={(contactId) => handleContactClick(contactId)}
+                  onCallClick={(contactId) => handleCallClick(contactId)}
+                  onEmailClick={(contactId) => handleEmailClick(undefined, undefined, undefined, contactId)}
+                  expandByDefault={activePriority === "P1" || activePriority === "P3"}
                 />
-              ) : (
-                (() => {
-                  const rows = companiesWithCalculatedStatus.map((company, companyIndex) => {
-                    const strategy = companyStrategies[company.id] || defaultStrategy;
-                    const strategyHint = strategy.default.summary;
-
-                    if (cardVariant === "current") {
-                      return (
-                        <div key={company.id} {...(companyIndex === 0 ? { "data-tour": "first-company-card" } : {})}>
-                          <CompanyCard
-                            company={company}
-                            onCompanyClick={() => handleCompanyClick(company.id)}
-                            onNameClick={() => handleCompanyClick(company.id)}
-                            onContactClick={(contactId) => handleContactClick(contactId)}
-                            onTaskClick={(taskId) => handleTaskClick(taskId)}
-                            onCallClick={(contactId) => handleCallClick(contactId)}
-                            onEmailClick={(contactId) => handleEmailClick(undefined, undefined, undefined, contactId)}
-                            onPrepForCallClick={(contactId) => handlePrepForCallClick(contactId)}
-                            completedTasks={completedTasks}
-                            currentPlayId={activePlay?.id}
-                          />
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <div key={company.id} {...(companyIndex === 0 ? { "data-tour": "first-company-card" } : {})}>
-                        <CompanyCardVariantC company={company} strategyHint={strategyHint} rank={companyIndex + 1} onCompanyClick={() => handleCompanyClick(company.id)} completedTasks={completedTasks} currentPlayId={activePlay?.id} />
-                      </div>
-                    );
-                  });
-
-                  return rows;
-                })()
               )}
              </div>
             </div>
@@ -1948,44 +1931,6 @@ const Prospecting = () => {
       />
       <ProspectingAgent />
       </Layout>;
-};
-const viewToggleOptions: { value: CardVariant; label: string }[] = [
-  { value: "current", label: "Cards" },
-  { value: "table", label: "Table" },
-];
-
-const ViewToggle = () => {
-  const { variant, setVariant } = useVariant();
-  return (
-    <div className="flex items-center" role="group" aria-label="Switch list view">
-      {viewToggleOptions.map((opt, i) => {
-        const isActive = variant === opt.value;
-        const isFirst = i === 0;
-        const isLast = i === viewToggleOptions.length - 1;
-        return (
-          <Tooltip key={opt.value}>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                aria-pressed={isActive}
-                onClick={() => setVariant(opt.value)}
-                className={`relative flex items-center px-3 py-1.5 detail-200 border border-core-subtle transition-colors ${
-                  isFirst ? "rounded-l-[4px] -mr-px" : isLast ? "rounded-r-[4px]" : "-mr-px"
-                } ${
-                  isActive
-                    ? "bg-[var(--page-bg)] z-[1] text-foreground"
-                    : "bg-card text-muted-foreground hover:bg-[var(--page-bg)]"
-                }`}
-              >
-                {opt.label}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>{opt.label}</TooltipContent>
-          </Tooltip>
-        );
-      })}
-    </div>
-  );
 };
 
 export default Prospecting;

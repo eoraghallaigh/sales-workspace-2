@@ -166,7 +166,7 @@ const ContactCard = ({
   const checkboxRevealed = selectionMode || isSelected;
 
   const cardClassName = cn(
-    "group relative flex h-full flex-col rounded-lg bg-white min-w-[360px] max-w-[360px] overflow-hidden transition-all duration-300 ease-out",
+    "group relative flex flex-col rounded-lg bg-white min-w-[360px] max-w-[360px] overflow-hidden transition-all duration-300 ease-out",
     isSelected ? "border-2 border-text-interactive" : "border border-border",
     isDragging ? "shadow-xl -translate-y-1" : "shadow-100",
     isRemoving ? "opacity-0" : "",
@@ -376,7 +376,7 @@ const ContactCard = ({
     >
       <div
         className="flex items-center justify-between p-4 rounded-t-lg"
-        style={{ background: "var(--color-fill-secondary-hover)" }}
+        style={{ background: "var(--color-fill-surface-default)" }}
       >
         {isDismissing ? (
           dismissalHeader

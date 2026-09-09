@@ -1,4 +1,4 @@
-import { Fragment, ReactNode, useMemo, useState } from "react";
+import { Fragment, ReactNode, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -14,8 +14,15 @@ import {
 import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { RecommendedContact } from "@/components/CompanyCard";
 import AddContactsModal from "@/components/AddContactsModal";
+import AddContactTile from "@/components/AddContactTile";
+import ContactCard from "@/components/ContactCard";
 import { SignalChipRow } from "@/components/SignalChip";
 import { PreviewButton } from "@/components/PreviewButton";
+import { useResizableColumns } from "@/hooks/useResizableColumns";
+import { ColumnResizeHandle } from "@/components/ColumnResizeHandle";
+import { cn } from "@/lib/utils";
+
+const PRIMARY_KEY = "__primary";
 
 /*
  * CompanyTable — the single, shared company/contact table used by every "book"
@@ -67,6 +74,18 @@ interface CompanyTableProps<T extends CompanyTableRow> {
     selected: SelectedContact<T>[],
     clearSelection: () => void,
   ) => ReactNode;
+  /**
+   * When true, an expanded row reveals the recommended contacts as ContactCards
+   * (the same presentation as the card view) in a full-width panel, instead of
+   * column-aligned nested rows. Opt-in so other consumers keep the nested rows.
+   */
+  expandToContactCards?: boolean;
+  /** Start every row expanded (used for deep-work tiers like P1/P3). */
+  defaultExpanded?: boolean;
+  /** Contact-level handlers, forwarded to the ContactCards in the panel. */
+  onContactClick?: (contactId: string) => void;
+  onContactCall?: (contactId: string) => void;
+  onContactEmail?: (contactId: string) => void;
 }
 
 const HEADER_CELL =
@@ -104,9 +123,20 @@ export function CompanyTable<T extends CompanyTableRow>({
   getAvailableContacts,
   toolbar,
   renderBulkBar,
+  expandToContactCards = false,
+  defaultExpanded = false,
+  onContactClick,
+  onContactCall,
+  onContactEmail,
 }: CompanyTableProps<T>) {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState<Set<string>>(() => {
+    if (!defaultExpanded) return new Set();
+    // Card-panel tables are single-open (accordion) — default to just the first
+    // row so the surface opens with one company's contacts, not all of them.
+    if (expandToContactCards) return new Set(rows[0] ? [rows[0].id] : []);
+    return new Set(rows.map((r) => r.id));
+  });
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
   const [addedContacts, setAddedContacts] = useState<Record<string, RecommendedContact[]>>({});
   const [addModalRowId, setAddModalRowId] = useState<string | null>(null);
@@ -119,7 +149,8 @@ export function CompanyTable<T extends CompanyTableRow>({
   const toggleRow = (id: string) =>
     setSelectedRows((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
 
@@ -131,8 +162,13 @@ export function CompanyTable<T extends CompanyTableRow>({
 
   const toggleExpanded = (id: string) =>
     setExpanded((prev) => {
+      // Card-panel tables: accordion — opening a company closes any other.
+      if (expandToContactCards) {
+        return prev.has(id) ? new Set() : new Set([id]);
+      }
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
 
@@ -140,7 +176,8 @@ export function CompanyTable<T extends CompanyTableRow>({
     setSelectedContacts((prev) => {
       const key = contactKey(rowId, contactId);
       const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
 
@@ -163,13 +200,33 @@ export function CompanyTable<T extends CompanyTableRow>({
 
   const colSpanAfterName = columns.length;
 
+  const { colStyle, startResize, totalWidth, fit } = useResizableColumns({
+    [PRIMARY_KEY]: primaryMinWidth,
+    ...Object.fromEntries(columns.map((c) => [c.key, c.minWidth])),
+  });
+  // +48 for the fixed-width checkbox column (w-12). Floor at minTableWidth.
+  const columnKeys = [PRIMARY_KEY, ...columns.map((c) => c.key)];
+  const tableWidth = Math.max(totalWidth(columnKeys, 48), minTableWidth);
+
+  // Fill the available width on mount (columns scale up proportionally), then
+  // stay independently resizable.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [panelWidth, setPanelWidth] = useState(0);
+  useLayoutEffect(() => {
+    if (scrollRef.current) {
+      fit(columnKeys, scrollRef.current.clientWidth, 48);
+      setPanelWidth(scrollRef.current.clientWidth);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="border border-border bg-card rounded-[4px] overflow-hidden">
       {toolbar}
-      {renderBulkBar && selectedContactList.length > 0 &&
+      {renderBulkBar && !expandToContactCards && selectedContactList.length > 0 &&
         renderBulkBar(selectedContactList, clearContactSelection)}
-      <div className="overflow-x-auto">
-        <Table style={{ minWidth: minTableWidth }}>
+      <div className="overflow-x-auto" ref={scrollRef}>
+        <Table style={{ tableLayout: "fixed", width: tableWidth, minWidth: tableWidth }}>
           <TableHeader>
             <TableRow className="bg-[var(--color-fill-surface-recessed)] hover:bg-[var(--color-fill-surface-recessed)] border-[var(--color-border-transitional-core-subtle)]">
               <TableHead className="w-12 px-4 sticky left-0 z-20 bg-[var(--color-fill-surface-recessed)] table-header-text align-middle border-r border-[var(--color-border-transitional-core-subtle)]">
@@ -177,17 +234,22 @@ export function CompanyTable<T extends CompanyTableRow>({
               </TableHead>
               <TableHead
                 className={`sticky left-12 z-20 bg-[var(--color-fill-surface-recessed)] ${HEADER_CELL}`}
-                style={{ minWidth: primaryMinWidth }}
+                style={colStyle(PRIMARY_KEY)}
               >
                 {primaryHeader}
+                <ColumnResizeHandle onStart={(x) => startResize(PRIMARY_KEY, x)} />
               </TableHead>
               {columns.map((col, idx) => (
                 <TableHead
                   key={col.key}
-                  className={idx === columns.length - 1 ? HEADER_CELL.replace(" border-r border-[var(--color-border-transitional-core-subtle)]", "") : HEADER_CELL}
-                  style={{ minWidth: col.minWidth }}
+                  className={cn(
+                    "relative",
+                    idx === columns.length - 1 ? HEADER_CELL.replace(" border-r border-[var(--color-border-transitional-core-subtle)]", "") : HEADER_CELL,
+                  )}
+                  style={colStyle(col.key)}
                 >
                   {col.header}
+                  <ColumnResizeHandle onStart={(x) => startResize(col.key, x)} />
                 </TableHead>
               ))}
             </TableRow>
@@ -197,21 +259,37 @@ export function CompanyTable<T extends CompanyTableRow>({
               const isExpanded = expanded.has(row.id);
               const contacts = contactsFor(row);
               const hasContacts = contacts.length > 0;
+              const expandable = hasContacts || !!getAvailableContacts;
               return (
                 <Fragment key={row.id}>
-                  <TableRow className="group bg-card hover:bg-fill-surface-recessed">
-                    <td className="w-12 sticky left-0 z-10 bg-inherit border-b border-border px-4 py-3 align-middle">
+                  <TableRow
+                    className={cn(
+                      "group bg-card hover:bg-fill-surface-recessed",
+                      expandable && "cursor-pointer",
+                    )}
+                    onClick={() => expandable && toggleExpanded(row.id)}
+                  >
+                    <td
+                      className="w-12 sticky left-0 z-10 bg-inherit border-b border-border px-4 py-3 align-middle"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Checkbox
                         checked={selectedRows.has(row.id)}
                         onCheckedChange={() => toggleRow(row.id)}
                       />
                     </td>
-                    <td className="sticky left-12 z-10 bg-inherit border-b border-border border-r border-border px-4 py-3 align-middle">
+                    <td
+                      className="sticky left-12 z-10 bg-inherit border-b border-border border-r border-border px-4 py-3 align-middle"
+                      style={colStyle(PRIMARY_KEY)}
+                    >
                       <div className="flex items-center gap-3">
                         <button
                           type="button"
-                          onClick={() => toggleExpanded(row.id)}
-                          disabled={!hasContacts && !getAvailableContacts}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleExpanded(row.id);
+                          }}
+                          disabled={!expandable}
                           className="flex items-center justify-center h-5 w-5 flex-shrink-0 rounded hover:bg-trellis-neutral-200 text-muted-foreground disabled:opacity-30 disabled:hover:bg-transparent"
                           aria-label={isExpanded ? "Collapse contacts" : "Expand contacts"}
                         >
@@ -231,7 +309,10 @@ export function CompanyTable<T extends CompanyTableRow>({
                             <Button
                               variant="link"
                               className="body-125 text-text-interactive hover:text-text-interactive-hover p-0 h-auto justify-start hover:no-underline"
-                              onClick={() => onNameClick(row)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onNameClick(row);
+                              }}
                             >
                               {row.name}
                             </Button>
@@ -240,17 +321,25 @@ export function CompanyTable<T extends CompanyTableRow>({
                           )}
                           {renderNameExtra?.(row)}
                         </div>
-                        {onPreview && <PreviewButton onClick={() => onPreview(row)} />}
+                        {onPreview && (
+                          <span onClick={(e) => e.stopPropagation()}>
+                            <PreviewButton onClick={() => onPreview(row)} />
+                          </span>
+                        )}
                       </div>
                     </td>
                     {columns.map((col) => (
-                      <td key={col.key} className={col.cellClassName ?? BODY_CELL}>
+                      <td
+                        key={col.key}
+                        className={col.cellClassName ?? BODY_CELL}
+                        style={colStyle(col.key)}
+                      >
                         {col.render(row)}
                       </td>
                     ))}
                   </TableRow>
 
-                  {isExpanded && (
+                  {isExpanded && !expandToContactCards && (
                     <>
                       {contacts.map((contact) => {
                         const recentConversions = contact.recentConversions ?? 0;
@@ -361,6 +450,67 @@ export function CompanyTable<T extends CompanyTableRow>({
                         </TableRow>
                       )}
                     </>
+                  )}
+
+                  {isExpanded && expandToContactCards && (
+                    <TableRow className="bg-[var(--color-fill-surface-default)] hover:bg-[var(--color-fill-surface-default)]">
+                      <td
+                        colSpan={columns.length + 2}
+                        className="border-b border-border bg-[var(--color-fill-surface-default)] p-0"
+                      >
+                        <div
+                          className="sticky left-0 bg-[var(--color-fill-surface-recessed)] pt-6 pr-6 pb-16 pl-16"
+                          style={{ width: panelWidth || undefined }}
+                        >
+                        {contacts.length > 0 ? (
+                          <div className="flex items-stretch gap-4 overflow-x-auto py-1 -my-1 px-1 -mx-1">
+                            {contacts.map((contact) => (
+                              <ContactCard
+                                key={contact.id}
+                                contact={contact}
+                                companyLogo={row.logo}
+                                enableSelection
+                                selectionMode={selectedContacts.size > 0}
+                                isSelected={selectedContacts.has(contactKey(row.id, contact.id))}
+                                onToggleSelect={() => toggleContact(row.id, contact.id)}
+                                onContactClick={onContactClick}
+                                onCallClick={onContactCall}
+                                onEmailClick={onContactEmail}
+                                onWorkQLClick={onContactClick}
+                              />
+                            ))}
+                            {getAvailableContacts && (
+                              <AddContactTile onClick={() => setAddModalRowId(row.id)} />
+                            )}
+                          </div>
+                        ) : getAvailableContacts ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="body-100 text-muted-foreground">
+                              No recommended contacts.
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setAddModalRowId(row.id)}
+                              className="link-100 text-text-interactive hover:text-text-interactive-hover hover:underline"
+                            >
+                              Add contacts
+                            </button>
+                          </div>
+                        ) : null}
+                        {renderBulkBar &&
+                          (() => {
+                            const rowSelected = selectedContactList.filter(
+                              (s) => s.row.id === row.id,
+                            );
+                            return rowSelected.length > 0 ? (
+                              <div className="mt-4">
+                                {renderBulkBar(rowSelected, clearContactSelection)}
+                              </div>
+                            ) : null;
+                          })()}
+                        </div>
+                      </td>
+                    </TableRow>
                   )}
                 </Fragment>
               );

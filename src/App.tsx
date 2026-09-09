@@ -22,6 +22,7 @@ import DesignSystem from "./pages/DesignSystem";
 import DataWellSandbox from "./pages/DataWellSandbox";
 import PlayHeaderSandbox from "./pages/PlayHeaderSandbox";
 import ProspectingStrategy from "./pages/ProspectingStrategy";
+import InstallBaseAccount from "./pages/InstallBaseAccount";
 import HoverPreviewDemo from "./pages/HoverPreviewDemo";
 import OutreachStates from "./pages/OutreachStates";
 import MotionSandbox from "./pages/MotionSandbox";
@@ -33,6 +34,7 @@ import SequenceCustomisationSpec from "./pages/specs/sequence-customisation";
 import AgentConfigurationSpec from "./pages/specs/agent-configuration";
 import ContactViewsSpec from "./pages/specs/contact-views";
 import PlayLifecycleSpec from "./pages/specs/play-lifecycle";
+import OsaDelaySpec from "./pages/specs/osa-delay";
 import WorkingHighVolumeSpec from "./pages/specs/working-high-volume";
 import CompanySidebarCardsSpec from "./pages/specs/company-sidebar-cards";
 import SequenceClaritySpec from "./pages/specs/sequence-clarity";
@@ -68,6 +70,7 @@ const App = () => (
             <Route path="/plays/new" element={<PlayBuilder />} />
             <Route path="/plays/:playId/edit" element={<PlayBuilder />} />
             <Route path="/prospecting/strategy/:companyId" element={<ProspectingStrategy />} />
+            <Route path="/prospecting/ib/:companyId" element={<InstallBaseAccount />} />
             <Route path="/power-hour" element={<PowerHour />} />
             <Route path="/power-hour/review" element={<PowerHourReview />} />
             <Route path="/sales-workspace" element={<SalesWorkspace />} />
@@ -84,6 +87,7 @@ const App = () => (
             <Route path="/specs/agent-configuration" element={<AgentConfigurationSpec />} />
             <Route path="/specs/contact-views" element={<ContactViewsSpec />} />
             <Route path="/specs/play-lifecycle" element={<PlayLifecycleSpec />} />
+            <Route path="/specs/osa-delay" element={<OsaDelaySpec />} />
             <Route path="/specs/working-high-volume" element={<WorkingHighVolumeSpec />} />
             <Route path="/specs/company-sidebar-cards" element={<CompanySidebarCardsSpec />} />
             <Route path="/specs/sequence-clarity" element={<SequenceClaritySpec />} />

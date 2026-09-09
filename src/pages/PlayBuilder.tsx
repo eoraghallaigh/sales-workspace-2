@@ -1,11 +1,20 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import WorkspaceHeader from "@/components/WorkspaceHeader";
 import CreateViewModal from "@/components/CreateViewModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { StatusIndicator } from "@/components/ui/status-indicator";
 import {
   Tooltip,
   TooltipContent,
@@ -14,12 +23,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useCyclePath } from "@/hooks/useCyclePath";
 import { usePlays } from "@/contexts/PlaysContext";
-import { Play, PlayStatus } from "@/data/playData";
-
-// How long after the last edit we commit the draft and flip to "Changes saved".
-const AUTOSAVE_DELAY_MS = 1000;
-
-type SaveState = "idle" | "saving" | "saved";
+import { Play, PlayState, PlayStatus, getPlayState } from "@/data/playData";
 
 const PlayBuilder = () => {
   const navigate = useNavigate();
@@ -30,78 +34,29 @@ const PlayBuilder = () => {
   const editing = playId ? plays.find((c) => c.id === playId) ?? null : null;
   const isEditMode = !!editing;
 
-  // The latest play assembled by the form, plus whether it's ready to publish.
   const [latestPlay, setLatestPlay] = useState<Play | null>(editing ?? null);
   const [canPublish, setCanPublish] = useState(false);
-  // Drives the bottom-panel status: nothing until the first edit, then it
-  // cycles saving -> saved. An existing play starts already "saved".
-  const [saveState, setSaveState] = useState<SaveState>(isEditMode ? "saved" : "idle");
-  // The id of the row we're auto-saving into. Set on first create so later
-  // edits update the same draft instead of spawning duplicates.
-  const draftIdRef = useRef<string | null>(editing?.id ?? null);
-  // The form emits once on mount; skip it so we don't show "Saving" on load.
-  const sawFirstChangeRef = useRef(false);
-  // Serialized snapshot of the last play we processed. Auto-saving writes back
-  // into the plays store, which re-emits a content-identical play; comparing
-  // against this lets us ignore that echo so the status can settle on "saved".
-  const lastSavedRef = useRef<string | null>(null);
-  // Whether the user has actually edited a form field. Stays false through the
-  // mount emit, so backing straight out of a fresh form saves nothing.
-  const hasEditedRef = useRef(false);
   const [isPotm, setIsPotm] = useState(editing?.isPotm ?? false);
+
+  const editingState: PlayState | null = editing ? getPlayState(editing) : null;
+
+  type PendingModal =
+    | { kind: "lifecycle-change"; fromState: PlayState; toState: PlayState }
+    | { kind: "move-to-draft" };
+  const [pendingModal, setPendingModal] = useState<PendingModal | null>(null);
 
   const handlePlayChange = useCallback((play: Play, publishable: boolean) => {
     setLatestPlay(play);
     setCanPublish(publishable);
   }, []);
 
-  // On each edit: show "Saving changes" immediately, then a beat after the user
-  // stops interacting commit the draft and flip to "Changes saved". In create
-  // mode the actual write waits until the play has a real name.
-  useEffect(() => {
-    if (!latestPlay) return;
-    // Compare on content only: buildPlay regenerates a volatile id on every
-    // emit, so including it would flag benign re-emits (e.g. the form resetting
-    // on mount) as edits and surface "Saving changes" before any real change.
-    const serialized = JSON.stringify({ ...latestPlay, id: "" });
-    if (!sawFirstChangeRef.current) {
-      sawFirstChangeRef.current = true;
-      lastSavedRef.current = serialized;
-      return;
-    }
-    // Ignore re-emits whose content matches what we already saved — notably the
-    // echo from auto-saving writing back into the plays store — otherwise the
-    // status would loop "saving" → "saved" → "saving" and never settle.
-    if (serialized === lastSavedRef.current) return;
-
-    // Reaching here means real content changed (the mount emit and echoes are
-    // filtered above), so this is a genuine user edit.
-    hasEditedRef.current = true;
-    setSaveState("saving");
-
-    const timer = setTimeout(() => {
-      if (draftIdRef.current) {
-        // Pin the id: in create mode buildPlay regenerates it each keystroke, so
-        // keep updating the same draft row rather than spawning duplicates.
-        updatePlay(draftIdRef.current, { ...latestPlay, isPotm, id: draftIdRef.current });
-      } else {
-        draftIdRef.current = latestPlay.id;
-        addPlay({ ...latestPlay, isPotm, status: "draft" });
-      }
-      lastSavedRef.current = serialized;
-      setSaveState("saved");
-    }, AUTOSAVE_DELAY_MS);
-
-    return () => clearTimeout(timer);
-  }, [latestPlay, addPlay, updatePlay]);
-
   const handlePublish = () => {
     if (!latestPlay || !canPublish) return;
     const today = new Date().toISOString().slice(0, 10);
     const status: PlayStatus = latestPlay.startDate > today ? "scheduled" : "live";
     const published = { ...latestPlay, status, isPotm };
-    if (draftIdRef.current) {
-      updatePlay(draftIdRef.current, { ...published, id: draftIdRef.current });
+    if (isEditMode && editing) {
+      updatePlay(editing.id, { ...published, id: editing.id });
     } else {
       addPlay(published);
     }
@@ -116,30 +71,86 @@ const PlayBuilder = () => {
       status: "draft",
       isPotm,
     };
-    if (draftIdRef.current) {
-      updatePlay(draftIdRef.current, { ...draft, id: draftIdRef.current });
+    if (isEditMode && editing) {
+      updatePlay(editing.id, { ...draft, id: editing.id });
     } else {
-      draftIdRef.current = draft.id;
       addPlay(draft);
     }
     navigate(cyclePath("/plays"));
   };
 
-  const handleClose = () => {
-    if (hasEditedRef.current && latestPlay) {
-      const finalPlay: Play = {
+  const computeNewState = (play: Play): PlayState => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(`${play.startDate}T00:00:00`);
+    const end = new Date(`${play.endDate}T00:00:00`);
+    if (start > today) return "upcoming";
+    if (end < today) return "ended";
+    return "active";
+  };
+
+  const commitSave = () => {
+    if (!latestPlay || !editing) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const status: PlayStatus = latestPlay.startDate > today ? "scheduled" : "live";
+    const saved = { ...latestPlay, status, isPotm, id: editing.id };
+    updatePlay(editing.id, saved);
+    navigate(cyclePath("/plays"));
+  };
+
+  const repVisibilityChanges = (fromState: PlayState, toState: PlayState): boolean =>
+    fromState === "active" || toState === "active";
+
+  const handleSave = () => {
+    if (!latestPlay || !canPublish || !editingState) return;
+    const newState = computeNewState(latestPlay);
+    if (newState !== editingState && repVisibilityChanges(editingState, newState)) {
+      setPendingModal({ kind: "lifecycle-change", fromState: editingState, toState: newState });
+      return;
+    }
+    commitSave();
+  };
+
+  const handleMoveToDraft = () => {
+    if (!latestPlay || !editing) return;
+    if (editingState === "active") {
+      setPendingModal({ kind: "move-to-draft" });
+      return;
+    }
+    const draft: Play = {
+      ...latestPlay,
+      label: latestPlay.label.trim() || "Untitled Play",
+      status: "draft",
+      isPotm,
+      id: editing.id,
+    };
+    updatePlay(editing.id, draft);
+    navigate(cyclePath("/plays"));
+  };
+
+  const confirmModal = () => {
+    if (!latestPlay || !pendingModal || !editing) return;
+    if (pendingModal.kind === "move-to-draft") {
+      const draft: Play = {
         ...latestPlay,
         label: latestPlay.label.trim() || "Untitled Play",
-        status: isEditMode ? latestPlay.status : "draft",
+        status: "draft",
         isPotm,
+        id: editing.id,
       };
-      if (draftIdRef.current) {
-        updatePlay(draftIdRef.current, { ...finalPlay, id: draftIdRef.current });
-      } else {
-        draftIdRef.current = finalPlay.id;
-        addPlay(finalPlay);
-      }
+      updatePlay(editing.id, draft);
+    } else {
+      commitSave();
+      setPendingModal(null);
+      return;
     }
+    setPendingModal(null);
+    navigate(cyclePath("/plays"));
+  };
+
+  const dismissModal = () => setPendingModal(null);
+
+  const handleClose = () => {
     navigate(cyclePath("/plays"));
   };
 
@@ -156,44 +167,136 @@ const PlayBuilder = () => {
     return "Reps will see this play immediately";
   })();
 
-  const formFooter = (
-    <div className="border-t border-[var(--color-border-container-default)]">
-      <div className="flex items-center justify-between p-3">
-        <div className="flex items-center gap-2">
+  const saveTooltip = (() => {
+    if (!latestPlay || !editingState) return null;
+    const newState = computeNewState(latestPlay);
+    if (newState === editingState) return null;
+    const stateLabel: Record<PlayState, string> = {
+      draft: "Draft",
+      upcoming: "Upcoming",
+      active: "Active",
+      ended: "Ended",
+    };
+    return `This will move the play from ${stateLabel[editingState]} to ${stateLabel[newState]}`;
+  })();
+
+  const stateLabel: Record<PlayState, string> = {
+    draft: "Draft",
+    upcoming: "Upcoming",
+    active: "Active",
+    ended: "Ended",
+  };
+
+  const lifecycleModalCopy = (() => {
+    if (pendingModal?.kind !== "lifecycle-change") return null;
+    const { fromState, toState } = pendingModal;
+    const from = stateLabel[fromState];
+    const to = stateLabel[toState];
+    if (toState === "ended") {
+      return {
+        title: "This will end the play",
+        description: `The dates you've chosen will move this play from ${from} to ${to}. Reps will lose access.`,
+        action: "Save & End Play",
+      };
+    }
+    if (toState === "upcoming") {
+      return {
+        title: "This will reschedule the play",
+        description: `The dates you've chosen will move this play from ${from} to ${to}. Reps will lose access until the new launch date.`,
+        action: "Save & Reschedule",
+      };
+    }
+    if (toState === "active") {
+      return {
+        title: "This will activate the play",
+        description: `The dates you've chosen will move this play from ${from} to ${to}. Reps will see this play immediately.`,
+        action: "Save & Activate",
+      };
+    }
+    return {
+      title: "This will change the play's status",
+      description: `The dates you've chosen will move this play from ${from} to ${to}.`,
+      action: "Save",
+    };
+  })();
+
+  const potmCheckbox = (
+    <label className="flex items-center gap-1.5 cursor-pointer body-75 text-[var(--color-text-core-default)]">
+      <Checkbox checked={isPotm} onCheckedChange={(v) => setIsPotm(v === true)} />
+      POTM
+    </label>
+  );
+
+  const formFooter = (() => {
+    const wrap = (buttons: React.ReactNode) => (
+      <div className="border-t border-[var(--color-border-container-default)]">
+        <div className="flex items-center justify-between p-3">
+          <div className="flex items-center gap-2">{buttons}</div>
+          {potmCheckbox}
+        </div>
+      </div>
+    );
+
+    if (!isEditMode || editingState === "draft") {
+      return wrap(
+        <>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="primary"
-                  size="medium"
-                  onClick={handlePublish}
-                  disabled={!canPublish}
-                >
+                <Button variant="primary" size="medium" onClick={handlePublish} disabled={!canPublish}>
                   Publish
                 </Button>
               </TooltipTrigger>
               {canPublish && publishTooltip && (
-                <TooltipContent side="top">
-                  {publishTooltip}
-                </TooltipContent>
+                <TooltipContent side="top">{publishTooltip}</TooltipContent>
               )}
             </Tooltip>
           </TooltipProvider>
-          <Button
-            variant="secondary"
-            size="medium"
-            onClick={handleSaveDraft}
-          >
+          <Button variant="secondary" size="medium" onClick={handleSaveDraft}>
             Save as Draft
           </Button>
-        </div>
-        <label className="flex items-center gap-1.5 cursor-pointer body-75 text-[var(--color-text-core-default)]">
-          <Checkbox checked={isPotm} onCheckedChange={(v) => setIsPotm(v === true)} />
-          POTM
-        </label>
-      </div>
-    </div>
-  );
+        </>
+      );
+    }
+
+    if (editingState === "upcoming" || editingState === "active") {
+      return wrap(
+        <>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="primary" size="medium" onClick={handleSave} disabled={!canPublish}>
+                  Save
+                </Button>
+              </TooltipTrigger>
+              {canPublish && saveTooltip && (
+                <TooltipContent side="top">{saveTooltip}</TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
+          <Button variant="secondary" size="medium" onClick={handleMoveToDraft}>
+            Move to Draft
+          </Button>
+        </>
+      );
+    }
+
+    // Ended — save only (Ended → Draft is blocked)
+    return wrap(
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="primary" size="medium" onClick={handleSave} disabled={!canPublish}>
+              Save
+            </Button>
+          </TooltipTrigger>
+          {canPublish && saveTooltip && (
+            <TooltipContent side="top">{saveTooltip}</TooltipContent>
+          )}
+        </Tooltip>
+      </TooltipProvider>
+    );
+  })();
 
   return (
     <Layout>
@@ -212,18 +315,37 @@ const PlayBuilder = () => {
             initialPlay={editing ?? undefined}
           />
         </div>
-        {saveState !== "idle" && (
-          <div className="ml-12 pb-1">
-            <StatusIndicator
-              key={saveState}
-              className="animate-fade-in"
-              loading={saveState === "saving"}
-              dotClassName="bg-trellis-green-600"
-              label={saveState === "saving" ? "Saving changes" : "Changes saved"}
-            />
-          </div>
-        )}
       </div>
+
+      {/* Lifecycle change confirmation — only when reps lose access (Active → non-Active) */}
+      <AlertDialog open={pendingModal?.kind === "lifecycle-change"} onOpenChange={(open) => { if (!open) dismissModal(); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{lifecycleModalCopy?.title}</AlertDialogTitle>
+            <AlertDialogDescription>{lifecycleModalCopy?.description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={dismissModal}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmModal}>{lifecycleModalCopy?.action}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Move to draft confirmation (Active → Draft, reps lose access) */}
+      <AlertDialog open={pendingModal?.kind === "move-to-draft"} onOpenChange={(open) => { if (!open) dismissModal(); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Move to draft?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Reps will lose access to this play immediately. You can re-publish it later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={dismissModal}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmModal}>Move to Draft</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 };

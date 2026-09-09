@@ -22,7 +22,7 @@ export const buttonVariantClasses = {
   destructive:
     "bg-destructive text-destructive-foreground hover:bg-destructive/90",
   outline:
-    "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+    "border border-input bg-[var(--color-fill-surface-default)] hover:bg-accent hover:text-accent-foreground",
   secondary:
     "bg-[var(--color-fill-secondary-default)] text-[var(--color-text-core-default)] border border-[var(--color-border-secondary-default)] rounded-[var(--radius-button)] hover:bg-[var(--color-fill-secondary-hover)]",
   ghost: "hover:bg-[var(--color-fill-accent-neutral-subtle-alt)]",

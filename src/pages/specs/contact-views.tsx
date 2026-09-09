@@ -62,7 +62,7 @@ const CreateCallTaskShowcase = () => {
 const ContactViewsSpec = () => (
   <SpecLayout>
     <SpecHeader
-      title="Contact views"
+      title="August play: bulk enrollment to Nooks pipeline"
       description="A contacts table view within the prospecting tab, allowing reps to toggle between company-level and contact-level views for any PPF bucket (P1–P4) or Play. Includes multi-select, bulk call task creation, and AI agent activity tracking."
     />
 
