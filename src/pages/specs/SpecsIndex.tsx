@@ -52,6 +52,41 @@ const specs: SpecEntry[] = [
       "After a signal fires on a contact, preserve a 1-hour window for Email Team Automation before the OSA can suggest or execute outreach.",
     category: "Interaction flows",
   },
+  {
+    slug: "working-high-volume",
+    title: "Working High Volume Efficiently",
+    description:
+      "Recently Generated view to find companies with finished strategies, and a simplified Sequence Summary column that rolls per-channel outreach into one workflow status per contact.",
+    category: "Interaction flows",
+  },
+  {
+    slug: "company-sidebar-cards",
+    title: "Company sidebar cards",
+    description:
+      "The right-hand sidebar on the company strategy page: Company Data, LinkedIn Sales Navigator, Hub Summary, Recent Conversions, Activity, Deals, and Notes.",
+    category: "Component states",
+  },
+  {
+    slug: "sequence-clarity",
+    title: "Sequence Clarity",
+    description:
+      "Status badge logic, reply visibility with multiple examples, external (non-agent) sequences, and agent refusal banners with reasoning links.",
+    category: "Interaction flows",
+  },
+  {
+    slug: "outreach-target-decoupling",
+    title: "Outreach Target decoupling",
+    description:
+      "Decoupling Outreach Targets from sequence generation so contacts appear as targets even when research or sequencing has not completed or has failed.",
+    category: "Interaction flows",
+  },
+  {
+    slug: "outreach-on-crm-record",
+    title: "Outreach strategy on the CRM record",
+    description:
+      "Surfacing the outreach strategy — company research and ranked outreach targets — in the middle content area of the company CRM record, so reps outside the prospecting workspace can find and use it.",
+    category: "Interaction flows",
+  },
 ];
 
 const categories = [...new Set(specs.map((s) => s.category))];

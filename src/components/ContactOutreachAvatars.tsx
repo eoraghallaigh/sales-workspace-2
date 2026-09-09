@@ -4,7 +4,6 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { TrellisIcon, type TrellisIconName } from "@/components/ui/trellis-icon";
 import { RecommendedContact } from "@/components/CompanyCard";
 import { getOutreachState } from "@/data/outreachStates";
 import Tag from "@/components/Tag";
@@ -79,70 +78,22 @@ const ContactOutreachAvatars = ({
   const NONE = "var(--color-fill-surface-recessed)";
   const dotFor = (t: Tone) => (t === "positive" ? POS : t === "awaiting" ? AWAIT : NONE);
 
-  const channelStatus = (
-    c: RecommendedContact,
-  ): Array<{ icon: TrellisIconName; status: string; tone: Tone }> => {
+  const workflowStatus = (c: RecommendedContact): { status: string; tone: Tone } => {
     const firstName = c.name.split(" ")[0];
     const s = getOutreachState(c.id, firstName);
-    const rows: Array<{ icon: TrellisIconName; status: string; tone: Tone }> = [];
 
-    switch (s.call.kind) {
-      case "not-attempted":
-        rows.push({ icon: "calling", status: "Not started", tone: "none" });
-        break;
-      case "no-answer":
-        rows.push({ icon: "calling", status: "No answer", tone: "awaiting" });
-        break;
-      case "voicemail":
-        rows.push({ icon: "calling", status: "Voicemail", tone: "awaiting" });
-        break;
-      case "connected":
-        rows.push({ icon: "calling", status: "Connected", tone: "positive" });
-        break;
+    if (s.sequence.kind === "unenrolled") {
+      const reason = s.sequence.reason;
+      if (reason.includes("replied")) return { status: "Replied", tone: "positive" };
+      if (reason.includes("call")) return { status: "Connected call logged", tone: "positive" };
+      if (reason.includes("LinkedIn")) return { status: "LinkedIn message logged", tone: "positive" };
+      return { status: "Sequence ended", tone: "none" };
     }
-
-    switch (s.linkedin.kind) {
-      case "not-sent":
-        rows.push({ icon: "linkedin", status: "Not started", tone: "none" });
-        break;
-      case "pending":
-        rows.push({ icon: "linkedin", status: "Awaiting response", tone: "awaiting" });
-        break;
-      case "accepted":
-        rows.push({ icon: "linkedin", status: "Accepted", tone: "positive" });
-        break;
-      case "declined":
-        rows.push({ icon: "linkedin", status: "No response", tone: "awaiting" });
-        break;
-      case "already-connected":
-        rows.push({ icon: "linkedin", status: "Already connected", tone: "positive" });
-        break;
-    }
-
-    switch (s.sequence.kind) {
-      case "not-enrolled":
-        rows.push({ icon: "email", status: "Not enrolled", tone: "none" });
-        break;
-      case "active":
-        rows.push({ icon: "email", status: "Active", tone: "awaiting" });
-        break;
-      case "completed":
-        rows.push({ icon: "email", status: "Completed", tone: "awaiting" });
-        break;
-      case "unenrolled": {
-        const reason = s.sequence.reason;
-        const status = reason.includes("replied")
-          ? "Replied"
-          : reason.includes("LinkedIn")
-          ? "Ended via LinkedIn"
-          : reason.includes("call")
-          ? "Ended via call"
-          : "Ended";
-        rows.push({ icon: "email", status, tone: "positive" });
-        break;
-      }
-    }
-    return rows;
+    if (s.call.kind === "connected") return { status: "Connected call logged", tone: "positive" };
+    if (s.sequence.kind === "completed") return { status: "Sequence ended", tone: "none" };
+    if (s.sequence.kind === "active") return { status: "Enrolled, awaiting response", tone: "awaiting" };
+    if (c.outreachStrategyCreated) return { status: "Sequence generated, not enrolled", tone: "none" };
+    return { status: "No sequence generated", tone: "none" };
   };
 
   return (
@@ -183,8 +134,7 @@ const ContactOutreachAvatars = ({
           </div>
           {targets.map((c) => {
             const subtle = getSubtleAvatarStyles(c.avatarColor);
-            const rows = channelStatus(c);
-            const allPristine = rows.every((r) => r.tone === "none");
+            const ws = workflowStatus(c);
             return (
               <div key={c.id} className="flex flex-col gap-1.5">
                 <div className="flex items-center gap-2">
@@ -201,31 +151,14 @@ const ContactOutreachAvatars = ({
                     · {c.role}
                   </span>
                 </div>
-                <div className="flex flex-col gap-1 pl-7">
-                  {allPristine ? (
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="h-1.5 w-1.5 rounded-full flex-shrink-0"
-                        style={{ background: NONE }}
-                      />
-                      <span className="detail-200 text-muted-foreground">
-                        Outreach not started
-                      </span>
-                    </div>
-                  ) : (
-                    rows.map((r) => (
-                      <div key={r.icon} className="flex items-center gap-2">
-                        <TrellisIcon name={r.icon} size={12} className="text-muted-foreground" />
-                        <div
-                          className="h-1.5 w-1.5 rounded-full flex-shrink-0"
-                          style={{ background: dotFor(r.tone) }}
-                        />
-                        <span className="detail-200 text-foreground truncate">
-                          {r.status}
-                        </span>
-                      </div>
-                    ))
-                  )}
+                <div className="flex items-center gap-2 pl-7">
+                  <div
+                    className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                    style={{ background: dotFor(ws.tone) }}
+                  />
+                  <span className={`detail-200 truncate ${ws.tone === "none" ? "text-muted-foreground" : "text-foreground"}`}>
+                    {ws.status}
+                  </span>
                 </div>
                 {c.signals.length > 0 && (
                   <div className="flex flex-wrap items-center gap-1 pl-7 pt-0.5">
