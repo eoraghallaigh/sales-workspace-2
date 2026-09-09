@@ -26,6 +26,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import { ResearchSectionBody } from "@/components/ResearchSectionBody";
 import { prospectingCompanies } from "@/data/prospectingCompanies";
+import { installBaseStrategyCompanies } from "@/data/installBase";
 import { companyDetails } from "@/data/companyDetails";
 import { contactDetails } from "@/data/contactDetails";
 import ContactDetailPanel from "@/components/ContactDetailPanel";
@@ -243,8 +244,14 @@ const ProspectingStrategy = () => {
   };
 
 
+  // Install base customers reuse this page; resolve them alongside prospects.
+  const isInstallBase = installBaseStrategyCompanies.some((c) => c.id === companyId);
   // Look up the active company's priority bucket so the sub-nav can show its cohort.
-  const activePriority = prospectingCompanies.find((c) => c.id === companyId)?.priority ?? "P1";
+  const activePriority =
+    (isInstallBase
+      ? installBaseStrategyCompanies.find((c) => c.id === companyId)
+      : prospectingCompanies.find((c) => c.id === companyId)
+    )?.priority ?? "P1";
 
   // Get all companies with calculated status for sub-nav, scoped to the active priority bucket.
   // Filter and sort must match Prospecting list page so the company set is identical.
@@ -258,6 +265,12 @@ const ProspectingStrategy = () => {
       "Snoozed": 6,
       "Dismissed": 7,
     };
+    // For an install base customer, the cohort is its IB tier, not a prospect bucket.
+    if (isInstallBase) {
+      return installBaseStrategyCompanies.filter(
+        (c) => (c.priority ?? "P1") === activePriority,
+      );
+    }
     return prospectingCompanies
       .map((company) => ({
         ...company,
@@ -271,7 +284,7 @@ const ProspectingStrategy = () => {
       )
       .filter((c) => (c.priority ?? "P1") === activePriority)
       .sort((a, b) => (statusPriority[a.status] ?? 99) - (statusPriority[b.status] ?? 99));
-  }, [activePriority]);
+  }, [activePriority, isInstallBase]);
 
   const currentCompany = companies.find((c) => c.id === companyId) || companies[0];
   const currentCompanyDetails = companyDetails[currentCompany?.id || "1"];

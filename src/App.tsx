@@ -22,6 +22,7 @@ import DesignSystem from "./pages/DesignSystem";
 import DataWellSandbox from "./pages/DataWellSandbox";
 import PlayHeaderSandbox from "./pages/PlayHeaderSandbox";
 import ProspectingStrategy from "./pages/ProspectingStrategy";
+import InstallBaseAccount from "./pages/InstallBaseAccount";
 import HoverPreviewDemo from "./pages/HoverPreviewDemo";
 import OutreachStates from "./pages/OutreachStates";
 import MotionSandbox from "./pages/MotionSandbox";
@@ -63,6 +64,7 @@ const App = () => (
             <Route path="/plays/new" element={<PlayBuilder />} />
             <Route path="/plays/:playId/edit" element={<PlayBuilder />} />
             <Route path="/prospecting/strategy/:companyId" element={<ProspectingStrategy />} />
+            <Route path="/prospecting/ib/:companyId" element={<InstallBaseAccount />} />
             <Route path="/power-hour" element={<PowerHour />} />
             <Route path="/power-hour/review" element={<PowerHourReview />} />
             <Route path="/sales-workspace" element={<SalesWorkspace />} />

@@ -24,6 +24,12 @@ interface CompaniesTableViewProps {
   onNameClick?: (companyId: string) => void;
   onPreview?: (companyId: string, companyName: string) => void;
   currentPlayId?: string;
+  /** Contact-level handlers, forwarded to the ContactCards in an expanded row. */
+  onContactClick?: (contactId: string) => void;
+  onCallClick?: (contactId: string) => void;
+  onEmailClick?: (contactId: string) => void;
+  /** Start rows expanded (deep-work tiers like P1/P3). */
+  expandByDefault?: boolean;
 }
 
 const getStatusBadge = (
@@ -61,6 +67,10 @@ const CompaniesTableView = ({
   onNameClick,
   onPreview,
   currentPlayId,
+  onContactClick,
+  onCallClick,
+  onEmailClick,
+  expandByDefault = false,
 }: CompaniesTableViewProps) => {
   const [search, setSearch] = useState("");
   const [isEnrollOpen, setIsEnrollOpen] = useState(false);
@@ -152,6 +162,11 @@ const CompaniesTableView = ({
         <CompanyPlayTags companyId={c.id} compact excludePlayId={currentPlayId} />
       )}
       getAvailableContacts={getAdditionalContactsForCompany}
+      expandToContactCards
+      defaultExpanded={expandByDefault}
+      onContactClick={onContactClick}
+      onContactCall={onCallClick}
+      onContactEmail={onEmailClick}
       toolbar={
         <TableToolbar
           searchPlaceholder="Search companies"
@@ -165,7 +180,7 @@ const CompaniesTableView = ({
           count === 1 ? selected[0]?.contact.name ?? "1 contact" : `${count} contacts`;
         return (
           <>
-            <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-card">
+            <div className="flex items-center gap-3">
               <Button variant="primary" size="small" onClick={() => setIsEnrollOpen(true)}>
                 Enrol ({count})
                 <TrellisIcon name="sequences" size={14} className="ml-1 brightness-0 invert" />

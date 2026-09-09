@@ -117,7 +117,13 @@ const ProspectingSubNav = ({
     { id: "p3-later", label: "P3 - Later" },
     { id: "p4-last", label: "P4 - Last" },
   ];
-  const installBaseItems = [{ id: "full-customer-book", label: "Full Customer Book" }];
+  const installBaseItems = [
+    { id: "full-customer-book", label: "Full Customer Book" },
+    { id: "ib-p1", label: "P1 - Now" },
+    { id: "ib-p2", label: "P2 - Next" },
+    { id: "ib-p3", label: "P3 - Later" },
+    { id: "ib-p4", label: "P4 - Last" },
+  ];
 
   const chevron = (open: boolean) => (
     <ChevronDown className={cn("h-4 w-4 transition-transform", isAlpha ? "text-[#666666]" : "text-muted-foreground", !open && "-rotate-90")} />

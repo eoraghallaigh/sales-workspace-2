@@ -1,228 +1,88 @@
+import { ListFilter } from "lucide-react";
 import { DataWell } from "@/components/ui/data-well";
 import { Button } from "@/components/ui/button";
-import { TableToolbar } from "@/components/ui/table-toolbar";
-import { ExternalLink, ListFilter } from "lucide-react";
-import Tag from "@/components/Tag";
 import FilterPill from "@/components/FilterPill";
-import { SIGNAL_LABELS, type SignalInstance } from "@/data/signals";
-import { CompanyTable, type CompanyTableColumn } from "@/components/CompanyTable";
-import type { RecommendedContact } from "@/components/CompanyCard";
-import { genericAdditionalContacts } from "@/data/allContacts";
+import { SIGNAL_LABELS } from "@/data/signals";
+import InstallBaseTable from "@/components/installbase/InstallBaseTable";
+import { installBaseCompanies, totalMrr } from "@/data/installBase";
 
-interface CustomerContact {
-  id: string;
-  name: string;
-  role: string;
-  initials: string;
-  avatarColor: string;
-  signals: Array<{ variant: "green" | "blue" | "orange" | "yellow" | "neutral"; text: string }>;
+interface FullCustomerBookProps {
+  onWork: (companyId: string) => void;
+  onContactClick?: (contactId: string) => void;
 }
 
-interface CustomerRow {
-  id: string;
-  name: string;
-  portalId: string;
-  actionGuidanceCount: number;
-  actionGuidanceLabel: string;
-  signals: Array<{ variant: "green" | "blue" | "orange" | "yellow" | "neutral"; text: string }>;
-  platformMrr: string;
-  contacts: CustomerContact[];
-}
-
-const customers: CustomerRow[] = [
-  {
-    id: "cks-packout",
-    name: "CKS Packout",
-    portalId: "45844085",
-    actionGuidanceCount: 1,
-    actionGuidanceLabel: "Partner Sold: One5MS",
-    signals: [],
-    platformMrr: "",
-    contacts: [],
-  },
-  {
-    id: "chirp",
-    name: "Chirp",
-    portalId: "23947299",
-    actionGuidanceCount: 1,
-    actionGuidanceLabel: "C3: Active CM Deal, Cure...",
-    signals: [
-      { variant: "orange", text: "Prospecting Agent" },
-      { variant: "blue", text: "Pre-Renewal Strategic Window" },
-    ],
-    platformMrr: "",
-    contacts: [
-      {
-        id: "taylor-roberts",
-        name: "Taylor Roberts",
-        role: "Chief Operating Officer",
-        initials: "TR",
-        avatarColor: "bg-trellis-orange-500",
-        signals: [
-          { variant: "green", text: "Primary Contact" },
-          { variant: "neutral", text: "General - Executive" },
-        ],
-      },
-      {
-        id: "tevi-carvajal",
-        name: "Tevi Carvajal",
-        role: "",
-        initials: "TC",
-        avatarColor: "bg-trellis-orange-500",
-        signals: [
-          { variant: "neutral", text: "Sales - Executive" },
-          { variant: "neutral", text: "CMS - Executive" },
-        ],
-      },
-      {
-        id: "ryan-peterson",
-        name: "Ryan Peterson",
-        role: "Partnership Manager",
-        initials: "RP",
-        avatarColor: "bg-trellis-orange-500",
-        signals: [
-          { variant: "neutral", text: "Sales - Influencer" },
-          { variant: "neutral", text: "CMS - Influencer" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "agentis-consulting",
-    name: "Agentis Consulting",
-    portalId: "47426205",
-    actionGuidanceCount: 2,
-    actionGuidanceLabel: "Partner Managed: You...",
-    signals: [
-      { variant: "orange", text: "Customer Agent" },
-      { variant: "blue", text: "Pre-Renewal Strategic Window" },
-    ],
-    platformMrr: "",
-    contacts: [],
-  },
-  {
-    id: "james-immigration-law",
-    name: "James Immigration Law",
-    portalId: "34201583",
-    actionGuidanceCount: 1,
-    actionGuidanceLabel: "C5: Active CM Deal, HBC...",
-    signals: [
-      { variant: "orange", text: "Customer Agent" },
-      { variant: "blue", text: "Pre-Renewal Strategic Window" },
-    ],
-    platformMrr: "",
-    contacts: [],
-  },
-  {
-    id: "fenix-usa",
-    name: "Fenix USA",
-    portalId: "44655774",
-    actionGuidanceCount: 1,
-    actionGuidanceLabel: "C5: Active CM Deal, CM...",
-    signals: [
-      { variant: "orange", text: "Customer Agent" },
-      { variant: "yellow", text: "Seats Whitespace" },
-    ],
-    platformMrr: "",
-    contacts: [],
-  },
-  {
-    id: "pricebook-digital",
-    name: "Pricebook Digital",
-    portalId: "4436751",
-    actionGuidanceCount: 1,
-    actionGuidanceLabel: "Partner Sold: New Brand",
-    signals: [{ variant: "orange", text: "Customer Agent" }],
-    platformMrr: "",
-    contacts: [],
-  },
-];
-
-type CustomerTableRow = CustomerRow & { recommendedContacts: RecommendedContact[] };
-
-const FullCustomerBook = ({
-  onPreview,
-}: {
-  onPreview?: (companyId: string, companyName: string) => void;
-}) => {
-  const rows: CustomerTableRow[] = customers.map((c) => ({
-    ...c,
-    recommendedContacts: c.contacts.map((ct) => ({
-      id: ct.id,
-      name: ct.name,
-      initials: ct.initials,
-      role: ct.role,
-      avatarColor: ct.avatarColor,
-      recentTouches: 0,
-      enrolledInSequence: false,
-      recentConversions: 0,
-      signals: [] as SignalInstance[],
-    })),
-  }));
-
-  const columns: CompanyTableColumn<CustomerTableRow>[] = [
-    {
-      key: "portalId", header: "Portal ID", minWidth: 140, render: (r) => (
-        <Button variant="link" className="body-100 text-text-interactive hover:text-text-interactive-hover p-0 h-auto hover:no-underline inline-flex items-center gap-1">
-          {r.portalId}
-          <ExternalLink className="h-3 w-3" />
-        </Button>
-      ),
-    },
-    {
-      key: "actionGuidance", header: "Action Guidance", minWidth: 240, render: (r) => (
-        <span className="body-100 text-foreground">
-          <span className="font-medium">{r.actionGuidanceCount} action{r.actionGuidanceCount === 1 ? "" : "s"}</span>
-          <span className="text-muted-foreground"> · {r.actionGuidanceLabel}</span>
-        </span>
-      ),
-    },
-    {
-      key: "signals", header: "Install Base Signals", minWidth: 280, render: (r) => (
-        <div className="flex flex-wrap gap-1">
-          {r.signals.map((signal) => (
-            <Tag key={signal.text} variant={signal.variant === "neutral" ? "neutral" : signal.variant}>
-              {signal.text}
-            </Tag>
-          ))}
-        </div>
-      ),
-    },
-    { key: "platformMrr", header: "Platform MRR (USD)", minWidth: 160, render: (r) => <span className="body-100 text-muted-foreground">{r.platformMrr || "—"}</span> },
-  ];
+// The whole install base book across every tier — the same nested company →
+// portal(s)/contacts table as the tier views, with a Tier column and the IB
+// quick-filters. See .context/ib-ppf-design.md.
+const FullCustomerBook = ({ onWork, onContactClick }: FullCustomerBookProps) => {
+  const companies = installBaseCompanies;
+  const bookMrr = companies.reduce((sum, c) => sum + totalMrr(c), 0);
+  const portalCount = companies.reduce((sum, c) => sum + c.portals.length, 0);
+  const renewing90 = companies.reduce(
+    (sum, c) => sum + c.portals.filter((p) => p.renewalInDays <= 90).length,
+    0,
+  );
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Top Metrics */}
-      <div className="grid grid-cols-3 gap-4">
+      {/* Top metrics */}
+      <div className="grid grid-cols-4 gap-4">
         <DataWell
           label="Total book size"
-          value="185"
+          value={`${companies.length}`}
           tooltip="Total customers in the install base book"
         />
         <DataWell
-          label="IB deals created"
-          value="—"
-          tooltip="Install base deals created"
+          label="Total MRR"
+          value={`$${bookMrr.toLocaleString("en-US")}`}
+          tooltip="Total monthly recurring revenue across the book"
         />
         <DataWell
-          label="% portals with credit usage"
-          value="10%"
-          tooltip="Share of portals consuming HubSpot Credits"
+          label="Portals"
+          value={`${portalCount}`}
+          tooltip="Total HubSpot portals across the book"
+        />
+        <DataWell
+          label="Renewing in 90 days"
+          value={`${renewing90}`}
+          tooltip="Portals with a renewal in the next 90 days"
         />
       </div>
 
-      {/* Title + Filters */}
+      {/* Title + filters */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h2 className="heading-300">Full Customer Book</h2>
-          <p className="body-100 text-muted-foreground">185 customers</p>
+          <p className="body-100 text-muted-foreground">
+            {companies.length} customers
+          </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <FilterPill label="Products (Hubs)" hasCarat options={["All Hubs", "Marketing Hub", "Sales Hub", "Service Hub", "Content Hub"]} />
-          <FilterPill label="Next renewal date" hasCarat options={["Any", "Next 30 days", "Next 60 days", "Next 90 days"]} />
-          <FilterPill label="Total MRR (Local)" hasCarat options={["Any", "< $500", "$500–$2k", "> $2k"]} />
-          <FilterPill label="HubSpot Credits Consumption" hasCarat options={["Any", "Low", "Medium", "High"]} />
+          <FilterPill
+            label="Tier"
+            hasCarat
+            options={["All tiers", "P1 - Now", "P2 - Next", "P3 - Later", "P4 - Last"]}
+          />
+          <FilterPill
+            label="Products (Hubs)"
+            hasCarat
+            options={["All Hubs", "Marketing", "Sales", "Service", "Content", "Operations"]}
+          />
+          <FilterPill
+            label="Next renewal date"
+            hasCarat
+            options={["Any", "Next 30 days", "Next 60 days", "Next 90 days"]}
+          />
+          <FilterPill
+            label="Total MRR"
+            hasCarat
+            options={["Any", "< $500", "$500–$2k", "> $2k"]}
+          />
+          <FilterPill
+            label="HubSpot Credits"
+            hasCarat
+            options={["Any", "Low", "Medium", "High"]}
+          />
           <FilterPill label="Signals" hasCarat options={["All signals", ...SIGNAL_LABELS]} />
           <Button variant="ghost" size="medium" className="border border-transparent heading-50">
             <ListFilter className="h-4 w-4" />
@@ -231,19 +91,16 @@ const FullCustomerBook = ({
         </div>
       </div>
 
-      {/* Table */}
-      <CompanyTable
-        rows={rows}
-        columns={columns}
-        primaryHeader="Customer"
-        minTableWidth={1100}
-        toolbar={<TableToolbar searchPlaceholder="Search portals" />}
-        getAvailableContacts={() => genericAdditionalContacts}
-        onPreview={onPreview ? (r) => onPreview(r.id, r.name) : undefined}
+      {/* Table — all tiers, with a Tier column */}
+      <InstallBaseTable
+        companies={companies}
+        onWork={onWork}
+        onContactClick={onContactClick}
+        showTier
+        searchPlaceholder="Search customers"
       />
     </div>
   );
 };
-
 
 export default FullCustomerBook;
