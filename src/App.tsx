@@ -40,6 +40,7 @@ import CompanySidebarCardsSpec from "./pages/specs/company-sidebar-cards";
 import SequenceClaritySpec from "./pages/specs/sequence-clarity";
 import OutreachTargetDecouplingSpec from "./pages/specs/outreach-target-decoupling";
 import OutreachOnCrmRecordSpec from "./pages/specs/outreach-on-crm-record";
+import InstallBasePpfSpec from "./pages/specs/install-base-ppf";
 import Company from "./pages/Company";
 import DesignMode from "./sandbox/DesignMode";
 import Inspector from "./inspector/Inspector";
@@ -93,6 +94,7 @@ const App = () => (
             <Route path="/specs/sequence-clarity" element={<SequenceClaritySpec />} />
             <Route path="/specs/outreach-target-decoupling" element={<OutreachTargetDecouplingSpec />} />
             <Route path="/specs/outreach-on-crm-record" element={<OutreachOnCrmRecordSpec />} />
+            <Route path="/specs/install-base-ppf" element={<InstallBasePpfSpec />} />
           </Routes>
           <GuidedTour />
           {import.meta.env.DEV && <DesignMode />}

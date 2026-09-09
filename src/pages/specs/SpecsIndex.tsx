@@ -87,6 +87,13 @@ const specs: SpecEntry[] = [
       "Surfacing the outreach strategy — company research and ranked outreach targets — in the middle content area of the company CRM record, so reps outside the prospecting workspace can find and use it.",
     category: "Interaction flows",
   },
+  {
+    slug: "install-base-ppf",
+    title: "Install Base PPF — customer accounts",
+    description:
+      "Customer accounts under the P1–P4 PPF: tier views, the account detail block (adaptive portal strip/expander + curated contacts), the expand-into-cards table, the Full Customer Book column set with Edit columns, bulk selection, and routing into the shared outreach strategy page.",
+    category: "Interaction flows",
+  },
 ];
 
 const categories = [...new Set(specs.map((s) => s.category))];

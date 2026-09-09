@@ -853,22 +853,17 @@ const InstallBaseTable = ({
               const isExpanded = expanded.has(company.id);
               return (
                 <Fragment key={company.id}>
-                  <TableRow
-                    className="group cursor-pointer bg-card hover:bg-fill-surface-recessed"
-                    onClick={() => toggle(company.id)}
-                  >
-                    <td
-                      className="w-12 sticky left-0 z-10 bg-inherit border-b border-border px-4 py-3 align-middle"
-                      onClick={(e) => e.stopPropagation()}
-                    >
+                  <TableRow className="group bg-card hover:bg-fill-surface-recessed">
+                    <td className="w-12 sticky left-0 z-10 bg-inherit border-b border-border px-4 py-3 align-middle">
                       <Checkbox
                         checked={selectedRows.has(company.id)}
                         onCheckedChange={() => toggleRow(company.id)}
                       />
                     </td>
                     <td
-                      className="sticky left-12 z-10 bg-inherit border-b border-border border-r border-border px-4 py-3 align-middle"
+                      className="sticky left-12 z-10 bg-inherit border-b border-border border-r border-border px-4 py-3 align-middle cursor-pointer"
                       style={colStyle("customer")}
+                      onClick={() => onWork(company.id)}
                     >
                       <div className="flex items-center gap-3">
                         <button
@@ -892,16 +887,9 @@ const InstallBaseTable = ({
                           className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                         />
                         <div className="flex flex-col min-w-0">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onWork(company.id);
-                            }}
-                            className="body-125 text-text-interactive hover:text-text-interactive-hover text-left truncate"
-                          >
+                          <span className="body-125 text-text-interactive truncate">
                             {company.name}
-                          </button>
+                          </span>
                           <span className="detail-100 text-muted-foreground">
                             {company.portals.length}{" "}
                             {company.portals.length === 1 ? "portal" : "portals"}
