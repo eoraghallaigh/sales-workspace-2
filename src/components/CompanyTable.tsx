@@ -262,25 +262,20 @@ export function CompanyTable<T extends CompanyTableRow>({
               const expandable = hasContacts || !!getAvailableContacts;
               return (
                 <Fragment key={row.id}>
-                  <TableRow
-                    className={cn(
-                      "group bg-card hover:bg-fill-surface-recessed",
-                      expandable && "cursor-pointer",
-                    )}
-                    onClick={() => expandable && toggleExpanded(row.id)}
-                  >
-                    <td
-                      className="w-12 sticky left-0 z-10 bg-inherit border-b border-border px-4 py-3 align-middle"
-                      onClick={(e) => e.stopPropagation()}
-                    >
+                  <TableRow className="group bg-card hover:bg-fill-surface-recessed">
+                    <td className="w-12 sticky left-0 z-10 bg-inherit border-b border-border px-4 py-3 align-middle">
                       <Checkbox
                         checked={selectedRows.has(row.id)}
                         onCheckedChange={() => toggleRow(row.id)}
                       />
                     </td>
                     <td
-                      className="sticky left-12 z-10 bg-inherit border-b border-border border-r border-border px-4 py-3 align-middle"
+                      className={cn(
+                        "sticky left-12 z-10 bg-inherit border-b border-border border-r border-border px-4 py-3 align-middle",
+                        onNameClick && "cursor-pointer",
+                      )}
                       style={colStyle(PRIMARY_KEY)}
+                      onClick={onNameClick ? () => onNameClick(row) : undefined}
                     >
                       <div className="flex items-center gap-3">
                         <button
@@ -309,10 +304,6 @@ export function CompanyTable<T extends CompanyTableRow>({
                             <Button
                               variant="link"
                               className="body-125 text-text-interactive hover:text-text-interactive-hover p-0 h-auto justify-start hover:no-underline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onNameClick(row);
-                              }}
                             >
                               {row.name}
                             </Button>

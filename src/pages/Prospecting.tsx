@@ -868,7 +868,6 @@ const Prospecting = () => {
                   onContactClick={(contactId) => handleContactClick(contactId)}
                   onCallClick={(contactId) => handleCallClick(contactId)}
                   onEmailClick={(contactId) => handleEmailClick(undefined, undefined, undefined, contactId)}
-                  expandByDefault={activePriority === "P1" || activePriority === "P3"}
                 />
               )}
              </div>

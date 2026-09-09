@@ -4,7 +4,6 @@ import { DataWell } from "@/components/ui/data-well";
 import { Button } from "@/components/ui/button";
 import FilterPill from "@/components/FilterPill";
 import { SIGNAL_LABELS } from "@/data/signals";
-import InstallBaseCompanyCard from "@/components/installbase/InstallBaseCompanyCard";
 import InstallBaseTable from "@/components/installbase/InstallBaseTable";
 import InstallBaseContactsTable from "@/components/installbase/InstallBaseContactsTable";
 import {
@@ -37,12 +36,6 @@ const TIER_META: Record<IbTier, { title: string; description: string }> = {
 };
 
 type EntityView = "companies" | "contacts";
-type CompanyView = "cards" | "table";
-
-// Tier-conditional default within Companies: cards for P1/P3 (want the contacts
-// up front), table for P2/P4 (higher volume, more to parse).
-const defaultCompanyView = (tier: IbTier): CompanyView =>
-  tier === "P1" || tier === "P3" ? "cards" : "table";
 
 // A small segmented control matching the rest of the workspace's toggles.
 const Segmented = <T extends string>({
@@ -86,9 +79,6 @@ interface InstallBaseViewProps {
 const InstallBaseView = ({ tier, onWork, onContactClick }: InstallBaseViewProps) => {
   const companies = installBaseByTier(tier);
   const [entity, setEntity] = useState<EntityView>("companies");
-  const [companyView, setCompanyView] = useState<CompanyView>(
-    defaultCompanyView(tier),
-  );
 
   const meta = TIER_META[tier];
   const tierMrr = companies.reduce((sum, c) => sum + totalMrr(c), 0);
@@ -169,15 +159,6 @@ const InstallBaseView = ({ tier, onWork, onContactClick }: InstallBaseViewProps)
             <ListFilter className="h-4 w-4" />
             Advanced filters
           </Button>
-          <div className="flex-1" />
-          {entity === "companies" && (
-            <Segmented
-              options={["cards", "table"] as CompanyView[]}
-              value={companyView}
-              onChange={(v) => setCompanyView(v as CompanyView)}
-              ariaLabel="Card or table view"
-            />
-          )}
         </div>
       </div>
 
@@ -191,17 +172,6 @@ const InstallBaseView = ({ tier, onWork, onContactClick }: InstallBaseViewProps)
           onWork={onWork}
           onContactClick={onContactClick}
         />
-      ) : companyView === "cards" ? (
-        <div>
-          {companies.map((company) => (
-            <InstallBaseCompanyCard
-              key={company.id}
-              company={company}
-              onWork={() => onWork(company.id)}
-              onContactClick={onContactClick}
-            />
-          ))}
-        </div>
       ) : (
         <InstallBaseTable
           companies={companies}
