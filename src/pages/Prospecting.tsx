@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { TableHeaderCell } from "@/components/ui/table-header-cell";
 import { TableDataCell } from "@/components/ui/table-data-cell";
 import { Info, ChevronDown, ListFilter, X, ExternalLink, FileEdit, Mail, Phone, ListTodo, Calendar, MoreHorizontal, Copy, Search, ArrowUpDown, ChevronRight, Check } from "lucide-react";
-import CompaniesTableView from "@/components/CompaniesTableView";
+import CompaniesTableView, { MAX_BULK_STRATEGY_COMPANIES, formatStrategyTimestamp } from "@/components/CompaniesTableView";
 import ContactsTableView from "@/components/ContactsTableView";
 import ViewController, { type EntityView } from "@/components/ViewController";
 import CreateCallTaskPanel from "@/components/CreateCallTaskPanel";
@@ -235,7 +235,7 @@ const Prospecting = () => {
       .filter((c): c is Company => c !== undefined);
 
     if (activeNavItem === "recently-generated") {
-      return sortedCompanies.filter(c => c.hasGeneratedStrategy !== false);
+      return sortedCompanies.filter(c => c.strategyStatus === "generating" || c.strategyStatus === "failed" || c.hasGeneratedStrategy !== false);
     }
 
     // Filter to show New, Unworked P1, In Progress, and Over SLA companies
@@ -260,7 +260,7 @@ const Prospecting = () => {
     );
     const counts: Record<string, number> = {
       "qls": workable.filter(c => c.recommendedContacts.some(rc => rc.qlData !== undefined)).length,
-      "recently-generated": companiesWithStatus.filter(c => c.hasGeneratedStrategy !== false).length,
+      "recently-generated": companiesWithStatus.filter(c => c.strategyStatus === "generating" || c.strategyStatus === "failed" || c.hasGeneratedStrategy !== false).length,
       "full-prospect-book": 312,
       "p1-now": workable.filter(c => (c.priority ?? "P1") === "P1").length,
       "p2-next": workable.filter(c => c.priority === "P2").length,
@@ -274,6 +274,63 @@ const Prospecting = () => {
     return counts;
   }, [prospectingCompanies, completedTasks, plays]);
 
+  // Bulk strategy generation. Marks the selected companies as "generating",
+  // surfaces them in Recently Generated, then (prototype-simulated) flips them
+  // to "generated" after a short delay. In the real product each company takes
+  // several minutes, which is why we cap the batch at MAX_BULK_STRATEGY_COMPANIES.
+  const strategyTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => () => strategyTimersRef.current.forEach(clearTimeout), []);
+  const handleGenerateStrategies = (companyIds: string[]) => {
+    const ids = companyIds.slice(0, MAX_BULK_STRATEGY_COMPANIES);
+    if (ids.length === 0) return;
+    const idSet = new Set(ids);
+    setProspectingCompanies(prev =>
+      prev.map(c => (idSet.has(c.id) ? { ...c, strategyStatus: "generating" as const } : c)),
+    );
+    setSuccessMessage(
+      `Generating strategies for ${ids.length} ${ids.length === 1 ? "company" : "companies"}. Find them in Recently Generated.`,
+    );
+    if (successTimerRef.current) clearTimeout(successTimerRef.current);
+    successTimerRef.current = setTimeout(() => setSuccessMessage(null), 5000);
+    const timer = setTimeout(() => {
+      const generatedAt = formatStrategyTimestamp(new Date());
+      setProspectingCompanies(prev =>
+        prev.map(c =>
+          idSet.has(c.id)
+            ? {
+                ...c,
+                strategyStatus: "generated" as const,
+                strategyGeneratedAt: generatedAt,
+                hasGeneratedStrategy: true,
+              }
+            : c,
+        ),
+      );
+    }, 4000);
+    strategyTimersRef.current.push(timer);
+  };
+  const handleSnoozeCompanies = (companyIds: string[]) => {
+    const idSet = new Set(companyIds);
+    setProspectingCompanies(prev =>
+      prev.map(c => (idSet.has(c.id) ? { ...c, status: "Snoozed" as const } : c)),
+    );
+    setSuccessMessage(
+      `Snoozed ${companyIds.length} ${companyIds.length === 1 ? "company" : "companies"}.`,
+    );
+    if (successTimerRef.current) clearTimeout(successTimerRef.current);
+    successTimerRef.current = setTimeout(() => setSuccessMessage(null), 3000);
+  };
+  const handleDismissCompanies = (companyIds: string[]) => {
+    const idSet = new Set(companyIds);
+    setProspectingCompanies(prev =>
+      prev.map(c => (idSet.has(c.id) ? { ...c, status: "Dismissed" as const } : c)),
+    );
+    setSuccessMessage(
+      `Dismissed ${companyIds.length} ${companyIds.length === 1 ? "company" : "companies"}.`,
+    );
+    if (successTimerRef.current) clearTimeout(successTimerRef.current);
+    successTimerRef.current = setTimeout(() => setSuccessMessage(null), 3000);
+  };
   const incrementCompanyTouch = (taskId: string) => {
     setProspectingCompanies(prevCompanies => prevCompanies.map(company => {
       const hasTask = company.tasks.some(task => task.id === taskId);
@@ -868,6 +925,10 @@ const Prospecting = () => {
                   onContactClick={(contactId) => handleContactClick(contactId)}
                   onCallClick={(contactId) => handleCallClick(contactId)}
                   onEmailClick={(contactId) => handleEmailClick(undefined, undefined, undefined, contactId)}
+                  onGenerateStrategies={handleGenerateStrategies}
+                  onSnoozeCompanies={handleSnoozeCompanies}
+                  onDismissCompanies={handleDismissCompanies}
+                  showStrategyStatus={activeNavItem === "recently-generated"}
                 />
               )}
              </div>

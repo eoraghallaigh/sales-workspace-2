@@ -24,6 +24,9 @@ import { toast } from "sonner";
 import { TableToolbar } from "@/components/ui/table-toolbar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { TrellisIcon } from "@/components/ui/trellis-icon";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { MAX_BULK_STRATEGY_COMPANIES } from "@/components/CompaniesTableView";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -760,50 +763,82 @@ const InstallBaseTable = ({
         }
       />
 
-      {selectedRows.size > 0 && (
-        <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-card">
-          <span className="body-125 text-foreground">
-            {selectedRows.size} selected
-          </span>
+      {selectedRows.size > 0 && (() => {
+        const count = selectedRows.size;
+        const noun = count === 1 ? "company" : "companies";
+        const overLimit = count > MAX_BULK_STRATEGY_COMPANIES;
+        const generateButton = (
           <Button
-            variant="secondary"
+            variant="primary"
             size="small"
+            disabled={overLimit}
             onClick={() => {
-              toast.success(`Added ${selectedRows.size} to a play`);
+              toast.success(`Generating strategies for ${count} ${noun}`);
               clearSelection();
             }}
           >
-            Add to play
+            <TrellisIcon
+              name="artificialIntelligence"
+              size={14}
+              className="mr-1 brightness-0 invert"
+            />
+            Generate strategies ({count})
           </Button>
-          <Button
-            variant="secondary"
-            size="small"
-            onClick={() => {
-              toast.success(`Assigned ${selectedRows.size} companies`);
-              clearSelection();
-            }}
-          >
-            Assign owner
-          </Button>
-          <Button
-            variant="secondary"
-            size="small"
-            onClick={() => {
-              toast.success(`Exported ${selectedRows.size} companies`);
-              clearSelection();
-            }}
-          >
-            Export
-          </Button>
-          <Button
-            variant="link"
-            className="body-100 text-foreground h-auto p-0"
-            onClick={clearSelection}
-          >
-            Clear
-          </Button>
-        </div>
-      )}
+        );
+        return (
+          <div className="flex items-center gap-3 px-4 py-2 min-h-[44px] border-b border-border bg-[var(--color-fill-surface-recessed)]">
+            <span className="body-100 font-medium text-foreground whitespace-nowrap">
+              {count} selected
+            </span>
+            {overLimit ? (
+              <Tooltip>
+                {/* Wrap in a span — a disabled button emits no pointer events, so
+                    the span is what receives hover/focus to open the tooltip. */}
+                <TooltipTrigger asChild>
+                  <span tabIndex={0} className="inline-flex">
+                    {generateButton}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  You can only generate strategies for {MAX_BULK_STRATEGY_COMPANIES}{" "}
+                  companies at a time.
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              generateButton
+            )}
+            <Button
+              variant="secondary"
+              size="small"
+              onClick={() => {
+                toast.success(`Snoozed ${count} ${noun}`);
+                clearSelection();
+              }}
+            >
+              <TrellisIcon name="snooze" size={14} className="mr-1" />
+              Snooze ({count})
+            </Button>
+            <Button
+              variant="secondary"
+              size="small"
+              onClick={() => {
+                toast.success(`Dismissed ${count} ${noun}`);
+                clearSelection();
+              }}
+            >
+              <TrellisIcon name="remove" size={14} className="mr-1" />
+              Dismiss ({count})
+            </Button>
+            <Button
+              variant="link"
+              className="body-100 text-foreground h-auto p-0"
+              onClick={clearSelection}
+            >
+              Clear
+            </Button>
+          </div>
+        );
+      })()}
 
       <div className="overflow-x-auto" ref={scrollRef}>
         <Table style={{ tableLayout: "fixed", width: tableWidth, minWidth: tableWidth }}>

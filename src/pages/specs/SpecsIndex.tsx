@@ -56,7 +56,7 @@ const specs: SpecEntry[] = [
     slug: "working-high-volume",
     title: "Working High Volume Efficiently",
     description:
-      "Recently Generated view to find companies with finished strategies, and a simplified Sequence Summary column that rolls per-channel outreach into one workflow status per contact.",
+      "Bulk strategy generation across many companies, a Recently Generated view to find companies with finished strategies, and a simplified Sequence Summary column that rolls per-channel outreach into one workflow status per contact.",
     category: "Interaction flows",
   },
   {

@@ -75,6 +75,13 @@ interface CompanyTableProps<T extends CompanyTableRow> {
     clearSelection: () => void,
   ) => ReactNode;
   /**
+   * Rendered as a selection bar in the table's top chrome when one or more
+   * company rows are checked (bulk company-level actions, e.g. generate
+   * strategies). The bar chrome (padding, border, background) is provided here;
+   * consumers just return the action content.
+   */
+  renderRowBulkBar?: (rows: T[], clearSelection: () => void) => ReactNode;
+  /**
    * When true, an expanded row reveals the recommended contacts as ContactCards
    * (the same presentation as the card view) in a full-width panel, instead of
    * column-aligned nested rows. Opt-in so other consumers keep the nested rows.
@@ -123,6 +130,7 @@ export function CompanyTable<T extends CompanyTableRow>({
   getAvailableContacts,
   toolbar,
   renderBulkBar,
+  renderRowBulkBar,
   expandToContactCards = false,
   defaultExpanded = false,
   onContactClick,
@@ -140,19 +148,36 @@ export function CompanyTable<T extends CompanyTableRow>({
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
   const [addedContacts, setAddedContacts] = useState<Record<string, RecommendedContact[]>>({});
   const [addModalRowId, setAddModalRowId] = useState<string | null>(null);
+  // Anchor for shift-click range selection — the last row toggled on its own.
+  // Stored by id (not index) so it survives filtering/reordering of `rows`.
+  const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
 
   const contactsFor = (row: T): RecommendedContact[] => [
     ...row.recommendedContacts,
     ...(addedContacts[row.id] ?? []),
   ];
 
-  const toggleRow = (id: string) =>
+  // Toggle a row's checkbox. With shiftKey held, select every row between the
+  // anchor (last row toggled) and this one, so a rep can grab a run of rows
+  // with two clicks instead of ticking each box.
+  const toggleRow = (id: string, shiftKey = false) => {
     setSelectedRows((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      const anchorIndex = lastSelectedId ? rows.findIndex((r) => r.id === lastSelectedId) : -1;
+      const currentIndex = rows.findIndex((r) => r.id === id);
+      if (shiftKey && anchorIndex !== -1 && currentIndex !== -1) {
+        const [start, end] =
+          currentIndex < anchorIndex ? [currentIndex, anchorIndex] : [anchorIndex, currentIndex];
+        for (let i = start; i <= end; i++) next.add(rows[i].id);
+      } else if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
+    setLastSelectedId(id);
+  };
 
   const allRowsSelected = rows.length > 0 && rows.every((r) => selectedRows.has(r.id));
   const toggleSelectAll = () =>
@@ -182,6 +207,12 @@ export function CompanyTable<T extends CompanyTableRow>({
     });
 
   const clearContactSelection = () => setSelectedContacts(new Set());
+
+  const clearRowSelection = () => setSelectedRows(new Set());
+  const selectedRowList = useMemo(
+    () => rows.filter((row) => selectedRows.has(row.id)),
+    [rows, selectedRows],
+  );
 
   const selectedContactList = useMemo(() => {
     const out: SelectedContact<T>[] = [];
@@ -223,6 +254,11 @@ export function CompanyTable<T extends CompanyTableRow>({
   return (
     <div className="border border-border bg-card rounded-[4px] overflow-hidden">
       {toolbar}
+      {renderRowBulkBar && selectedRowList.length > 0 && (
+        <div className="flex items-center gap-3 px-4 py-2 min-h-[44px] border-b border-border bg-[var(--color-fill-surface-recessed)]">
+          {renderRowBulkBar(selectedRowList, clearRowSelection)}
+        </div>
+      )}
       {renderBulkBar && !expandToContactCards && selectedContactList.length > 0 &&
         renderBulkBar(selectedContactList, clearContactSelection)}
       <div className="overflow-x-auto" ref={scrollRef}>
@@ -266,7 +302,12 @@ export function CompanyTable<T extends CompanyTableRow>({
                     <td className="w-12 sticky left-0 z-10 bg-inherit border-b border-border px-4 py-3 align-middle">
                       <Checkbox
                         checked={selectedRows.has(row.id)}
-                        onCheckedChange={() => toggleRow(row.id)}
+                        onMouseDown={(e) => {
+                          // Stop shift-click from selecting page text between rows;
+                          // the click (and toggle) still fires.
+                          if (e.shiftKey) e.preventDefault();
+                        }}
+                        onClick={(e) => toggleRow(row.id, e.shiftKey)}
                       />
                     </td>
                     <td
