@@ -97,6 +97,15 @@ export interface Company {
   recommendedContacts: RecommendedContact[];
   priority?: "P1" | "P2" | "P3" | "P4";
   hasGeneratedStrategy?: boolean;
+  // Live strategy-generation status, set when a rep kicks off generation (e.g.
+  // from the bulk "Generate strategies" action). "generating" while the
+  // Outreach Strategy Agent is running, "generated" once it finishes, "failed"
+  // if the run errored. Absent means the company was never run through the new
+  // flow (fall back to hasGeneratedStrategy for whether a strategy exists).
+  strategyStatus?: "generating" | "generated" | "failed";
+  // Formatted date/time the strategy finished generating (display string), set
+  // alongside strategyStatus === "generated".
+  strategyGeneratedAt?: string;
 }
 interface CompanyCardProps {
   company: Company;

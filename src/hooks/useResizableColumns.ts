@@ -31,15 +31,18 @@ export function useResizableColumns(initial: Record<string, number>) {
 
   // Pin a column to its width. Used with `table-layout: fixed` so a resize
   // grows/shrinks only that column (and the table), never its neighbours.
+  // Falls back to the caller's seed width for columns that appear after mount
+  // (e.g. a column only shown in certain views) — `widths` is seeded once, so
+  // without this those columns would render with no width and collapse.
   const colStyle = (key: string): CSSProperties => {
-    const w = widths[key];
+    const w = widths[key] ?? initial[key];
     return w ? { width: w, minWidth: w, maxWidth: w } : {};
   };
 
   // Sum of the given column widths (+ any fixed columns not in the map, e.g. a
   // checkbox), used as the table's own width under `table-layout: fixed`.
   const totalWidth = (keys: string[], extra = 0): number =>
-    keys.reduce((sum, k) => sum + (widths[k] ?? 0), 0) + extra;
+    keys.reduce((sum, k) => sum + (widths[k] ?? initial[k] ?? 0), 0) + extra;
 
   // Scale the given columns proportionally so they fill `target` (e.g. the
   // container width) — so the table fills available space by default. Only

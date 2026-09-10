@@ -1877,6 +1877,9 @@ const rawProspectingCompanies: Company[] = [
       deadline: touchDeadlines[2],
     },
     recommendedContacts: company3Contacts,
+    // Seeded so the "Generation Failed" strategy status is visible in the
+    // Recently Generated view without a rep having to hit an error.
+    strategyStatus: "failed",
   },
   {
     id: "4",
