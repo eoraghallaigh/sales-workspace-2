@@ -37,26 +37,27 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Tag from "@/components/Tag";
 import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
-import AccountDetailBlock from "@/components/installbase/AccountDetailBlock";
+import ContactStrip from "@/components/installbase/ContactStrip";
 import { useResizableColumns } from "@/hooks/useResizableColumns";
 import { ColumnResizeHandle } from "@/components/ColumnResizeHandle";
 import { cn } from "@/lib/utils";
 import {
-  earliestRenewal,
   formatMrr,
   getIbMetrics,
-  totalMrr,
   type HubName,
   type IbCompany,
+  type IbMetrics,
   type IbTier,
+  type Portal,
 } from "@/data/installBase";
 
 /*
- * InstallBaseTable — the customer-book table. Collapsed rows show company-level
- * columns; expanding renders the shared AccountDetailBlock (portal strip/cards +
- * contacts) as a full-width panel. Columns come from a registry with a default
- * subset shown and the rest toggleable via "Edit columns", mirroring the real
- * Full Customer Book. See .context/ib-ppf-design.md.
+ * InstallBaseTable — the customer-book table. Each row is a portal: the company
+ * row shows its primary (highest-MRR) portal, and expanding reveals the account's
+ * remaining portals as sub-rows plus a full-width strip of curated contacts. All
+ * columns are portal-scoped (see portalMetrics). The column set comes from a
+ * registry with a default subset shown and the rest toggleable via "Edit
+ * columns", mirroring the real Full Customer Book. See .context/ib-ppf-design.md.
  */
 
 const HEADER_CELL =
@@ -87,24 +88,42 @@ const usageDot = (score: number): string =>
 
 const HUB_ORDER: HubName[] = ["Marketing", "Sales", "Service", "Content", "Operations"];
 
+// Every column is portal-scoped: a row represents one portal, so genuinely
+// per-portal fields come off the Portal itself while the account-wide metrics
+// (success owner, usage, whitespace…) repeat from the company's record. The
+// primary (highest-MRR) portal fills the company row; the rest become sub-rows.
+const portalMetrics = (c: IbCompany, portal: Portal): IbMetrics => {
+  const base = getIbMetrics(c.id);
+  return {
+    ...base,
+    portalId: portal.id,
+    platformMrr: portal.mrr,
+    ibSignals:
+      portal.signals && portal.signals.length > 0 ? portal.signals : base.ibSignals,
+    creditsConsumedMtd:
+      portal.creditsLimit != null ? (portal.creditsUsed ?? 0) : base.creditsConsumedMtd,
+    creditsLimit: portal.creditsLimit != null ? portal.creditsLimit : base.creditsLimit,
+  };
+};
+
 interface ColumnDef {
   id: string;
   header: string;
   minWidth: number;
   defaultVisible: boolean;
-  render: (c: IbCompany) => ReactNode;
+  render: (c: IbCompany, portal: Portal, m: IbMetrics) => ReactNode;
 }
 
-// Column registry — the real Full Customer Book field set. `m` is the extra
-// metrics for the row; derived columns (Total MRR, Next renewal) read the model.
+// Column registry — the real Full Customer Book field set. Each render receives
+// the portal for its row plus that portal's scoped metrics (`m`); Total MRR and
+// Next renewal read the portal directly.
 const COLUMNS: ColumnDef[] = [
   {
     id: "portalId",
     header: "Portal ID",
     minWidth: 130,
     defaultVisible: true,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.portalId ? (
         <button className="inline-flex items-center gap-1 body-100 text-text-interactive hover:text-text-interactive-hover">
           {m.portalId}
@@ -120,8 +139,7 @@ const COLUMNS: ColumnDef[] = [
     header: "Action Guidance",
     minWidth: 260,
     defaultVisible: true,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.actionGuidance ? (
         <span className="body-100 text-foreground" title={m.actionGuidance.label}>
           <span className="font-medium">
@@ -139,8 +157,7 @@ const COLUMNS: ColumnDef[] = [
     header: "Install Base Signals",
     minWidth: 220,
     defaultVisible: true,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.ibSignals && m.ibSignals.length > 0 ? (
         <div className="flex flex-wrap gap-1">
           {m.ibSignals.map((s) => (
@@ -159,15 +176,16 @@ const COLUMNS: ColumnDef[] = [
     header: "Total MRR",
     minWidth: 130,
     defaultVisible: true,
-    render: (c) => <span className="body-125 text-foreground">{formatMrr(totalMrr(c))}</span>,
+    render: (_c, portal) => (
+      <span className="body-125 text-foreground">{formatMrr(portal.mrr)}</span>
+    ),
   },
   {
     id: "platformMrr",
     header: "Platform MRR (USD)",
     minWidth: 160,
     defaultVisible: false,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.platformMrr != null ? (
         <span className="body-100 text-foreground">{usd(m.platformMrr)}</span>
       ) : (
@@ -180,8 +198,7 @@ const COLUMNS: ColumnDef[] = [
     header: "Total Hub MRR",
     minWidth: 150,
     defaultVisible: false,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.totalHubMrr != null ? (
         <span className="body-100 text-foreground">{usd(m.totalHubMrr)}</span>
       ) : (
@@ -194,8 +211,8 @@ const COLUMNS: ColumnDef[] = [
     header: hub,
     minWidth: 130,
     defaultVisible: false,
-    render: (c) => {
-      const cell = getIbMetrics(c.id).hubMrr?.[hub];
+    render: (c, portal, m) => {
+      const cell = m.hubMrr?.[hub];
       return cell ? (
         <div className="flex flex-col">
           <span className="body-100 text-foreground">{usd(cell.mrr)}</span>
@@ -211,25 +228,19 @@ const COLUMNS: ColumnDef[] = [
     header: "Next renewal",
     minWidth: 160,
     defaultVisible: true,
-    render: (c) => {
-      const soonest = earliestRenewal(c);
-      return soonest ? (
-        <span className={cn("body-100", renewalTone(soonest.renewalInDays))}>
-          {soonest.renewalDate}{" "}
-          <span className="detail-200">({soonest.renewalInDays}d)</span>
-        </span>
-      ) : (
-        <Dash />
-      );
-    },
+    render: (_c, portal) => (
+      <span className={cn("body-100", renewalTone(portal.renewalInDays))}>
+        {portal.renewalDate}{" "}
+        <span className="detail-200">({portal.renewalInDays}d)</span>
+      </span>
+    ),
   },
   {
     id: "discountChanges",
     header: "Discount → Upcoming Changes",
     minWidth: 220,
     defaultVisible: false,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.discountChanges && m.discountChanges.length > 0 ? (
         <div className="flex flex-col gap-0.5">
           {m.discountChanges.map((d) => (
@@ -254,8 +265,7 @@ const COLUMNS: ColumnDef[] = [
     header: "Next Cancellation Date",
     minWidth: 170,
     defaultVisible: false,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.nextCancellationDate ? (
         <span className="body-100 text-foreground">{m.nextCancellationDate}</span>
       ) : (
@@ -268,8 +278,8 @@ const COLUMNS: ColumnDef[] = [
     header: "Sales seats assigned",
     minWidth: 160,
     defaultVisible: false,
-    render: (c) => {
-      const s = getIbMetrics(c.id).salesSeats;
+    render: (c, portal, m) => {
+      const s = m.salesSeats;
       return s ? (
         <span className="body-100 text-foreground">
           {s.assigned} / {s.purchased}
@@ -284,8 +294,8 @@ const COLUMNS: ColumnDef[] = [
     header: "Service seats assigned",
     minWidth: 170,
     defaultVisible: false,
-    render: (c) => {
-      const s = getIbMetrics(c.id).serviceSeats;
+    render: (c, portal, m) => {
+      const s = m.serviceSeats;
       return s ? (
         <span className="body-100 text-foreground">
           {s.assigned} / {s.purchased}
@@ -300,8 +310,7 @@ const COLUMNS: ColumnDef[] = [
     header: "Open alerts",
     minWidth: 120,
     defaultVisible: false,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.openAlerts != null ? (
         <span className="body-100 text-foreground">{m.openAlerts}</span>
       ) : (
@@ -314,8 +323,8 @@ const COLUMNS: ColumnDef[] = [
     header: "Marketing Contacts Limit %",
     minWidth: 200,
     defaultVisible: false,
-    render: (c) => {
-      const mc = getIbMetrics(c.id).marketingContacts;
+    render: (c, portal, m) => {
+      const mc = m.marketingContacts;
       return mc ? (
         <span className="body-100 text-foreground">
           {mc.used.toLocaleString("en-US")} / {mc.limit.toLocaleString("en-US")}
@@ -330,8 +339,7 @@ const COLUMNS: ColumnDef[] = [
     header: "HubSpot Credits Consumption %",
     minWidth: 210,
     defaultVisible: true,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       if (m.creditsConsumedMtd == null && m.creditsLimit == null) return <Dash />;
       return (
         <span className="body-100 text-foreground">
@@ -346,8 +354,7 @@ const COLUMNS: ColumnDef[] = [
     header: "Credits consumed (MTD)",
     minWidth: 180,
     defaultVisible: false,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.creditsConsumedMtd != null ? (
         <span className="body-100 text-foreground">
           {m.creditsConsumedMtd.toLocaleString("en-US")}
@@ -362,8 +369,7 @@ const COLUMNS: ColumnDef[] = [
     header: "Included Credits Monthly",
     minWidth: 200,
     defaultVisible: false,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.includedCreditsMonthly != null ? (
         <span className="body-100 text-foreground">
           {m.includedCreditsMonthly.toLocaleString("en-US")}
@@ -378,8 +384,7 @@ const COLUMNS: ColumnDef[] = [
     header: "Credits limit",
     minWidth: 140,
     defaultVisible: false,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.creditsLimit != null ? (
         <span className="body-100 text-foreground">
           {m.creditsLimit.toLocaleString("en-US")}
@@ -394,8 +399,7 @@ const COLUMNS: ColumnDef[] = [
     header: "Active Trials",
     minWidth: 220,
     defaultVisible: false,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.activeTrials ? (
         <span className="body-100 text-foreground" title={m.activeTrials}>
           {m.activeTrials}
@@ -410,8 +414,7 @@ const COLUMNS: ColumnDef[] = [
     header: "Count of Integrations",
     minWidth: 160,
     defaultVisible: true,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.integrationsCount != null ? (
         <span className="body-100 text-text-interactive">{m.integrationsCount} integrations</span>
       ) : (
@@ -424,8 +427,7 @@ const COLUMNS: ColumnDef[] = [
     header: "Last Activity Preview",
     minWidth: 260,
     defaultVisible: false,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.lastActivityPreview ? (
         <span className="body-100 text-muted-foreground line-clamp-2" title={m.lastActivityPreview}>
           {m.lastActivityPreview}
@@ -440,8 +442,8 @@ const COLUMNS: ColumnDef[] = [
     header: "Last Activity By",
     minWidth: 170,
     defaultVisible: false,
-    render: (c) => {
-      const a = getIbMetrics(c.id).lastActivityBy;
+    render: (c, portal, m) => {
+      const a = m.lastActivityBy;
       return a ? (
         <div className="flex flex-col">
           <span className="body-100 text-text-interactive">{a.name}</span>
@@ -457,8 +459,8 @@ const COLUMNS: ColumnDef[] = [
     header: "Next Activity",
     minWidth: 160,
     defaultVisible: false,
-    render: (c) => {
-      const a = getIbMetrics(c.id).nextActivity;
+    render: (c, portal, m) => {
+      const a = m.nextActivity;
       return a ? (
         <div className="flex flex-col">
           <span className="body-100 text-foreground">{a.name}</span>
@@ -474,8 +476,7 @@ const COLUMNS: ColumnDef[] = [
     header: "Portal Usage Score",
     minWidth: 160,
     defaultVisible: true,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.usageScore != null ? (
         <span className="flex items-center gap-2 body-100 text-foreground">
           <span className={cn("h-2.5 w-2.5 rounded-full flex-shrink-0", usageDot(m.usageScore))} />
@@ -491,8 +492,8 @@ const COLUMNS: ColumnDef[] = [
     header: "Usage Score Trend",
     minWidth: 150,
     defaultVisible: true,
-    render: (c) => {
-      const t = getIbMetrics(c.id).usageScoreTrend;
+    render: (c, portal, m) => {
+      const t = m.usageScoreTrend;
       if (t == null) return <Dash />;
       return (
         <span
@@ -514,8 +515,8 @@ const COLUMNS: ColumnDef[] = [
     header: "Whitespace",
     minWidth: 220,
     defaultVisible: true,
-    render: (c) => {
-      const w = getIbMetrics(c.id).whitespace;
+    render: (c, portal, m) => {
+      const w = m.whitespace;
       return w && w.length > 0 ? (
         <div className="flex flex-col gap-0.5">
           {w.map((line) => (
@@ -534,8 +535,7 @@ const COLUMNS: ColumnDef[] = [
     header: "Users Logged in (30d)",
     minWidth: 170,
     defaultVisible: false,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.usersLoggedIn30d != null ? (
         <span className="body-100 text-foreground">{m.usersLoggedIn30d}</span>
       ) : (
@@ -548,8 +548,7 @@ const COLUMNS: ColumnDef[] = [
     header: "Recent SQL Submission Date",
     minWidth: 200,
     defaultVisible: false,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.recentSqlDate ? (
         <span className="body-100 text-foreground">{m.recentSqlDate}</span>
       ) : (
@@ -562,8 +561,7 @@ const COLUMNS: ColumnDef[] = [
     header: "Primary POC Email",
     minWidth: 220,
     defaultVisible: false,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.primaryPocEmail ? (
         <span className="body-100 text-text-interactive truncate block" title={m.primaryPocEmail}>
           {m.primaryPocEmail}
@@ -578,8 +576,7 @@ const COLUMNS: ColumnDef[] = [
     header: "CSM Notes",
     minWidth: 220,
     defaultVisible: false,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.csmNotes ? (
         <span className="body-100 text-muted-foreground line-clamp-2" title={m.csmNotes}>
           {m.csmNotes}
@@ -594,8 +591,7 @@ const COLUMNS: ColumnDef[] = [
     header: "Success Owner - Next Meeting",
     minWidth: 200,
     defaultVisible: false,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.successOwnerNextMeeting ? (
         <span className="body-100 text-foreground">{m.successOwnerNextMeeting}</span>
       ) : (
@@ -608,8 +604,7 @@ const COLUMNS: ColumnDef[] = [
     header: "Success Owner",
     minWidth: 170,
     defaultVisible: true,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.successOwner ? (
         <span className="body-100 text-foreground">{m.successOwner}</span>
       ) : (
@@ -622,8 +617,7 @@ const COLUMNS: ColumnDef[] = [
     header: "Contract Manager",
     minWidth: 170,
     defaultVisible: true,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.contractManager ? (
         <span className="body-100 text-foreground">{m.contractManager}</span>
       ) : (
@@ -636,8 +630,7 @@ const COLUMNS: ColumnDef[] = [
     header: "Managing Partners",
     minWidth: 180,
     defaultVisible: false,
-    render: (c) => {
-      const m = getIbMetrics(c.id);
+    render: (c, portal, m) => {
       return m.managingPartners ? (
         <span className="body-100 text-foreground">{m.managingPartners}</span>
       ) : (
@@ -676,8 +669,8 @@ const InstallBaseTable = ({
   );
   const { colStyle, startResize, totalWidth, fit } = useResizableColumns(INITIAL_WIDTHS);
 
-  // Accordion — at most one account open at a time, so the expanded detail
-  // panel never stacks and the nested horizontal scroll stays manageable.
+  // Accordion — at most one account's contacts tray open at a time, so the
+  // full-width panel never stacks and the table stays scannable.
   const toggle = (id: string) =>
     setExpanded((prev) => (prev.has(id) ? new Set() : new Set([id])));
 
@@ -715,14 +708,11 @@ const InstallBaseTable = ({
     ...visibleColumns.map((c) => c.id),
   ];
   const tableWidth = totalWidth(activeKeys, 48); // +48 for the checkbox column
-  const colCount = activeKeys.length + 1; // + checkbox column
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [panelWidth, setPanelWidth] = useState(0);
   useLayoutEffect(() => {
     if (scrollRef.current) {
       fit(activeKeys, scrollRef.current.clientWidth, 48);
-      setPanelWidth(scrollRef.current.clientWidth);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -886,17 +876,29 @@ const InstallBaseTable = ({
           <TableBody className="[&>tr:last-child>td]:border-b-0">
             {companies.map((company) => {
               const isExpanded = expanded.has(company.id);
+              // A row is a portal. The primary (highest-MRR) portal fills the
+              // company row; the rest always surface as sub-rows beneath it.
+              const sortedPortals = [...company.portals].sort((a, b) => b.mrr - a.mrr);
+              const [primaryPortal, ...restPortals] = sortedPortals;
               return (
                 <Fragment key={company.id}>
-                  <TableRow className="group bg-card hover:bg-fill-surface-recessed">
-                    <td className="w-12 sticky left-0 z-10 bg-inherit border-b border-border px-4 py-3 align-middle">
+                  {/* Merged company block — the primary and every portal sub-row
+                      drop their full-width border so the company column reads as
+                      one cell; the last portal row closes and separates the group. */}
+                  <TableRow
+                    className={cn(
+                      "group bg-card hover:bg-fill-surface-recessed",
+                      restPortals.length > 0 && "border-b-0",
+                    )}
+                  >
+                    <td className="w-12 sticky left-0 z-10 bg-inherit px-4 py-3 align-middle">
                       <Checkbox
                         checked={selectedRows.has(company.id)}
                         onCheckedChange={() => toggleRow(company.id)}
                       />
                     </td>
                     <td
-                      className="sticky left-12 z-10 bg-inherit border-b border-border border-r border-border px-4 py-3 align-middle cursor-pointer"
+                      className="sticky left-12 z-10 bg-inherit border-r border-border px-4 py-3 align-middle cursor-pointer"
                       style={colStyle("customer")}
                       onClick={() => onWork(company.id)}
                     >
@@ -908,7 +910,7 @@ const InstallBaseTable = ({
                             toggle(company.id);
                           }}
                           className="flex items-center justify-center h-5 w-5 flex-shrink-0 rounded hover:bg-trellis-neutral-200 text-muted-foreground"
-                          aria-label={isExpanded ? "Collapse account" : "Expand account"}
+                          aria-label={isExpanded ? "Collapse contacts" : "Expand contacts"}
                         >
                           {isExpanded ? (
                             <ChevronDown className="h-4 w-4" />
@@ -939,22 +941,54 @@ const InstallBaseTable = ({
                     )}
                     {visibleColumns.map((col) => (
                       <td key={col.id} className={BODY_CELL} style={colStyle(col.id)}>
-                        {col.render(company)}
+                        {col.render(company, primaryPortal, portalMetrics(company, primaryPortal))}
                       </td>
                     ))}
                   </TableRow>
 
-                  {isExpanded && (
-                    <TableRow className="bg-[var(--color-fill-surface-default)] hover:bg-[var(--color-fill-surface-default)]">
-                      <td colSpan={colCount} className="border-b border-border bg-[var(--color-fill-surface-default)] p-0">
-                        <div
-                          className="sticky left-0 bg-[var(--color-fill-surface-recessed)] p-6 pl-16"
-                          style={{ width: panelWidth || undefined }}
+                  {/* Additional portals — one sub-row each, same columns. */}
+                  {restPortals.map((portal, idx) => {
+                      const m = portalMetrics(company, portal);
+                      return (
+                        <TableRow
+                          key={`${company.id}-${portal.id}`}
+                          className={cn(
+                            "bg-card hover:bg-fill-surface-recessed",
+                            idx < restPortals.length - 1 && "border-b-0",
+                          )}
                         >
-                          <AccountDetailBlock
+                          <td className="w-12 sticky left-0 z-10 bg-inherit px-4 py-3 align-middle" />
+                          <td
+                            className="sticky left-12 z-10 bg-inherit border-r border-border px-4 py-3 align-middle"
+                            style={colStyle("customer")}
+                          />
+                          {showTier && <td className={BODY_CELL} style={colStyle("tier")} />}
+                          {visibleColumns.map((col) => (
+                            <td key={col.id} className={BODY_CELL} style={colStyle(col.id)}>
+                              {col.render(company, portal, m)}
+                            </td>
+                          ))}
+                        </TableRow>
+                      );
+                    })}
+
+                  {/* Expanded contacts — revealed by the company-row expander,
+                      shown as a panel below the portals. */}
+                  {isExpanded && (
+                    <TableRow className="bg-card hover:bg-card">
+                      <td
+                        colSpan={2 + (showTier ? 1 : 0) + visibleColumns.length}
+                        className="py-2 pr-6 pl-16 align-top"
+                      >
+                        <div className="flex flex-col gap-3 mt-2">
+                          <span className="heading-50 text-foreground">
+                            Recommended contacts
+                          </span>
+                          <ContactStrip
                             company={company}
                             onWork={() => onWork(company.id)}
                             onContactClick={onContactClick}
+                            showHeading={false}
                           />
                         </div>
                       </td>

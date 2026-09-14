@@ -491,9 +491,12 @@ export function CompanyTable<T extends CompanyTableRow>({
                         className="border-b border-border bg-[var(--color-fill-surface-default)] p-0"
                       >
                         <div
-                          className="sticky left-0 bg-[var(--color-fill-surface-recessed)] pt-6 pr-6 pb-16 pl-16"
+                          className="sticky left-0 bg-[var(--color-fill-surface-raised)] pt-6 pr-6 pb-16 pl-16"
                           style={{ width: panelWidth || undefined }}
                         >
+                        <span className="heading-50 text-foreground block mb-3">
+                          Recommended contacts
+                        </span>
                         {contacts.length > 0 ? (
                           <div className="flex items-stretch gap-4 overflow-x-auto py-1 -my-1 px-1 -mx-1">
                             {contacts.map((contact) => (

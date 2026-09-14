@@ -3,14 +3,12 @@ import {
   SpecHeader,
   SpecSection,
   StateCard,
-  FlowStep,
   Callout,
 } from "./blocks";
 import InstallBaseView from "@/components/installbase/InstallBaseView";
 import InstallBaseTable from "@/components/installbase/InstallBaseTable";
 import InstallBaseContactsTable from "@/components/installbase/InstallBaseContactsTable";
-import PortalBlock from "@/components/installbase/PortalBlock";
-import AccountDetailBlock from "@/components/installbase/AccountDetailBlock";
+import ContactStrip from "@/components/installbase/ContactStrip";
 import {
   installBaseByTier,
   installBaseCompanies,
@@ -21,9 +19,8 @@ const noop = () => {};
 const byId = (id: string) =>
   installBaseCompanies.find((c) => c.id === id) as IbCompany;
 
-// Northwind = P1, multi-portal, QL trigger. Brightpath = P1, single-portal SMB.
+// Northwind = P1, multi-portal, QL trigger — used to depict the contacts tray.
 const MULTI = byId("northwind-traders");
-const SINGLE = byId("brightpath-studio");
 
 // A slice of P2 for the table (includes Atlas Freight, a multi-portal account).
 const TABLE_COMPANIES = installBaseByTier("P2").slice(0, 4);
@@ -40,7 +37,7 @@ const InstallBasePpfSpec = () => (
   <SpecLayout>
     <SpecHeader
       title="Install Base PPF — customer accounts"
-      description="Rendering install base (customer) accounts in the prospecting workspace under the same P1–P4 Prospect Prioritisation Framework as Net New. A customer is an account with one or more HubSpot portals (each carrying its own MRR, usage, seats, credits and renewal) plus a curated set of contacts."
+      description="Rendering install base (customer) accounts in the prospecting workspace under the same P1–P4 Prospect Prioritisation Framework as Net New. A customer is an account with one or more HubSpot portals — each portal carries its own MRR, usage, seats, credits and renewal, and is the trigger for a rep to reach out — plus a curated set of contacts."
     />
 
     {/* ── Prioritisation model ──────────────────────────────────── */}
@@ -58,9 +55,11 @@ const InstallBasePpfSpec = () => (
         incremental expansion). &nbsp;<strong>P4</strong> — everyone else.
       </Callout>
       <Callout type="behavior">
-        Every tier uses one surface — the <strong>table</strong>. Collapsed rows
-        for scanning; expanding a row reveals the full account detail (portals +
-        contacts) inline, so there's no separate card view to maintain.
+        Every tier uses one surface — the <strong>table</strong>. The columns
+        carry <strong>portal-level</strong> data (the portal is what triggers the
+        outreach), so each portal is a row: the primary (highest-MRR) portal
+        fills the company row and any additional portals appear as sub-rows
+        beneath it. Expanding a company reveals its recommended contacts.
       </Callout>
     </SpecSection>
 
@@ -79,65 +78,48 @@ const InstallBasePpfSpec = () => (
       </StateCard>
     </SpecSection>
 
-    {/* ── Portal block ──────────────────────────────────────────── */}
+    {/* ── Portals as rows ───────────────────────────────────────── */}
     <SpecSection
-      title="Portal block — adapts to portal count"
-      description="A customer's portals are shown at a glance. The block adapts to how many there are, so the common one-portal case stays lean and multi-portal accounts stay legible without a wall of data."
+      title="Portals as rows"
+      description="Because the columns are portal-level data, each portal gets its own row rather than being hidden behind a card. The primary (highest-MRR) portal fills the company row; additional portals are sub-rows sharing the same columns. The checkbox + Customer columns merge across a company's portals into one block, so it reads as a single account, while the portal-data columns stay divided per portal."
     >
       <StateCard
-        label="One portal"
-        description="A single dense strip: portal ID, hubs + tier, MRR, renewal countdown (colour-coded in-window), seats and credits meters, health dot, portal-level signals."
+        label="Company rows + portal sub-rows"
+        description="Atlas Freight (multi-portal) shows a primary row plus a sub-row for its second portal; single-portal customers are just one row. The Customer column is merged down; portal columns (Portal ID, MRR, renewal, credits, usage…) are per portal."
       >
-        <div className="w-[900px]">
-          <PortalBlock portals={SINGLE.portals} />
-        </div>
-      </StateCard>
-      <StateCard
-        label="Multiple portals"
-        description="Leads with the primary (highest-MRR) portal, then a 'Show N more portals · $X/mo' expander revealing the rest — same strip format throughout. All strips share the widest one's width."
-      >
-        <div className="w-[900px]">
-          <PortalBlock portals={MULTI.portals} />
+        <div className="w-[1040px]">
+          <InstallBaseTable companies={TABLE_COMPANIES} onWork={noop} onContactClick={noop} />
         </div>
       </StateCard>
       <Callout type="behavior">
-        The expander is interactive — click “Show N more portals” to reveal the
-        remaining portal strips.
+        Consistent with Net New, the <strong>chevron beside the company
+        avatar</strong> expands the account. Clicking elsewhere in the{" "}
+        <strong>Customer cell</strong> (avatar or name) opens the account's
+        outreach strategy page.
       </Callout>
     </SpecSection>
 
-    {/* ── The table + expand-into-cards ─────────────────────────── */}
+    {/* ── Expanding a company ───────────────────────────────────── */}
     <SpecSection
-      title="Table view — expand into cards"
-      description="The table is the P2/P4 default. Collapsed rows carry honest company-level columns for scanning; expanding a row reveals the SAME account detail block (portal strip/cards + contacts) as a full-width panel — not column-aligned nested rows."
+      title="Expanding a company — recommended contacts"
+      description="The expander reveals the account's curated contacts (economic buyer, champion, cross-functional leaders) as a tray beneath its portal rows, aligned with the expander arrow. In the multi-portal case the tray sits under all of the portals — a minor oddity accepted for consistency with Net New, since the vast majority of customers are single-portal."
     >
-      <div className="bg-[var(--color-fill-surface-recessed)] p-8 rounded-200">
-        <FlowStep
-          step={1}
-          label="Collapsed rows"
-          description="All rows start collapsed. Company-level columns only (total MRR, next renewal, usage, whitespace, signals, success owner…). A checkbox column enables bulk selection; the chevron expands."
-        >
-          <div className="w-[1040px]">
-            <InstallBaseTable companies={TABLE_COMPANIES} onWork={noop} onContactClick={noop} />
+      <StateCard
+        label="Recommended contacts tray"
+        description="Shown when a company is expanded. Each card links back to the contact; call / email open targeted outreach."
+      >
+        <div className="w-[1040px] bg-card p-6 rounded-200">
+          <div className="flex flex-col gap-3">
+            <span className="heading-50 text-foreground">Recommended contacts</span>
+            <ContactStrip
+              company={MULTI}
+              onWork={noop}
+              onContactClick={noop}
+              showHeading={false}
+            />
           </div>
-        </FlowStep>
-        <FlowStep
-          step={2}
-          label="Expand → account detail panel"
-          description="Clicking the chevron reveals this panel inline, beneath the row: the portal block plus the curated contact cards. This is the same block the card view renders."
-          isLast
-        >
-          <div className="w-[1040px] bg-[var(--color-fill-surface-recessed)] p-6 rounded-200">
-            <AccountDetailBlock company={MULTI} onWork={noop} onContactClick={noop} />
-          </div>
-        </FlowStep>
-      </div>
-      <Callout type="behavior">
-        <strong>Row interactions:</strong> only the chevron expands a row.
-        Clicking anywhere in the <strong>Customer name cell</strong> opens the
-        account's outreach strategy page. A click on the rest of the row does
-        nothing.
-      </Callout>
+        </div>
+      </StateCard>
     </SpecSection>
 
     {/* ── Full Customer Book + columns ──────────────────────────── */}
@@ -147,7 +129,7 @@ const InstallBasePpfSpec = () => (
     >
       <StateCard
         label="All tiers, with Tier column"
-        description="One row per customer across P1–P4."
+        description="Portals as rows, grouped by company (primary portal + sub-rows), across P1–P4."
       >
         <div className="w-[1040px]">
           <InstallBaseTable
@@ -161,17 +143,18 @@ const InstallBasePpfSpec = () => (
       </StateCard>
       <Callout type="behavior">
         <strong>Edit columns</strong> (top-right of the table) toggles the full
-        column set. A lean default subset shows (Install Base Signals · Total
-        MRR · Next renewal · Portal Usage Score · Usage Score Trend · Whitespace
-        · Success Owner); the rest — Portal ID, Action Guidance, per-hub MRR +
-        tier, Discount → Upcoming Changes, seats, credits, integrations, CSM
-        Notes, Contract Manager, and more — are available on demand. Every
-        column is drag-resizable from its header edge.
+        column set. A lean default subset shows (Portal ID · Action Guidance ·
+        Install Base Signals · Total MRR · Next renewal · HubSpot Credits
+        Consumption % · Count of Integrations · Portal Usage Score · Usage Score
+        Trend · Whitespace · Success Owner · Contract Manager); the rest —
+        per-hub MRR + tier, Discount → Upcoming Changes, seats, marketing
+        contacts, CSM Notes, and more — are available on demand. Every column is
+        drag-resizable from its header edge.
       </Callout>
       <Callout type="behavior">
-        <strong>Bulk selection:</strong> the header and per-row checkboxes select
-        customers; a bulk-action bar (Add to play · Assign owner · Export)
-        appears above the table while any are selected.
+        <strong>Bulk selection:</strong> the header and per-company checkboxes
+        select customers; a bulk-action bar (Generate strategies · Snooze ·
+        Dismiss) appears above the table while any are selected.
       </Callout>
     </SpecSection>
 
@@ -197,8 +180,8 @@ const InstallBasePpfSpec = () => (
       description="The primary job is to choose a customer and work it."
     >
       <Callout type="info">
-        Clicking a customer's name (from any list, card, or contacts view) opens
-        the <strong>same outreach strategy page Net New companies use</strong> —
+        Clicking a customer's name (from any list or contacts view) opens the{" "}
+        <strong>same outreach strategy page Net New companies use</strong> —
         install base customers flow through the shared strategy surface rather
         than a separate destination.
       </Callout>
