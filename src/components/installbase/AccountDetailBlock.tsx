@@ -1,5 +1,4 @@
-import { toast } from "sonner";
-import ContactCard from "@/components/ContactCard";
+import ContactStrip from "@/components/installbase/ContactStrip";
 import PortalBlock from "@/components/installbase/PortalBlock";
 import { type IbCompany } from "@/data/installBase";
 
@@ -28,26 +27,11 @@ const AccountDetailBlock = ({
     </div>
 
     {/* Curated contacts */}
-    <div className="flex flex-col gap-3">
-      <span className="heading-100 text-foreground">Contacts</span>
-      <div className="flex items-stretch gap-4 overflow-x-auto py-1 -my-1 px-1 -mx-1">
-        {company.contacts.map((contact) => (
-          <ContactCard
-            key={contact.id}
-            contact={contact}
-            companyLogo={company.logo}
-            onContactClick={onContactClick}
-            onWorkQLClick={onWork}
-            onCallClick={() =>
-              toast.success("Opens targeted outreach for this contact")
-            }
-            onEmailClick={() =>
-              toast.success("Opens targeted outreach for this contact")
-            }
-          />
-        ))}
-      </div>
-    </div>
+    <ContactStrip
+      company={company}
+      onWork={onWork}
+      onContactClick={onContactClick}
+    />
   </div>
 );
 
