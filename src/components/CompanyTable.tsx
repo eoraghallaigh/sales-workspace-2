@@ -344,7 +344,7 @@ export function CompanyTable<T extends CompanyTableRow>({
                           {onNameClick ? (
                             <Button
                               variant="link"
-                              className="body-125 text-text-interactive hover:text-text-interactive-hover p-0 h-auto justify-start hover:no-underline"
+                              className="body-125 text-text-interactive hover:text-text-interactive-hover p-0 h-auto justify-start text-left whitespace-normal hover:no-underline"
                             >
                               {row.name}
                             </Button>

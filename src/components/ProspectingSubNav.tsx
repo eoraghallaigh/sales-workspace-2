@@ -22,6 +22,12 @@ interface ProspectingSubNavProps {
   isCollapsed?: boolean;
   onActiveItemChange?: (itemId: string) => void;
   viewCounts?: Record<string, number>;
+  /**
+   * Keeps the highlighted row in sync when the active view is changed from
+   * outside the sub-nav (e.g. the "Recently Generated" link in the generate
+   * success banner). Sub-nav clicks still drive selection on their own.
+   */
+  activeItem?: string;
 }
 
 /*
@@ -85,6 +91,7 @@ const ProspectingSubNav = ({
   isCollapsed = false,
   onActiveItemChange,
   viewCounts,
+  activeItem: activeItemProp,
 }: ProspectingSubNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -99,6 +106,14 @@ const ProspectingSubNav = ({
   const defaultItem = playId || viewParam || (isPowerHourRoute ? "" : "p1-now");
   const playIds = plays.map(c => c.id);
   const [activeItem, setActiveItemState] = useState(defaultItem);
+  // Mirror externally-driven view changes (e.g. the success-banner link) into
+  // the highlighted row. Clicks already set both this state and the parent's, so
+  // this only fires for truly external changes.
+  React.useEffect(() => {
+    if (activeItemProp !== undefined && activeItemProp !== activeItem) {
+      setActiveItemState(activeItemProp);
+    }
+  }, [activeItemProp]); // eslint-disable-line react-hooks/exhaustive-deps
   const [isNetNewOpen, setIsNetNewOpen] = useState(!playId);
   const [isInstallBaseOpen, setIsInstallBaseOpen] = useState(!playId);
   const [isOtherOpen, setIsOtherOpen] = useState(!!playId);

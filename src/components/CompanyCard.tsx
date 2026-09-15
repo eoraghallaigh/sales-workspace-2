@@ -103,6 +103,10 @@ export interface Company {
   // if the run errored. Absent means the company was never run through the new
   // flow (fall back to hasGeneratedStrategy for whether a strategy exists).
   strategyStatus?: "generating" | "generated" | "failed";
+  // Epoch ms when generation was kicked off. Used to sort Recently Generated in
+  // reverse-chronological order (most recently started first). Absent for seed
+  // companies that were never run through the new flow.
+  strategyStartedAt?: number;
   // Formatted date/time the strategy finished generating (display string), set
   // alongside strategyStatus === "generated".
   strategyGeneratedAt?: string;
