@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, type ReactNode } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useCyclePath } from "@/hooks/useCyclePath";
 import { Layout } from "@/components/Layout";
@@ -46,6 +46,11 @@ import companyLogoPlaceholder from "@/assets/company-logo-placeholder.png";
 import { Company } from "@/components/CompanyCard";
 import { calculateCompanyStatus } from "@/utils/companyStatusUtils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+
+// How long companies hold their "generating" status after the Recently Generated
+// view loads, before flipping to "generated". Long enough (prototype only) for a
+// user-testing participant to notice the status column and give feedback on it.
+const STRATEGY_GENERATING_DISPLAY_MS = 20_000;
 
 const formatPlayPipeline = (amount: number) => {
   if (amount >= 1_000_000) {
@@ -139,8 +144,13 @@ const Prospecting = () => {
   const [callTaskContactCount, setCallTaskContactCount] = useState(0);
   const [callTaskContactIds, setCallTaskContactIds] = useState<string[]>([]);
   const [activeCallTasks, setActiveCallTasks] = useState<Record<string, number>>({});
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<ReactNode>(null);
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const goToRecentlyGenerated = () => {
+    if (successTimerRef.current) clearTimeout(successTimerRef.current);
+    setSuccessMessage(null);
+    setActiveNavItem("recently-generated");
+  };
   const { plays } = usePlays();
   useEffect(() => {
     if (playId) {
@@ -235,7 +245,14 @@ const Prospecting = () => {
       .filter((c): c is Company => c !== undefined);
 
     if (activeNavItem === "recently-generated") {
-      return sortedCompanies.filter(c => c.strategyStatus === "generating" || c.strategyStatus === "failed" || c.hasGeneratedStrategy !== false);
+      const generated = sortedCompanies.filter(c => c.strategyStatus === "generating" || c.strategyStatus === "failed" || c.hasGeneratedStrategy !== false);
+      // Reverse-chronological by when generation started, so companies a rep just
+      // kicked off jump to the top. Seed companies have no start time, so they
+      // fall beneath and keep their frozen relative order (stable index tiebreak).
+      return generated
+        .map((c, i) => ({ c, i }))
+        .sort((a, b) => (b.c.strategyStartedAt ?? 0) - (a.c.strategyStartedAt ?? 0) || a.i - b.i)
+        .map(x => x.c);
     }
 
     // Filter to show New, Unworked P1, In Progress, and Over SLA companies
@@ -274,24 +291,62 @@ const Prospecting = () => {
     return counts;
   }, [prospectingCompanies, completedTasks, plays]);
 
-  // Bulk strategy generation. Marks the selected companies as "generating",
-  // surfaces them in Recently Generated, then (prototype-simulated) flips them
-  // to "generated" after a short delay. In the real product each company takes
-  // several minutes, which is why we cap the batch at MAX_BULK_STRATEGY_COMPANIES.
+  // Bulk strategy generation. Marks the selected companies as "generating" and
+  // records when generation started (so Recently Generated can sort them to the
+  // top), surfaces them in Recently Generated, then flips them to "generated".
+  // In the real product each company takes several minutes, which is why we cap
+  // the batch at MAX_BULK_STRATEGY_COMPANIES.
   const strategyTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   useEffect(() => () => strategyTimersRef.current.forEach(clearTimeout), []);
   const handleGenerateStrategies = (companyIds: string[]) => {
     const ids = companyIds.slice(0, MAX_BULK_STRATEGY_COMPANIES);
     if (ids.length === 0) return;
     const idSet = new Set(ids);
+    const startedAt = Date.now();
     setProspectingCompanies(prev =>
-      prev.map(c => (idSet.has(c.id) ? { ...c, strategyStatus: "generating" as const } : c)),
+      prev.map(c =>
+        idSet.has(c.id)
+          ? { ...c, strategyStatus: "generating" as const, strategyStartedAt: startedAt }
+          : c,
+      ),
     );
     setSuccessMessage(
-      `Generating strategies for ${ids.length} ${ids.length === 1 ? "company" : "companies"}. Find them in Recently Generated.`,
+      <>
+        Generating strategies for {ids.length} {ids.length === 1 ? "company" : "companies"}. Find
+        them in{" "}
+        <button
+          type="button"
+          onClick={goToRecentlyGenerated}
+          className="link-100 text-text-interactive hover:text-text-interactive-hover underline"
+        >
+          Recently Generated
+        </button>
+        .
+      </>,
     );
     if (successTimerRef.current) clearTimeout(successTimerRef.current);
     successTimerRef.current = setTimeout(() => setSuccessMessage(null), 5000);
+  };
+
+  // Completion is anchored to the Recently Generated view rather than the moment
+  // the rep hit "Generate strategies": we hold companies in their "generating"
+  // state for STRATEGY_GENERATING_DISPLAY_MS after the view loads (and re-arm on
+  // every visit) so, during user testing, there's a reliable window to observe
+  // and give feedback on the status column before it flips to "generated".
+  const generatingIdsKey = useMemo(
+    () =>
+      activeNavItem === "recently-generated"
+        ? prospectingCompanies
+            .filter(c => c.strategyStatus === "generating")
+            .map(c => c.id)
+            .sort()
+            .join(",")
+        : "",
+    [activeNavItem, prospectingCompanies],
+  );
+  useEffect(() => {
+    if (!generatingIdsKey) return;
+    const idSet = new Set(generatingIdsKey.split(","));
     const timer = setTimeout(() => {
       const generatedAt = formatStrategyTimestamp(new Date());
       setProspectingCompanies(prev =>
@@ -306,9 +361,10 @@ const Prospecting = () => {
             : c,
         ),
       );
-    }, 4000);
+    }, STRATEGY_GENERATING_DISPLAY_MS);
     strategyTimersRef.current.push(timer);
-  };
+    return () => clearTimeout(timer);
+  }, [generatingIdsKey]);
   const handleSnoozeCompanies = (companyIds: string[]) => {
     const idSet = new Set(companyIds);
     setProspectingCompanies(prev =>
@@ -679,7 +735,7 @@ const Prospecting = () => {
         <WorkspaceHeader activeTab="prospecting" />
         <div className="flex flex-1 overflow-hidden relative">
           {/* Left Sidebar - No margin, right against left nav */}
-          {!expandedPanelCompanyId && <ProspectingSubNav isCollapsed={(isPanelOpen || isContactPanelOpen || isTaskPanelOpen) && isSubNavNarrow} onActiveItemChange={setActiveNavItem} viewCounts={viewCounts} />}
+          {!expandedPanelCompanyId && <ProspectingSubNav isCollapsed={(isPanelOpen || isContactPanelOpen || isTaskPanelOpen) && isSubNavNarrow} onActiveItemChange={setActiveNavItem} activeItem={activeNavItem} viewCounts={viewCounts} />}
 
           {/* Main Content Area - Only scrolling element */}
           <div ref={listScrollRef} className={`${expandedPanelCompanyId ? 'w-[240px] flex-shrink-0' : 'flex-1'} overflow-y-auto overscroll-contain transition-all duration-300 ${!expandedPanelCompanyId && (isPanelOpen || isContactPanelOpen || isTaskPanelOpen) ? 'mr-[569px]' : 'mr-0'}`}>
