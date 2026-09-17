@@ -1030,10 +1030,6 @@ type SortableRowProps = {
   onDelayChange: (days: number) => void;
   touchTitle: string;
   onTitleChange: (title: string) => void;
-  startTiming: StartTiming;
-  customStartDate?: Date;
-  onStartTimingSelect: (timing: StartTiming) => void;
-  onCustomDateSelect: (date: Date) => void;
 };
 
 const SortableRow = ({
@@ -1060,10 +1056,6 @@ const SortableRow = ({
   onDelayChange,
   touchTitle,
   onTitleChange,
-  startTiming,
-  customStartDate: customStartDateProp,
-  onStartTimingSelect,
-  onCustomDateSelect,
 }: SortableRowProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: touch.id,
@@ -1088,19 +1080,7 @@ const SortableRow = ({
   const editable = !isEnrolled;
   const completed = isTouchCompleted(touch);
 
-  const [stepScheduleOpen, setStepScheduleOpen] = useState(false);
-  const [stepShowCal, setStepShowCal] = useState(false);
   const [delayPopoverOpen, setDelayPopoverOpen] = useState(false);
-
-  const stepStartLabel = (() => {
-    if (startTiming === "same-day") return "same day as";
-    if (startTiming === "1-day") return "1 day after";
-    if (startTiming === "3-days") return "3 days after";
-    if (startTiming === "custom" && customStartDateProp) {
-      return `on ${customStartDateProp.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
-    }
-    return "same day as";
-  })();
 
   const headingInner = (
     <div className="flex-1 min-w-0 -space-y-0.5">
@@ -1134,82 +1114,10 @@ const SortableRow = ({
         const meta = renderTouchMeta(touch, isEnrolled);
         return meta ? <div className="mt-1">{meta}</div> : null;
       })()}
-      {!isEnrolled && stepIndex === 0 && (
+      {!isEnrolled && stepIndex === 0 && (touch.kind === "call" || touch.kind === "linkedin") && (
         <div className="mt-0">
           <span className="detail-200 text-muted-foreground">
-            First step will execute{" "}
-            <Popover
-              open={stepScheduleOpen}
-              onOpenChange={(open) => {
-                setStepScheduleOpen(open);
-                if (!open) setStepShowCal(false);
-              }}
-            >
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  className="font-semibold text-foreground inline-flex items-center gap-0.5 hover:underline underline-offset-2"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {stepStartLabel}
-                  <ChevronDown size={10} />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent
-                side="bottom"
-                align="start"
-                className="w-auto p-1"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {stepShowCal ? (
-                  <Calendar
-                    mode="single"
-                    selected={customStartDateProp}
-                    onSelect={(date) => {
-                      if (date) onCustomDateSelect(date);
-                      setStepScheduleOpen(false);
-                      setStepShowCal(false);
-                    }}
-                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                  />
-                ) : (
-                  <div className="flex flex-col gap-0.5">
-                    {(
-                      [
-                        { value: "same-day", label: "same day as" },
-                        { value: "1-day", label: "1 day after" },
-                        { value: "3-days", label: "3 days after" },
-                      ] as const
-                    ).map(({ value, label }) => (
-                      <button
-                        key={value}
-                        type="button"
-                        className="flex items-center gap-2 rounded px-3 py-1.5 text-left detail-200 text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
-                        onClick={() => {
-                          onStartTimingSelect(value);
-                          setStepScheduleOpen(false);
-                        }}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                    <button
-                      type="button"
-                      className="flex items-center gap-2 rounded px-3 py-1.5 text-left detail-200 text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
-                      onClick={() => {
-                        onStartTimingSelect("custom");
-                        setStepShowCal(true);
-                      }}
-                    >
-                      Custom Date and Time
-                    </button>
-                  </div>
-                )}
-              </PopoverContent>
-            </Popover>
-            {startTiming !== "custom" || !customStartDateProp ? " enrollment" : ""}.
-            {(touch.kind === "call" || touch.kind === "linkedin") &&
-              " This task will not block subsequent steps."}
+            This task will not block subsequent steps.
           </span>
         </div>
       )}
@@ -2099,10 +2007,6 @@ export const OutreachSequenceCard = ({
                         onDelayChange={(days) => setDelayForTouch(t.id, days)}
                         touchTitle={getTouchTitle(t.id, t.kind)}
                         onTitleChange={(title) => setTouchTitle(t.id, title)}
-                        startTiming={startTiming}
-                        customStartDate={customStartDate}
-                        onStartTimingSelect={setStartTiming}
-                        onCustomDateSelect={setCustomStartDate}
                       />
                       {idx === 0 && isEnrolled && startTiming !== "same-day" && computeStartDateLabel(startTiming, customStartDate) !== "" && (
                         <div className="relative flex gap-3">
@@ -2138,14 +2042,78 @@ export const OutreachSequenceCard = ({
               <div>
               {status === null && (
                 <div className="flex items-center gap-6">
-                  <Button
-                    variant="primary"
-                    size="small"
-                    onClick={() => setLocalOverride("enrolled")}
-                  >
-                    <TrellisIcon name="email" size={12} className="mr-1 brightness-0 invert" />
-                    Enroll {firstName}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="primary"
+                      size="small"
+                      onClick={() => {
+                        setStartTiming("same-day");
+                        setCustomStartDate(undefined);
+                        setLocalOverride("enrolled");
+                      }}
+                    >
+                      <TrellisIcon name="email" size={12} className="mr-1 brightness-0 invert" />
+                      Enroll {firstName}
+                    </Button>
+                    <Popover
+                      open={isScheduleOpen}
+                      onOpenChange={(open) => {
+                        setIsScheduleOpen(open);
+                        if (!open) setShowCalendarPicker(false);
+                      }}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button variant="secondary" size="small" className="gap-1">
+                          Enroll later
+                          <ChevronDown size={12} />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent side="bottom" align="start" className="w-auto p-1">
+                        {showCalendarPicker ? (
+                          <Calendar
+                            mode="single"
+                            selected={customStartDate}
+                            onSelect={(date) => {
+                              if (!date) return;
+                              setStartTiming("custom");
+                              setCustomStartDate(date);
+                              setIsScheduleOpen(false);
+                              setShowCalendarPicker(false);
+                              setLocalOverride("enrolled");
+                            }}
+                            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                          />
+                        ) : (
+                          <div className="flex flex-col gap-0.5">
+                            {[2, 5].map((days) => (
+                              <button
+                                key={days}
+                                type="button"
+                                className="flex items-center gap-2 rounded px-3 py-1.5 text-left detail-200 text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+                                onClick={() => {
+                                  const target = new Date();
+                                  target.setDate(target.getDate() + days);
+                                  setStartTiming("custom");
+                                  setCustomStartDate(target);
+                                  setIsScheduleOpen(false);
+                                  setLocalOverride("enrolled");
+                                }}
+                              >
+                                In {days} days
+                              </button>
+                            ))}
+                            <button
+                              type="button"
+                              className="flex items-center gap-2 rounded px-3 py-1.5 text-left detail-200 text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
+                              onClick={() => setShowCalendarPicker(true)}
+                            >
+                              Custom Date
+                            </button>
+                          </div>
+                        )}
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                   {onRegenerate && (
                     <Button
                       variant="transparent"
