@@ -307,7 +307,7 @@ const ScriptModeToggle = ({
 const stripReasonPrefix = (reason: string): string =>
   reason.replace(/^Sequence ended because /, "");
 
-type SequenceStatus = "enrolled" | "paused" | "replied" | "ended";
+type SequenceStatus = "enrolled" | "paused" | "replied" | "ended" | "scheduled";
 type LocalOverride = SequenceStatus | "removed" | null;
 
 const classifyStatus = (
@@ -336,11 +336,17 @@ const renderStatusBadgeStack = (
   status: SequenceStatus,
   sequence: SequenceState,
   localOverride: LocalOverride,
+  scheduledStartLabel?: string,
 ) => {
   let badge: React.ReactNode = null;
   let text = "";
 
-  if (status === "enrolled") {
+  if (status === "scheduled") {
+    badge = <Badge variant="status-blue">Scheduled</Badge>;
+    text = scheduledStartLabel
+      ? `Scheduled to start ${scheduledStartLabel}`
+      : "Scheduled — hasn't started yet";
+  } else if (status === "enrolled") {
     badge = <Badge variant="status-blue">Enrolled</Badge>;
     text = stepTextFromActive(sequence);
   } else if (status === "paused") {
@@ -1737,7 +1743,7 @@ export const OutreachSequenceCard = ({
   const [startTiming, setStartTiming] = useState<StartTiming>("same-day");
   const [customStartDate, setCustomStartDate] = useState<Date | undefined>();
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
-  const [showCalendarPicker, setShowCalendarPicker] = useState(false);
+  const [pendingStartDate, setPendingStartDate] = useState<Date | undefined>();
   const [stepDelays, setStepDelays] = useState<Record<string, number>>({});
   const [touchTitles, setTouchTitles] = useState<Record<string, string>>({});
 
@@ -1911,7 +1917,13 @@ export const OutreachSequenceCard = ({
       <div className="overflow-hidden">
         <div className="flex flex-wrap items-center gap-2 py-3">
           <span className="heading-100 text-foreground">5-touch sequence</span>
-          {status !== null && renderStatusBadgeStack(status, sequence, localOverride)}
+          {status !== null &&
+            renderStatusBadgeStack(
+              status,
+              sequence,
+              localOverride,
+              computeStartDateLabel(startTiming, customStartDate),
+            )}
           {playOptions && playOptions.length > 1 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -2059,7 +2071,7 @@ export const OutreachSequenceCard = ({
                       open={isScheduleOpen}
                       onOpenChange={(open) => {
                         setIsScheduleOpen(open);
-                        if (!open) setShowCalendarPicker(false);
+                        if (!open) setPendingStartDate(undefined);
                       }}
                     >
                       <PopoverTrigger asChild>
@@ -2069,46 +2081,29 @@ export const OutreachSequenceCard = ({
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent side="bottom" align="start" className="w-auto p-1">
-                        {showCalendarPicker ? (
-                          <Calendar
-                            mode="single"
-                            selected={customStartDate}
-                            onSelect={(date) => {
-                              if (!date) return;
-                              setStartTiming("custom");
-                              setCustomStartDate(date);
-                              setIsScheduleOpen(false);
-                              setShowCalendarPicker(false);
-                              setLocalOverride("enrolled");
-                            }}
-                            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                          />
-                        ) : (
-                          <div className="flex flex-col gap-0.5">
-                            {[2, 5].map((days) => (
-                              <button
-                                key={days}
-                                type="button"
-                                className="flex items-center gap-2 rounded px-3 py-1.5 text-left detail-200 text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
-                                onClick={() => {
-                                  const target = new Date();
-                                  target.setDate(target.getDate() + days);
-                                  setStartTiming("custom");
-                                  setCustomStartDate(target);
-                                  setIsScheduleOpen(false);
-                                  setLocalOverride("enrolled");
-                                }}
-                              >
-                                In {days} days
-                              </button>
-                            ))}
-                            <button
-                              type="button"
-                              className="flex items-center gap-2 rounded px-3 py-1.5 text-left detail-200 text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
-                              onClick={() => setShowCalendarPicker(true)}
+                        <Calendar
+                          mode="single"
+                          selected={pendingStartDate}
+                          onSelect={(date) => setPendingStartDate(date)}
+                          disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                          classNames={{ day_today: "" }}
+                        />
+                        {pendingStartDate && (
+                          <div className="px-2 pb-1 pt-2">
+                            <Button
+                              variant="primary"
+                              size="small"
+                              className="w-full"
+                              onClick={() => {
+                                setStartTiming("custom");
+                                setCustomStartDate(pendingStartDate);
+                                setLocalOverride("scheduled");
+                                setIsScheduleOpen(false);
+                                setPendingStartDate(undefined);
+                              }}
                             >
-                              Custom Date
-                            </button>
+                              Enroll
+                            </Button>
                           </div>
                         )}
                       </PopoverContent>
@@ -2125,6 +2120,21 @@ export const OutreachSequenceCard = ({
                       Regenerate sequence
                     </Button>
                   )}
+                </div>
+              )}
+              {status === "scheduled" && (
+                <div className="pl-[26px]">
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    onClick={() => {
+                      setLocalOverride(null);
+                      setStartTiming("same-day");
+                      setCustomStartDate(undefined);
+                    }}
+                  >
+                    Cancel
+                  </Button>
                 </div>
               )}
               {(status === "enrolled" || status === "paused") && (
