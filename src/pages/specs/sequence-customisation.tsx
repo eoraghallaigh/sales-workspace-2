@@ -11,9 +11,13 @@ import {
 } from "./blocks";
 import { OutreachSequenceCard } from "@/components/OutreachSequenceCard";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import { GripVertical, ChevronDown } from "lucide-react";
 import type { SequenceState } from "@/data/outreachStates";
+
+const DEMO_START_DATE = new Date(2026, 7, 15);
 
 const MOCK_CONTACT = {
   id: "spec-seq",
@@ -137,7 +141,7 @@ const SequenceCustomisationSpec = () => (
 
     <SpecSection
       title="Scheduled start"
-      description="When the sequence begins is chosen from the enrollment CTAs, not from the first step. The primary 'Enroll {Name}' button starts the sequence the same day; a secondary 'Enroll later' button opens a popover with 'In 2 days', 'In 5 days', and 'Custom Date'."
+      description="When the sequence begins is chosen from the enrollment CTAs, not from the first step. The primary 'Enroll {Name}' button starts the sequence the same day; a secondary 'Enroll later' button opens a date picker to schedule a later start."
     >
       <HorizontalFlow>
         <HorizontalFlowStep
@@ -161,46 +165,64 @@ const SequenceCustomisationSpec = () => (
         <HorizontalFlowStep
           step={2}
           label="Open 'Enroll later'"
-          description="The popover lists 'In 2 days', 'In 5 days', and 'Custom Date'."
+          description="The popover opens straight to a date picker — no intermediate menu, no date preselected, and no highlight on today."
         >
-          <div className="bg-white rounded-200 border border-border p-4 w-[340px]">
-            <div className="flex items-center gap-2 mb-2">
-              <Button variant="primary" size="small">
-                <TrellisIcon name="email" size={12} className="mr-1 brightness-0 invert" />
-                Enroll Keisha
-              </Button>
-              <Button variant="secondary" size="small" className="gap-1">
-                Enroll later
-                <ChevronDown size={12} />
-              </Button>
-            </div>
-            <div className="w-[160px] rounded-200 border border-border bg-white shadow-200 p-1">
-              <div className="px-3 py-1.5 detail-200 text-foreground">In 2 days</div>
-              <div className="px-3 py-1.5 detail-200 text-foreground">In 5 days</div>
-              <div className="px-3 py-1.5 detail-200 text-foreground">Custom Date</div>
-            </div>
+          <div className="bg-white rounded-200 border border-border shadow-200 p-1 w-fit">
+            <Calendar mode="single" classNames={{ day_today: "" }} />
           </div>
         </HorizontalFlowStep>
         <HorizontalFlowStep
           step={3}
-          label="Enrolled with a start date"
-          description="Selecting any option enrolls immediately. When the start is later than the same day, a 'Sequence starts on {date}' note appears under the first step."
+          label="Pick a date"
+          description="Selecting a date keeps the picker open and reveals a primary 'Enroll' button at the bottom. Enrollment only commits on that click."
+        >
+          <div className="bg-white rounded-200 border border-border shadow-200 p-1 w-fit">
+            <Calendar
+              mode="single"
+              selected={DEMO_START_DATE}
+              defaultMonth={DEMO_START_DATE}
+              classNames={{ day_today: "" }}
+            />
+            <div className="px-2 pb-1 pt-2">
+              <Button variant="primary" size="small" className="w-full">
+                Enroll
+              </Button>
+            </div>
+          </div>
+        </HorizontalFlowStep>
+        <HorizontalFlowStep
+          step={4}
+          label="Scheduled"
+          description="The chip reads 'Scheduled' (blue), the footer shows a single 'Cancel' CTA, and a 'Sequence starts on {date}' note sits under the first step."
           isLast
         >
-          <div className="bg-white rounded-200 border border-border p-4 w-[340px]">
-            <div className="flex items-center gap-2 mb-1">
-              <TrellisIcon name="calling" size={16} className="text-foreground shrink-0" />
-              <span className="body-100 text-foreground">Follow up call</span>
+          <div className="bg-white rounded-200 border border-border p-4 w-[340px] space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="heading-100 text-foreground">5-touch sequence</span>
+              <Badge variant="status-blue">Scheduled</Badge>
             </div>
-            <p className="detail-200 text-muted-foreground">
-              Sequence starts on <span className="font-semibold text-foreground">Aug 15</span>.
-            </p>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <TrellisIcon name="calling" size={16} className="text-foreground shrink-0" />
+                <span className="body-100 text-foreground">Follow up call</span>
+              </div>
+              <p className="detail-200 text-muted-foreground">
+                Sequence starts on <span className="font-semibold text-foreground">Aug 15</span>.
+              </p>
+            </div>
+            <Button variant="secondary" size="small">
+              Cancel
+            </Button>
           </div>
         </HorizontalFlowStep>
       </HorizontalFlow>
 
       <Callout type="behavior">
-        "Enroll later" replaces the old inline timing dropdown on the first step. "In 2 days" and "In 5 days" enroll with a start date that many days out; "Custom Date" swaps the popover for a calendar picker and enrolls on the selected date. In every case the contact is enrolled straight away — only the first step's fire date shifts.
+        Scheduling doesn't wait — the contact is enrolled straight away; only the first step's fire date shifts to the chosen date. While scheduled, the chip reads "Scheduled" and the only control is "Cancel", which returns the sequence to its initial un-enrolled state. Once the first step actually executes, the chip flips to "Enrolled" and the controls become "Pause" and "Unenroll".
+      </Callout>
+
+      <Callout type="behavior">
+        The primary "Enroll {"{Name}"}" button skips the picker entirely — it enrolls same-day and goes straight to the "Enrolled" state.
       </Callout>
     </SpecSection>
 
