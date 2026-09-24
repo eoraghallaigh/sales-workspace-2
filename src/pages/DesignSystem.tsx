@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SplitButton } from "@/components/ui/split-button";
 import { TrellisIcon, TRELLIS_ICON_NAMES, type TrellisIconName } from "@/components/ui/trellis-icon";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -697,6 +698,37 @@ const DesignSystem = () => {
                     <div className="flex flex-wrap gap-3">
                       <Button variant="primary" size="medium" disabled>Primary Disabled</Button>
                       <Button variant="secondary" size="medium" disabled>Secondary Disabled</Button>
+                    </div>
+                  </div>
+                  <Separator />
+                  <div>
+                    <span className="heading-50 text-[var(--color-text-core-subtle)] mb-3 block">Split button</span>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <SplitButton
+                        variant="primary"
+                        size="small"
+                        trailing={<TrellisIcon name="date" size={14} />}
+                        trailingAriaLabel="Choose a date"
+                      >
+                        Enroll Alicia
+                      </SplitButton>
+                      <SplitButton
+                        variant="secondary"
+                        size="small"
+                        trailing={<TrellisIcon name="downCarat" size={14} />}
+                        trailingAriaLabel="More options"
+                      >
+                        Save
+                      </SplitButton>
+                      <SplitButton
+                        variant="primary"
+                        size="small"
+                        disabled
+                        trailing={<TrellisIcon name="date" size={14} />}
+                        trailingAriaLabel="Choose a date"
+                      >
+                        Disabled
+                      </SplitButton>
                     </div>
                   </div>
                 </CardContent>
