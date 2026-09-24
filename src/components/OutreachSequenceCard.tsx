@@ -45,7 +45,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Popover, PopoverTrigger, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
+import { SplitButton } from "@/components/ui/split-button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import { InlineFeedbackRow } from "@/components/InlineFeedbackRow";
@@ -1733,6 +1734,7 @@ export const OutreachSequenceCard = ({
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSuccess, setFeedbackSuccess] = useState(false);
   const feedbackRef = useRef<HTMLTextAreaElement>(null);
+  const scheduleAnchorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isFeedbackMode && !feedbackSuccess) feedbackRef.current?.focus();
@@ -2054,61 +2056,60 @@ export const OutreachSequenceCard = ({
               <div>
               {status === null && (
                 <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="primary"
-                      size="small"
-                      onClick={() => {
-                        setStartTiming("same-day");
-                        setCustomStartDate(undefined);
-                        setLocalOverride("enrolled");
+                  <Popover open={isScheduleOpen} onOpenChange={setIsScheduleOpen}>
+                    <PopoverAnchor asChild>
+                      <SplitButton
+                        ref={scheduleAnchorRef}
+                        size="small"
+                        mainAriaLabel={
+                          pendingStartDate
+                            ? `Enroll ${firstName} on ${pendingStartDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                            : `Enroll ${firstName}`
+                        }
+                        trailingAriaLabel="Choose a start date"
+                        trailing={<TrellisIcon name="date" size={14} />}
+                        onMainClick={() => {
+                          if (pendingStartDate) {
+                            setStartTiming("custom");
+                            setCustomStartDate(pendingStartDate);
+                            setLocalOverride("scheduled");
+                          } else {
+                            setStartTiming("same-day");
+                            setCustomStartDate(undefined);
+                            setLocalOverride("enrolled");
+                          }
+                        }}
+                        onTrailingClick={() => setIsScheduleOpen((open) => !open)}
+                      >
+                        {pendingStartDate
+                          ? `Enroll ${firstName} on ${pendingStartDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                          : `Enroll ${firstName}`}
+                      </SplitButton>
+                    </PopoverAnchor>
+                    <PopoverContent
+                      side="bottom"
+                      align="end"
+                      className="w-auto p-1"
+                      onOpenAutoFocus={(e) => e.preventDefault()}
+                      onInteractOutside={(e) => {
+                        if (scheduleAnchorRef.current?.contains(e.target as Node)) {
+                          e.preventDefault();
+                        }
                       }}
                     >
-                      <TrellisIcon name="email" size={12} className="mr-1 brightness-0 invert" />
-                      Enroll {firstName}
-                    </Button>
-                    <Popover
-                      open={isScheduleOpen}
-                      onOpenChange={(open) => {
-                        setIsScheduleOpen(open);
-                        if (!open) setPendingStartDate(undefined);
-                      }}
-                    >
-                      <PopoverTrigger asChild>
-                        <Button variant="secondary" size="small" className="gap-1">
-                          Enroll later
-                          <ChevronDown size={12} />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent side="bottom" align="start" className="w-auto p-1">
-                        <Calendar
-                          mode="single"
-                          selected={pendingStartDate}
-                          onSelect={(date) => setPendingStartDate(date)}
-                          disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                          classNames={{ day_today: "" }}
-                        />
-                        {pendingStartDate && (
-                          <div className="px-2 pb-1 pt-2">
-                            <Button
-                              variant="primary"
-                              size="small"
-                              className="w-full"
-                              onClick={() => {
-                                setStartTiming("custom");
-                                setCustomStartDate(pendingStartDate);
-                                setLocalOverride("scheduled");
-                                setIsScheduleOpen(false);
-                                setPendingStartDate(undefined);
-                              }}
-                            >
-                              Enroll
-                            </Button>
-                          </div>
-                        )}
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+                      <Calendar
+                        mode="single"
+                        selected={pendingStartDate}
+                        defaultMonth={pendingStartDate}
+                        onSelect={(date) => {
+                          setPendingStartDate(date);
+                          setIsScheduleOpen(false);
+                        }}
+                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                        classNames={{ day_today: "" }}
+                      />
+                    </PopoverContent>
+                  </Popover>
                   {onRegenerate && (
                     <Button
                       variant="transparent"
@@ -2131,6 +2132,7 @@ export const OutreachSequenceCard = ({
                       setLocalOverride(null);
                       setStartTiming("same-day");
                       setCustomStartDate(undefined);
+                      setPendingStartDate(undefined);
                     }}
                   >
                     Cancel
