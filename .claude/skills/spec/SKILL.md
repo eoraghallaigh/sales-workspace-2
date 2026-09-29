@@ -11,12 +11,24 @@ Generate an engineer-facing spec page that documents a feature's interaction flo
 
 Use when the user asks to create a spec page, document a feature for engineers, or says `/spec`. The user will describe a feature (or point you at specific components/pages in the prototype). Your job is to find the relevant components and data, then build a spec page that renders them in all their states.
 
+## Use the real design system — no shadow components
+
+Spec pages live in the **same repo as the prototype** (`src/pages/specs/*`), so the entire design system (`src/components/ui/*`) and every prototype component are importable via the `@/*` alias. There is **no reason to hand-roll markup that a component already provides.** (Earlier specs were authored in a separate repo without design-system access — that is why some existing specs contain look-alike "shadow" markup. That constraint is gone; don't add more, and prefer replacing shadow markup with the real component when you touch it.)
+
+Before writing markup for any primitive — button, badge, popover, dialog, tabs, calendar, input, split button, avatar, tag, switch, tooltip, and so on:
+
+1. **Grep `src/components/ui/` for it and import the real one.** Also check `src/components/` for higher-level prototype components.
+2. **Match the call pattern** from a real usage in the prototype (props, wrapper structure, tokens).
+3. **Only hand-roll when nothing equivalent exists** — and say so in your summary.
+
+Never reproduce a design-system primitive's look with raw `<div>` + Tailwind. Tell-tale shadow markup to avoid: `rounded-full` pills standing in for `Badge`/`Button`, hand-built dropdown menus, fake calendars, or `border … bg-white shadow` chrome mirroring `PopoverContent`. If you find yourself writing any of these, stop and import the real component instead. Shadow copies drift from the real UI — which is the whole problem this rule exists to prevent.
+
 ## Before you start
 
 1. **Review the conversation history.** The user is usually designing a feature in this same session — the conversation contains decisions about interactions, states, edge cases, and component structure that aren't yet captured anywhere else. Read back through the chat to understand what was built, what states were discussed, and what behaviour was decided. This is your primary source of truth for what the spec should document.
 2. **Find the feature's components.** Grep for the component names, state types, and data the user mentions (or that you identified from the conversation). Read the source to understand every state/variant.
 3. **Find where it's used in context.** Search for where the component is rendered on a real page (e.g., strategy page, prospecting page). This tells you what surrounding card/layout to show for the "wider context" section.
-4. **Read the reference spec page** at `src/pages/specs/feedback-popover.tsx` — this is the canonical example of a finished spec page. Match its structure and patterns.
+4. **Read the reference spec page** at `src/pages/specs/feedback-popover.tsx` — this is the canonical example of a finished spec page. Match its **structure and patterns** (sections, showcase wrappers, mock data). But note it predates some primitives and contains a hand-rolled `PopoverFrame` shadow div — **do not copy that**. When you need to show popover contents, use the real `Popover`/`PopoverContent`; if a floating popover is awkward to lay out inline in a flow diagram, keep the wrapper minimal and token-matched and put the real components *inside* it.
 
 ## Spec page structure
 
@@ -54,9 +66,9 @@ Every spec page follows this order. Include sections that apply; skip sections t
 ## Key rules
 
 ### Use real components
-- Import and render the **actual prototype components** — never recreate markup that already exists as a component.
+- Import and render the **actual prototype components and design-system primitives** — never recreate markup that already exists as a component (see "Use the real design system" above).
 - If a component has too many required props to render standalone (like OutreachSequenceCard), create a `...Showcase` wrapper component that manages state and provides mock data.
-- For isolated sub-components that are internal to a component (not exported), you may recreate them in the spec file — but match the original code exactly.
+- If a piece of UI is an internal, non-exported sub-component, first try to reproduce it by **composing exported design-system primitives** (real `Popover`/`PopoverContent`, `Calendar`, `Badge`, `Button`, `SplitButton`, `Input`, etc.). Only recreate raw markup when it genuinely can't be composed from real primitives — and then copy the original source exactly (same classes, same tokens) so it can't drift. If the sub-component would be reused across specs, consider exporting it from the prototype instead of copying it.
 
 ### Mock data
 - Define mock data as constants at the top of the file (`MOCK_CONTACT`, `MOCK_EMAILS`, etc.).
@@ -87,6 +99,7 @@ Every spec page follows this order. Include sections that apply; skip sections t
 
 ### 4. Verify the build
 - Run `npx vite build` to confirm no compilation errors.
+- Also re-scan your spec for shadow markup: if any block re-implements the look of something in `src/components/ui/` (a pill instead of `Badge`, framed div instead of `PopoverContent`, fake dropdown/calendar, etc.), swap in the real component before finishing.
 
 ## Available building blocks
 
