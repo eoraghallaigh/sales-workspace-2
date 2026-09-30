@@ -1,5 +1,5 @@
-import { Building2, Users, type LucideIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { TrellisIcon, type TrellisIconName } from "@/components/ui/trellis-icon";
 
 export type EntityView = "companies" | "contacts";
 
@@ -8,9 +8,9 @@ interface ViewControllerProps {
   onChange: (view: EntityView) => void;
 }
 
-const options: { value: EntityView; label: string; icon: LucideIcon }[] = [
-  { value: "companies", label: "Companies", icon: Building2 },
-  { value: "contacts", label: "Contacts", icon: Users },
+const options: { value: EntityView; label: string; icon: TrellisIconName }[] = [
+  { value: "companies", label: "Companies", icon: "companies" },
+  { value: "contacts", label: "Contacts", icon: "contacts" },
 ];
 
 const ViewController = ({ value, onChange }: ViewControllerProps) => (
@@ -19,7 +19,6 @@ const ViewController = ({ value, onChange }: ViewControllerProps) => (
       const isActive = value === opt.value;
       const isFirst = i === 0;
       const isLast = i === options.length - 1;
-      const Icon = opt.icon;
       return (
         <Tooltip key={opt.value}>
           <TooltipTrigger asChild>
@@ -35,7 +34,7 @@ const ViewController = ({ value, onChange }: ViewControllerProps) => (
                   : "bg-card text-muted-foreground hover:bg-[var(--page-bg)]"
               }`}
             >
-              <Icon className="h-3.5 w-3.5" />
+              <TrellisIcon name={opt.icon} size={14} />
               {opt.label}
             </button>
           </TooltipTrigger>
