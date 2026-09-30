@@ -1,3 +1,4 @@
+import { Building2, Users, type LucideIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export type EntityView = "companies" | "contacts";
@@ -7,9 +8,9 @@ interface ViewControllerProps {
   onChange: (view: EntityView) => void;
 }
 
-const options: { value: EntityView; label: string }[] = [
-  { value: "companies", label: "Companies" },
-  { value: "contacts", label: "Contacts" },
+const options: { value: EntityView; label: string; icon: LucideIcon }[] = [
+  { value: "companies", label: "Companies", icon: Building2 },
+  { value: "contacts", label: "Contacts", icon: Users },
 ];
 
 const ViewController = ({ value, onChange }: ViewControllerProps) => (
@@ -18,6 +19,7 @@ const ViewController = ({ value, onChange }: ViewControllerProps) => (
       const isActive = value === opt.value;
       const isFirst = i === 0;
       const isLast = i === options.length - 1;
+      const Icon = opt.icon;
       return (
         <Tooltip key={opt.value}>
           <TooltipTrigger asChild>
@@ -25,7 +27,7 @@ const ViewController = ({ value, onChange }: ViewControllerProps) => (
               type="button"
               aria-pressed={isActive}
               onClick={() => onChange(opt.value)}
-              className={`relative flex items-center px-3 py-1.5 detail-200 border border-core-subtle transition-colors ${
+              className={`relative flex items-center gap-1.5 px-3 py-1.5 detail-200 border border-core-subtle transition-colors ${
                 isFirst ? "rounded-l-[4px] -mr-px" : isLast ? "rounded-r-[4px]" : "-mr-px"
               } ${
                 isActive
@@ -33,6 +35,7 @@ const ViewController = ({ value, onChange }: ViewControllerProps) => (
                   : "bg-card text-muted-foreground hover:bg-[var(--page-bg)]"
               }`}
             >
+              <Icon className="h-3.5 w-3.5" />
               {opt.label}
             </button>
           </TooltipTrigger>
