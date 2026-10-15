@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useCallback, useEffect, type ReactNode } from "react";
-import { Plus, Loader2, FileEdit, Mail, Phone, ListTodo, Calendar, MoreHorizontal, ChevronLeft, ChevronDown, RotateCw } from "lucide-react";
+import { Plus, Loader2, FileEdit, Mail, ListTodo, Calendar, MoreHorizontal, ChevronLeft, ChevronDown, RotateCw } from "lucide-react";
+import NooksLogo from "@/components/NooksLogo";
 import { AnimatePresence } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
 import ContactFeedbackModal from "@/components/ContactFeedbackModal";
@@ -1443,8 +1444,8 @@ const ProspectingStrategy = () => {
                           </p>
                           <div className="mb-12">
                             <Button variant="primary" size="small">
-                              <Phone />
-                              Call {contact.name.split(" ")[0]}
+                              <NooksLogo />
+                              Call with Nooks
                             </Button>
                           </div>
 
