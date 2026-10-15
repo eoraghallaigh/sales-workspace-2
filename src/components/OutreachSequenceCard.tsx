@@ -45,7 +45,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Popover, PopoverTrigger, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
+import { SplitButton } from "@/components/ui/split-button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import { InlineFeedbackRow } from "@/components/InlineFeedbackRow";
@@ -307,7 +308,7 @@ const ScriptModeToggle = ({
 const stripReasonPrefix = (reason: string): string =>
   reason.replace(/^Sequence ended because /, "");
 
-type SequenceStatus = "enrolled" | "paused" | "replied" | "ended" | "unenrolled";
+type SequenceStatus = "enrolled" | "paused" | "replied" | "ended" | "unenrolled" | "scheduled";
 type LocalOverride = SequenceStatus | "removed" | null;
 
 const classifyStatus = (
@@ -336,11 +337,17 @@ const renderStatusBadgeStack = (
   status: SequenceStatus,
   sequence: SequenceState,
   localOverride: LocalOverride,
+  scheduledStartLabel?: string,
 ) => {
   let badge: React.ReactNode = null;
   let text = "";
 
-  if (status === "enrolled") {
+  if (status === "scheduled") {
+    badge = <Badge variant="status-blue">Scheduled</Badge>;
+    text = scheduledStartLabel
+      ? `Scheduled to start ${scheduledStartLabel}`
+      : "Scheduled — hasn't started yet";
+  } else if (status === "enrolled") {
     badge = <Badge variant="status-blue">Enrolled</Badge>;
     text = stepTextFromActive(sequence);
   } else if (status === "paused") {
@@ -1037,10 +1044,6 @@ type SortableRowProps = {
   onDelayChange: (days: number) => void;
   touchTitle: string;
   onTitleChange: (title: string) => void;
-  startTiming: StartTiming;
-  customStartDate?: Date;
-  onStartTimingSelect: (timing: StartTiming) => void;
-  onCustomDateSelect: (date: Date) => void;
 };
 
 const SortableRow = ({
@@ -1067,10 +1070,6 @@ const SortableRow = ({
   onDelayChange,
   touchTitle,
   onTitleChange,
-  startTiming,
-  customStartDate: customStartDateProp,
-  onStartTimingSelect,
-  onCustomDateSelect,
 }: SortableRowProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: touch.id,
@@ -1095,19 +1094,7 @@ const SortableRow = ({
   const editable = !isEnrolled;
   const completed = isTouchCompleted(touch);
 
-  const [stepScheduleOpen, setStepScheduleOpen] = useState(false);
-  const [stepShowCal, setStepShowCal] = useState(false);
   const [delayPopoverOpen, setDelayPopoverOpen] = useState(false);
-
-  const stepStartLabel = (() => {
-    if (startTiming === "same-day") return "same day as";
-    if (startTiming === "1-day") return "1 day after";
-    if (startTiming === "3-days") return "3 days after";
-    if (startTiming === "custom" && customStartDateProp) {
-      return `on ${customStartDateProp.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
-    }
-    return "same day as";
-  })();
 
   const headingInner = (
     <div className="flex-1 min-w-0 -space-y-0.5">
@@ -1141,82 +1128,10 @@ const SortableRow = ({
         const meta = renderTouchMeta(touch, isEnrolled);
         return meta ? <div className="mt-1">{meta}</div> : null;
       })()}
-      {!isEnrolled && stepIndex === 0 && (
+      {!isEnrolled && stepIndex === 0 && (touch.kind === "call" || touch.kind === "linkedin") && (
         <div className="mt-0">
           <span className="detail-200 text-muted-foreground">
-            First step will execute{" "}
-            <Popover
-              open={stepScheduleOpen}
-              onOpenChange={(open) => {
-                setStepScheduleOpen(open);
-                if (!open) setStepShowCal(false);
-              }}
-            >
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  className="font-semibold text-foreground inline-flex items-center gap-0.5 hover:underline underline-offset-2"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {stepStartLabel}
-                  <ChevronDown size={10} />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent
-                side="bottom"
-                align="start"
-                className="w-auto p-1"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {stepShowCal ? (
-                  <Calendar
-                    mode="single"
-                    selected={customStartDateProp}
-                    onSelect={(date) => {
-                      if (date) onCustomDateSelect(date);
-                      setStepScheduleOpen(false);
-                      setStepShowCal(false);
-                    }}
-                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                  />
-                ) : (
-                  <div className="flex flex-col gap-0.5">
-                    {(
-                      [
-                        { value: "same-day", label: "same day as" },
-                        { value: "1-day", label: "1 day after" },
-                        { value: "3-days", label: "3 days after" },
-                      ] as const
-                    ).map(({ value, label }) => (
-                      <button
-                        key={value}
-                        type="button"
-                        className="flex items-center gap-2 rounded px-3 py-1.5 text-left detail-200 text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
-                        onClick={() => {
-                          onStartTimingSelect(value);
-                          setStepScheduleOpen(false);
-                        }}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                    <button
-                      type="button"
-                      className="flex items-center gap-2 rounded px-3 py-1.5 text-left detail-200 text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"
-                      onClick={() => {
-                        onStartTimingSelect("custom");
-                        setStepShowCal(true);
-                      }}
-                    >
-                      Custom Date and Time
-                    </button>
-                  </div>
-                )}
-              </PopoverContent>
-            </Popover>
-            {startTiming !== "custom" || !customStartDateProp ? " enrollment" : ""}.
-            {(touch.kind === "call" || touch.kind === "linkedin") &&
-              " This task will not block subsequent steps."}
+            This task will not block subsequent steps.
           </span>
         </div>
       )}
@@ -1828,6 +1743,7 @@ export const OutreachSequenceCard = ({
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSuccess, setFeedbackSuccess] = useState(false);
   const feedbackRef = useRef<HTMLTextAreaElement>(null);
+  const scheduleAnchorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isFeedbackMode && !feedbackSuccess) feedbackRef.current?.focus();
@@ -1838,7 +1754,7 @@ export const OutreachSequenceCard = ({
   const [startTiming, setStartTiming] = useState<StartTiming>("same-day");
   const [customStartDate, setCustomStartDate] = useState<Date | undefined>();
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
-  const [showCalendarPicker, setShowCalendarPicker] = useState(false);
+  const [pendingStartDate, setPendingStartDate] = useState<Date | undefined>();
   const [stepDelays, setStepDelays] = useState<Record<string, number>>({});
   const [touchTitles, setTouchTitles] = useState<Record<string, string>>({});
 
@@ -2012,7 +1928,13 @@ export const OutreachSequenceCard = ({
       <div className="overflow-hidden">
         <div className="flex flex-wrap items-center gap-2 py-3">
           <span className="heading-100 text-foreground">5-touch sequence</span>
-          {status !== null && renderStatusBadgeStack(status, sequence, localOverride)}
+          {status !== null &&
+            renderStatusBadgeStack(
+              status,
+              sequence,
+              localOverride,
+              computeStartDateLabel(startTiming, customStartDate),
+            )}
           {playOptions && playOptions.length > 1 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -2110,10 +2032,6 @@ export const OutreachSequenceCard = ({
                         onDelayChange={(days) => setDelayForTouch(t.id, days)}
                         touchTitle={getTouchTitle(t.id, t.kind)}
                         onTitleChange={(title) => setTouchTitle(t.id, title)}
-                        startTiming={startTiming}
-                        customStartDate={customStartDate}
-                        onStartTimingSelect={setStartTiming}
-                        onCustomDateSelect={setCustomStartDate}
                       />
                       {idx === 0 && isEnrolled && startTiming !== "same-day" && computeStartDateLabel(startTiming, customStartDate) !== "" && (
                         <div className="relative flex gap-3">
@@ -2149,14 +2067,60 @@ export const OutreachSequenceCard = ({
               <div>
               {status === null && (
                 <div className="flex items-center gap-6">
-                  <Button
-                    variant="primary"
-                    size="small"
-                    onClick={() => setLocalOverride("enrolled")}
-                  >
-                    <TrellisIcon name="email" size={12} className="mr-1 brightness-0 invert" />
-                    Enroll {firstName}
-                  </Button>
+                  <Popover open={isScheduleOpen} onOpenChange={setIsScheduleOpen}>
+                    <PopoverAnchor asChild>
+                      <SplitButton
+                        ref={scheduleAnchorRef}
+                        size="small"
+                        mainAriaLabel={
+                          pendingStartDate
+                            ? `Enroll ${firstName} on ${pendingStartDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                            : `Enroll ${firstName}`
+                        }
+                        trailingAriaLabel="Choose a start date"
+                        trailing={<TrellisIcon name="date" size={14} />}
+                        onMainClick={() => {
+                          if (pendingStartDate) {
+                            setStartTiming("custom");
+                            setCustomStartDate(pendingStartDate);
+                            setLocalOverride("scheduled");
+                          } else {
+                            setStartTiming("same-day");
+                            setCustomStartDate(undefined);
+                            setLocalOverride("enrolled");
+                          }
+                        }}
+                        onTrailingClick={() => setIsScheduleOpen((open) => !open)}
+                      >
+                        {pendingStartDate
+                          ? `Enroll ${firstName} on ${pendingStartDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                          : `Enroll ${firstName}`}
+                      </SplitButton>
+                    </PopoverAnchor>
+                    <PopoverContent
+                      side="bottom"
+                      align="end"
+                      className="w-auto p-1"
+                      onOpenAutoFocus={(e) => e.preventDefault()}
+                      onInteractOutside={(e) => {
+                        if (scheduleAnchorRef.current?.contains(e.target as Node)) {
+                          e.preventDefault();
+                        }
+                      }}
+                    >
+                      <Calendar
+                        mode="single"
+                        selected={pendingStartDate}
+                        defaultMonth={pendingStartDate}
+                        onSelect={(date) => {
+                          setPendingStartDate(date);
+                          setIsScheduleOpen(false);
+                        }}
+                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                        classNames={{ day_today: "" }}
+                      />
+                    </PopoverContent>
+                  </Popover>
                   {onRegenerate && (
                     <Button
                       variant="transparent"
@@ -2168,6 +2132,22 @@ export const OutreachSequenceCard = ({
                       Regenerate sequence
                     </Button>
                   )}
+                </div>
+              )}
+              {status === "scheduled" && (
+                <div className="pl-[26px]">
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    onClick={() => {
+                      setLocalOverride(null);
+                      setStartTiming("same-day");
+                      setCustomStartDate(undefined);
+                      setPendingStartDate(undefined);
+                    }}
+                  >
+                    Cancel
+                  </Button>
                 </div>
               )}
               {(status === "enrolled" || status === "paused") && (

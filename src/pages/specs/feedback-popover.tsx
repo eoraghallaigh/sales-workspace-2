@@ -95,7 +95,7 @@ const SuccessBody = () => (
 );
 
 const PopoverFrame = ({ children }: { children: React.ReactNode }) => (
-  <div className="w-[280px] rounded-200 border border-border bg-white shadow-200">
+  <div className="w-[280px] rounded-[var(--radius-popover)] border bg-popover text-popover-foreground shadow-md">
     {children}
   </div>
 );

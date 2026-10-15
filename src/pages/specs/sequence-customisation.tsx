@@ -11,8 +11,13 @@ import {
 } from "./blocks";
 import { OutreachSequenceCard } from "@/components/OutreachSequenceCard";
 import { Button } from "@/components/ui/button";
+import { SplitButton } from "@/components/ui/split-button";
+import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
-import { GripVertical } from "lucide-react";
+import { GripVertical, ChevronDown, Bold, Italic, Underline, Link as LinkIcon } from "lucide-react";
 import type { SequenceState } from "@/data/outreachStates";
 
 const MOCK_CONTACT = {
@@ -137,65 +142,81 @@ const SequenceCustomisationSpec = () => (
 
     <SpecSection
       title="Scheduled start"
-      description="The first step shows an inline dropdown that controls when the sequence begins relative to enrollment. Options: same day as, 1 day after, 3 days after, or a custom date via a calendar picker."
+      description="When the sequence begins is chosen from the enroll control, not from the first step. The control is a primary split button: its main segment enrolls same-day, and its calendar segment opens a date picker to schedule a later start."
     >
       <HorizontalFlow>
         <HorizontalFlowStep
           step={1}
-          label="Default state"
-          description="First step shows 'First step will execute same day as enrollment.' with a dropdown trigger."
+          label="Enroll control"
+          description="Below the sequence, a primary split button with an 'Enroll {Name}' main segment and a calendar segment divided by a thin line."
         >
-          <div className="bg-white rounded-200 border border-border p-4 w-[340px]">
-            <div className="flex items-center gap-2 mb-1">
-              <TrellisIcon name="calling" size={16} className="text-foreground shrink-0" />
-              <span className="body-100 text-foreground">Follow up call</span>
-            </div>
-            <p className="detail-200 text-muted-foreground">
-              First step will execute <span className="font-semibold text-foreground">same day as ˅</span> enrollment. This task will not block subsequent steps.
-            </p>
+          <div className="w-fit">
+            <SplitButton
+              size="small"
+              trailing={<TrellisIcon name="date" size={14} />}
+              trailingAriaLabel="Choose a start date"
+            >
+              Enroll Keisha
+            </SplitButton>
           </div>
         </HorizontalFlowStep>
         <HorizontalFlowStep
           step={2}
-          label="Click dropdown"
-          description="Popover opens with preset options and a 'Custom Date and Time' option that reveals a calendar."
+          label="Open the date picker"
+          description="Clicking the calendar segment opens a date picker — no date preselected, and no highlight on today."
         >
-          <div className="bg-white rounded-200 border border-border p-4 w-[340px]">
-            <div className="flex items-center gap-2 mb-1">
-              <TrellisIcon name="calling" size={16} className="text-foreground shrink-0" />
-              <span className="body-100 text-foreground">Follow up call</span>
-            </div>
-            <p className="detail-200 text-muted-foreground mb-2">
-              First step will execute <span className="font-semibold text-foreground">same day as ˅</span> enrollment.
-            </p>
-            <div className="w-[180px] rounded-200 border border-border bg-white shadow-200 p-1">
-              <div className="px-3 py-1.5 detail-200 text-foreground font-semibold bg-[var(--color-fill-surface-recessed)] rounded">same day as</div>
-              <div className="px-3 py-1.5 detail-200 text-foreground">1 day after</div>
-              <div className="px-3 py-1.5 detail-200 text-foreground">3 days after</div>
-              <div className="px-3 py-1.5 detail-200 text-foreground">Custom Date and Time</div>
-            </div>
+          <div className="w-fit rounded-[var(--radius-popover)] border bg-popover text-popover-foreground shadow-md p-1">
+            <Calendar mode="single" classNames={{ day_today: "" }} />
           </div>
         </HorizontalFlowStep>
         <HorizontalFlowStep
           step={3}
-          label="Selection applied"
-          description="Dropdown closes. The text updates to reflect the new timing."
+          label="Pick a date"
+          description="Selecting a date closes the picker immediately and relabels the main segment to 'Enroll {Name} on {date}'. Enrolling is still one click on the main segment."
+        >
+          <div className="w-fit">
+            <SplitButton
+              size="small"
+              trailing={<TrellisIcon name="date" size={14} />}
+              trailingAriaLabel="Choose a start date"
+            >
+              Enroll Keisha on Aug 15
+            </SplitButton>
+          </div>
+        </HorizontalFlowStep>
+        <HorizontalFlowStep
+          step={4}
+          label="Scheduled"
+          description="The chip reads 'Scheduled' (blue), the footer shows a single 'Cancel' CTA, and a 'Sequence starts on {date}' note sits under the first step."
           isLast
         >
-          <div className="bg-white rounded-200 border border-border p-4 w-[340px]">
-            <div className="flex items-center gap-2 mb-1">
-              <TrellisIcon name="calling" size={16} className="text-foreground shrink-0" />
-              <span className="body-100 text-foreground">Follow up call</span>
+          <div className="bg-[var(--color-fill-surface-raised)] rounded-200 border border-border p-4 w-[340px] space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="heading-100 text-foreground">5-touch sequence</span>
+              <Badge variant="status-blue">Scheduled</Badge>
             </div>
-            <p className="detail-200 text-muted-foreground">
-              First step will execute <span className="font-semibold text-foreground">3 days after ˅</span> enrollment.
-            </p>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <TrellisIcon name="calling" size={16} className="text-foreground shrink-0" />
+                <span className="body-100 text-foreground">Follow up call</span>
+              </div>
+              <p className="detail-200 text-muted-foreground">
+                Sequence starts on <span className="font-semibold text-foreground">Aug 15</span>.
+              </p>
+            </div>
+            <Button variant="secondary" size="small">
+              Cancel
+            </Button>
           </div>
         </HorizontalFlowStep>
       </HorizontalFlow>
 
       <Callout type="behavior">
-        When the rep selects "Custom Date and Time", the popover switches to a calendar picker. After selecting a date, the text updates to show the chosen date (e.g., "First step will execute <strong>on Aug 15</strong>.").
+        Scheduling doesn't wait — the contact is enrolled straight away; only the first step's fire date shifts to the chosen date. While scheduled, the chip reads "Scheduled" and the only control is "Cancel", which returns the sequence to its initial un-enrolled state. Once the first step actually executes, the chip flips to "Enrolled" and the controls become "Pause" and "Unenroll".
+      </Callout>
+
+      <Callout type="behavior">
+        The main segment enrolls directly. With no date chosen it enrolls same-day and goes straight to "Enrolled"; after a date is chosen its label becomes "Enroll {"{Name}"} on {"{date}"}" and it schedules instead.
       </Callout>
     </SpecSection>
 
@@ -209,7 +230,7 @@ const SequenceCustomisationSpec = () => (
       >
         <div className="bg-white rounded-200 border border-border p-4">
           <p className="detail-200 text-muted-foreground">
-            Email will be sent <span className="font-semibold text-foreground">2 days after ˅</span> previous step.
+            Email will be sent <span className="font-semibold text-foreground inline-flex items-center gap-0.5">2 days after <ChevronDown size={10} /></span> previous step.
           </p>
         </div>
       </StateCard>
@@ -220,7 +241,7 @@ const SequenceCustomisationSpec = () => (
       >
         <div className="bg-white rounded-200 border border-border p-4">
           <p className="detail-200 text-muted-foreground">
-            Task will be created <span className="font-semibold text-foreground">3 days after ˅</span> previous step. This task will not block subsequent steps.
+            Task will be created <span className="font-semibold text-foreground inline-flex items-center gap-0.5">3 days after <ChevronDown size={10} /></span> previous step. This task will not block subsequent steps.
           </p>
         </div>
       </StateCard>
@@ -236,19 +257,19 @@ const SequenceCustomisationSpec = () => (
     >
       <StateCard
         label="Non-blocking indicator"
-        description="A sentence appended to the timing text for call and LinkedIn steps. This appears on every manual task, including step 1."
+        description="A sentence shown for call and LinkedIn steps. On steps 2+ it's appended to the timing text; on the first step (which no longer has a timing line) it stands on its own."
       >
         <div className="bg-white rounded-200 border border-border p-4 space-y-3">
           <div>
             <p className="heading-50 text-foreground">Step 1 (call task)</p>
             <p className="detail-200 text-muted-foreground mt-1">
-              First step will execute <span className="font-semibold text-foreground">same day as ˅</span> enrollment. This task will not block subsequent steps.
+              This task will not block subsequent steps.
             </p>
           </div>
           <div className="border-t border-border pt-3">
             <p className="heading-50 text-foreground">Step 2 (LinkedIn task)</p>
             <p className="detail-200 text-muted-foreground mt-1">
-              Task will be created <span className="font-semibold text-foreground">3 days after ˅</span> previous step. This task will not block subsequent steps.
+              Task will be created <span className="font-semibold text-foreground inline-flex items-center gap-0.5">3 days after <ChevronDown size={10} /></span> previous step. This task will not block subsequent steps.
             </p>
           </div>
         </div>
@@ -277,7 +298,7 @@ const SequenceCustomisationSpec = () => (
                   <TrellisIcon name="calling" size={16} />
                   <span className="body-100 text-foreground">Follow up call</span>
                 </div>
-                <p className="detail-200 text-muted-foreground">First step will execute <span className="font-semibold text-foreground">same day as ˅</span> enrollment. This task will not block subsequent steps.</p>
+                <p className="detail-200 text-muted-foreground">This task will not block subsequent steps.</p>
               </div>
             </div>
             <div className="px-4 py-4 pl-10">
@@ -306,28 +327,31 @@ const SequenceCustomisationSpec = () => (
                   <TrellisIcon name="calling" size={16} />
                   <span className="body-100 text-foreground">Follow up call</span>
                 </div>
-                <p className="detail-200 text-muted-foreground">First step will execute <span className="font-semibold text-foreground">same day as ˅</span> enrollment. This task will not block subsequent steps.</p>
+                <p className="detail-200 text-muted-foreground">This task will not block subsequent steps.</p>
               </div>
             </div>
             <div className="px-4 py-4 pl-10 space-y-4">
               <div className="flex flex-col gap-1">
                 <label className="heading-50 text-foreground">Task title</label>
-                <div className="border border-border rounded-[4px] px-3 py-2 body-100 text-foreground bg-white">Follow up call</div>
+                <Input defaultValue="Follow up call" />
               </div>
               <div className="flex flex-col gap-1">
                 <label className="heading-50 text-foreground">Task notes</label>
-                <div className="border border-border rounded-[4px] px-3 py-2 body-100 text-foreground bg-white min-h-[80px] leading-relaxed">"Hi Keisha — congrats on the new role — the first 90 days are usually when the stack gets a hard look."</div>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-0.5 text-muted-foreground">
-                  <span className="p-1.5 rounded hover:bg-[var(--color-fill-surface-recessed)]"><strong>B</strong></span>
-                  <span className="p-1.5 rounded hover:bg-[var(--color-fill-surface-recessed)]"><em>I</em></span>
-                  <span className="p-1.5 rounded hover:bg-[var(--color-fill-surface-recessed)]"><u>U</u></span>
-                  <span className="p-1.5 rounded hover:bg-[var(--color-fill-surface-recessed)]">🔗</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="detail-200 text-muted-foreground px-2 py-1 border border-border rounded-full">Cancel</span>
-                  <span className="detail-200 text-white bg-foreground px-2 py-1 rounded-full">Save</span>
+                <Textarea
+                  defaultValue={`"Hi Keisha — congrats on the new role — the first 90 days are usually when the stack gets a hard look."`}
+                  className="min-h-[120px] leading-relaxed"
+                />
+                <div className="flex items-center justify-between gap-2 mt-1">
+                  <div className="flex items-center">
+                    <button type="button" aria-label="Bold" className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"><Bold size={14} /></button>
+                    <button type="button" aria-label="Italic" className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"><Italic size={14} /></button>
+                    <button type="button" aria-label="Underline" className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"><Underline size={14} /></button>
+                    <button type="button" aria-label="Insert link" className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-[var(--color-fill-surface-recessed)] transition-colors"><LinkIcon size={14} /></button>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button variant="secondary" size="extra-small" className="mr-2">Cancel</Button>
+                    <Button variant="primary" size="extra-small">Save</Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -348,7 +372,7 @@ const SequenceCustomisationSpec = () => (
                   <TrellisIcon name="calling" size={16} />
                   <span className="body-100 text-foreground">Follow up call</span>
                 </div>
-                <p className="detail-200 text-muted-foreground">First step will execute <span className="font-semibold text-foreground">same day as ˅</span> enrollment. This task will not block subsequent steps.</p>
+                <p className="detail-200 text-muted-foreground">This task will not block subsequent steps.</p>
               </div>
             </div>
             <div className="px-4 py-4 pl-10">
@@ -386,12 +410,12 @@ const SequenceCustomisationSpec = () => (
                 <TrellisIcon name="calling" size={16} className="text-foreground shrink-0" />
                 <span className="body-100 text-foreground">Follow up call</span>
               </div>
-              <p className="detail-200 text-muted-foreground">First step will execute <span className="font-semibold text-foreground">same day as ˅</span> enrollment. This task will not block subsequent steps.</p>
+              <p className="detail-200 text-muted-foreground">This task will not block subsequent steps.</p>
             </div>
           </div>
           <div className="relative border-t border-border">
             <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 z-10">
-              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-white px-2.5 py-0.5 detail-100 text-muted-foreground shadow-sm">+ Step</span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border-core-subtle)] bg-white px-2 py-0.5 detail-100 text-muted-foreground shadow-sm">+ Step</span>
             </div>
           </div>
           <div className="px-4 py-3 flex items-center gap-4">
@@ -401,7 +425,7 @@ const SequenceCustomisationSpec = () => (
                 <TrellisIcon name="linkedin" size={16} className="text-foreground shrink-0" />
                 <span className="body-100 text-foreground">Connection request</span>
               </div>
-              <p className="detail-200 text-muted-foreground">Task will be created <span className="font-semibold text-foreground">3 days after ˅</span> previous step. This task will not block subsequent steps.</p>
+              <p className="detail-200 text-muted-foreground">Task will be created <span className="font-semibold text-foreground inline-flex items-center gap-0.5">3 days after <ChevronDown size={10} /></span> previous step. This task will not block subsequent steps.</p>
             </div>
           </div>
         </div>
@@ -419,7 +443,7 @@ const SequenceCustomisationSpec = () => (
                 <TrellisIcon name="calling" size={16} className="text-foreground shrink-0" />
                 <span className="body-100 text-foreground">Follow up call</span>
               </div>
-              <p className="detail-200 text-muted-foreground">First step will execute <span className="font-semibold text-foreground">same day as ˅</span> enrollment.</p>
+              <p className="detail-200 text-muted-foreground">This task will not block subsequent steps.</p>
             </div>
           </div>
           <div className="px-4 py-3 flex items-center gap-4">
@@ -429,7 +453,7 @@ const SequenceCustomisationSpec = () => (
                 <TrellisIcon name="linkedin" size={16} className="text-foreground shrink-0" />
                 <span className="body-100 text-foreground">Connection request</span>
               </div>
-              <p className="detail-200 text-muted-foreground">Task will be created <span className="font-semibold text-foreground">3 days after ˅</span> previous step.</p>
+              <p className="detail-200 text-muted-foreground">Task will be created <span className="font-semibold text-foreground inline-flex items-center gap-0.5">3 days after <ChevronDown size={10} /></span> previous step.</p>
             </div>
           </div>
           <div className="px-4 py-3 flex items-center gap-4">
@@ -439,14 +463,14 @@ const SequenceCustomisationSpec = () => (
                 <TrellisIcon name="email" size={16} className="text-foreground shrink-0" />
                 <span className="body-100 text-foreground truncate">A cleaner path off Salesforce for ACME Corp</span>
               </div>
-              <p className="detail-200 text-muted-foreground">Email will be sent <span className="font-semibold text-foreground">2 days after ˅</span> previous step.</p>
+              <p className="detail-200 text-muted-foreground">Email will be sent <span className="font-semibold text-foreground inline-flex items-center gap-0.5">2 days after <ChevronDown size={10} /></span> previous step.</p>
             </div>
           </div>
         </div>
       </StateCard>
 
       <Callout type="edge-case">
-        After reordering, step timing indicators update automatically — "Executes on enrollment" only ever applies to whatever step is first, and all subsequent steps show their delay relative to the previous step.
+        After reordering, step timing indicators update automatically — whatever step lands first drops its "N days after previous step" delay (its start is governed by the enrollment CTAs instead), and all subsequent steps show their delay relative to the previous step.
       </Callout>
     </SpecSection>
 
