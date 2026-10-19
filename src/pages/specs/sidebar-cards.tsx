@@ -5,6 +5,8 @@ import PortalsCard from "@/components/PortalsCard";
 import PortalsCardFSC from "@/components/PortalsCardFSC";
 import PortalsEmptyState from "@/components/PortalsEmptyState";
 import { getFscPortalsCardData, getPortalsCardData, getProspectPortalsCardData } from "@/data/installBase";
+import fscPortalRecordImg from "@/assets/spec-fsc-portal-record.png";
+import hubSummaryRecordImg from "@/assets/spec-hub-summary-company-record.png";
 
 /* ── Portals panel: the "Portals" sidebar card as it appears in the right
    column of an install base company record (same chrome as the record page's
@@ -32,6 +34,14 @@ const ExternalLink = ({ href, children }: { href: string; children: ReactNode })
 
 const Bullet = ({ children }: { children: ReactNode }) => (
   <li className="body-100 text-foreground leading-relaxed">{children}</li>
+);
+
+const RecordScreenshot = ({ src, alt }: { src: string; alt: string }) => (
+  <img
+    src={src}
+    alt={alt}
+    className="w-full max-w-[720px] rounded-200 border border-core-subtle shadow-100"
+  />
 );
 
 /* ── Real card data — a legacy (Hub-based) customer and an FSC customer. ─── */
@@ -156,18 +166,24 @@ const SidebarCardsSpec = () => (
           label="Non-FSC card — Hub Summary card on the company record"
           description="Everything on the non-FSC portal card comes from the existing Hub Summary card found on the company record: portal usage, tiers limits, usage-over-time, integrations, trials, and the subscription detail."
         >
-          <ExternalLink href="https://app.hubspot.com/contacts/53/record/0-2/1710376822">
-            Example company record — app.hubspot.com/contacts/53/record/0-2/1710376822
-          </ExternalLink>
+          <div className="flex flex-col gap-3">
+            <RecordScreenshot src={hubSummaryRecordImg} alt="Hub Summary card on a company record" />
+            <ExternalLink href="https://app.hubspot.com/contacts/53/record/0-2/1710376822">
+              Example company record — app.hubspot.com/contacts/53/record/0-2/1710376822
+            </ExternalLink>
+          </div>
         </StateCard>
 
         <StateCard
           label="FSC credit usage & capacity — the portal record"
           description="The credit usage and capacity data (the Credits & Capacity view that replaces Tiers limits) comes from the portal records of customers already on FSC."
         >
-          <ExternalLink href="https://app.hubspot.com/contacts/53/record/2-5945472/1357911972?eschref=%2Fcontacts%2F53%2Fobjects%2F2-5945472%2Fviews%2Fall%2Flist">
-            Example FSC portal record — app.hubspot.com/contacts/53/record/2-5945472/1357911972
-          </ExternalLink>
+          <div className="flex flex-col gap-3">
+            <RecordScreenshot src={fscPortalRecordImg} alt="Credits & Capacity on an FSC portal record" />
+            <ExternalLink href="https://app.hubspot.com/contacts/53/record/2-5945472/1357911972?eschref=%2Fcontacts%2F53%2Fobjects%2F2-5945472%2Fviews%2Fall%2Flist">
+              Example FSC portal record — app.hubspot.com/contacts/53/record/2-5945472/1357911972
+            </ExternalLink>
+          </div>
         </StateCard>
       </div>
     </SpecSection>
