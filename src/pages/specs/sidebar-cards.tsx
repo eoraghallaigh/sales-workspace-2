@@ -3,7 +3,8 @@ import { SpecLayout } from "./SpecLayout";
 import { SpecHeader, SpecSection, StateCard, Callout } from "./blocks";
 import PortalsCard from "@/components/PortalsCard";
 import PortalsCardFSC from "@/components/PortalsCardFSC";
-import { getFscPortalsCardData, getPortalsCardData } from "@/data/installBase";
+import PortalsEmptyState from "@/components/PortalsEmptyState";
+import { getFscPortalsCardData, getPortalsCardData, getProspectPortalsCardData } from "@/data/installBase";
 
 /* ── Portals panel: the "Portals" sidebar card as it appears in the right
    column of an install base company record (same chrome as the record page's
@@ -36,6 +37,7 @@ const Bullet = ({ children }: { children: ReactNode }) => (
 /* ── Real card data — a legacy (Hub-based) customer and an FSC customer. ─── */
 const LEGACY_PORTALS = getPortalsCardData("brightpath-studio");
 const FSC_PORTALS = getFscPortalsCardData("harbor-dental");
+const PROSPECT_PORTALS = getProspectPortalsCardData("1");
 
 const SidebarCardsSpec = () => (
   <SpecLayout>
@@ -88,6 +90,29 @@ const SidebarCardsSpec = () => (
       >
         <PortalsPanel>
           <PortalsCardFSC portals={FSC_PORTALS} />
+        </PortalsPanel>
+      </StateCard>
+    </SpecSection>
+
+    <SpecSection
+      title="Net-new prospects — free portal"
+      description="Net-new prospects (not yet customers) reuse the Portals card as a free-portal variant. It replaces the old standalone Hub Summary card on the prospect record. Prospect portals are free, so there is no recurring subscription (0 MRR) and no HubSpot or partner team — just the usage and a Customer team of the buying contacts."
+    >
+      <StateCard
+        label="Prospect portal card (free)"
+        description="Usage (the Hub Summary) plus a Customer team (primary contact and decision maker). No subscriptions, HubSpot team, or partner team."
+      >
+        <PortalsPanel>
+          <PortalsCard portals={PROSPECT_PORTALS} />
+        </PortalsPanel>
+      </StateCard>
+
+      <StateCard
+        label="No portal (empty state)"
+        description="Common for net-new prospects who don't have a HubSpot portal. When empty, the Portals card drops to the bottom of the right-column card stack."
+      >
+        <PortalsPanel>
+          <PortalsEmptyState />
         </PortalsPanel>
       </StateCard>
     </SpecSection>

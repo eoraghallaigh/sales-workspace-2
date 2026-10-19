@@ -7,7 +7,9 @@
 // .context/ib-ppf-design.md for the design rationale.
 
 import type { Company, RecommendedContact } from "@/components/CompanyCard";
-import type { HubSummary } from "@/data/companyCards";
+import { getHubSummary, type HubSummary } from "@/data/companyCards";
+import { companyDetails } from "@/data/companyDetails";
+import { prospectingCompanies } from "@/data/prospectingCompanies";
 import { sig, type SignalInstance, type SignalVariant } from "@/data/signals";
 
 export type IbTier = "P1" | "P2" | "P3" | "P4";
@@ -1292,7 +1294,7 @@ export interface PortalHubSpotTeam {
 }
 
 export interface PortalTeam {
-  hubSpot: PortalHubSpotTeam;
+  hubSpot?: PortalHubSpotTeam; // omitted for prospect (free) portals
   customer: CustomerTeamRole[];
   partners: PartnerTeamRow[];
 }
@@ -1327,7 +1329,7 @@ export interface PortalCardData {
   name: string;
   summary: HubSummary;
   team: PortalTeam;
-  subscription: PortalSubscription;
+  subscription?: PortalSubscription; // omitted for prospect (free) portals
 }
 
 const CUSTOMER_FIRST = [
@@ -1625,6 +1627,44 @@ export const getPortalsCardData = (companyId: string): PortalCardData[] => {
     team: portalTeam(company, portal),
     subscription: portalSubscription(portal),
   }));
+};
+
+// Net-new prospects reuse the Portals card as a free-portal variant: the Hub
+// Summary usage plus a Customer team, but no subscription (free, 0 MRR) and no
+// HubSpot or partner team.
+export const getProspectPortalsCardData = (companyId: string): PortalCardData[] => {
+  const company = prospectingCompanies.find((c) => c.id === companyId);
+  if (!company) return [];
+  // Most net-new prospects have no HubSpot portal at all — only those with a
+  // portal on their record get a (free) portal card; everyone else is empty.
+  if (!companyDetails[companyId]?.portals?.length) return [];
+  const summary = getHubSummary(companyId);
+  const domain = domainFromWebsite(company.website);
+  const names = company.recommendedContacts.map((c) => c.name).filter(Boolean);
+
+  const customer: CustomerTeamRole[] = [];
+  if (names[0]) {
+    customer.push({
+      role: "Primary contact",
+      contacts: [{ name: names[0], email: emailFor(names[0], domain) }],
+    });
+  }
+  const decisionMaker = names[1] ?? names[0];
+  if (decisionMaker) {
+    customer.push({
+      role: "Decision maker",
+      contacts: [{ name: decisionMaker, email: emailFor(decisionMaker, domain) }],
+    });
+  }
+
+  return [
+    {
+      id: summary.hubId,
+      name: company.name,
+      summary,
+      team: { customer, partners: [] },
+    },
+  ];
 };
 
 // --- FSC (Flexible Seats & Credits) portal card -----------------------------

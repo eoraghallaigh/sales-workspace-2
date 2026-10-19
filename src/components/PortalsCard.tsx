@@ -1,3 +1,4 @@
+import { Fragment, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import type {
@@ -147,17 +148,35 @@ const ViewPortalLink = () => (
 );
 
 const PortalBody = ({ portal }: { portal: PortalCardData }) => (
-  <div className="flex flex-col gap-6">
-    <HubSummaryCard summary={portal.summary} hidePortalLinks />
-    <Separator />
-    <PortalSubscriptions subscription={portal.subscription} />
-    <Separator />
-    <HubSpotTeamSection team={portal.team.hubSpot} />
-    <Separator />
-    <CustomerTeamSection roles={portal.team.customer} />
-    <Separator />
-    <PartnerTeamSection partners={portal.team.partners} />
-  </div>
+  (() => {
+    // Only render the sections that have data — prospects (free portals) have no
+    // subscription, HubSpot team, or partner team.
+    const sections: ReactNode[] = [
+      <HubSummaryCard key="usage" summary={portal.summary} hidePortalLinks />,
+    ];
+    if (portal.subscription) {
+      sections.push(<PortalSubscriptions key="subs" subscription={portal.subscription} />);
+    }
+    if (portal.team.hubSpot) {
+      sections.push(<HubSpotTeamSection key="hubspot" team={portal.team.hubSpot} />);
+    }
+    if (portal.team.customer.length > 0) {
+      sections.push(<CustomerTeamSection key="customer" roles={portal.team.customer} />);
+    }
+    if (portal.team.partners.length > 0) {
+      sections.push(<PartnerTeamSection key="partner" partners={portal.team.partners} />);
+    }
+    return (
+      <div className="flex flex-col gap-6">
+        {sections.map((section, i) => (
+          <Fragment key={i}>
+            {i > 0 && <Separator />}
+            {section}
+          </Fragment>
+        ))}
+      </div>
+    );
+  })()
 );
 
 const PortalsCard = ({ portals }: PortalsCardProps) => {
