@@ -11,6 +11,13 @@ interface SpecEntry {
 
 const specs: SpecEntry[] = [
   {
+    slug: "sidebar-cards",
+    title: "Sidebar Cards",
+    description:
+      "The Portals card on install base company records, in both its legacy (Hub-based) and FSC (Flexible Seats & Credits) versions, with the data sources for each.",
+    category: "Component states",
+  },
+  {
     slug: "feedback-popover",
     title: "Signal feedback popover",
     description:

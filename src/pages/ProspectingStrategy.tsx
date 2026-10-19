@@ -27,7 +27,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { TrellisIcon } from "@/components/ui/trellis-icon";
 import { ResearchSectionBody } from "@/components/ResearchSectionBody";
 import { prospectingCompanies } from "@/data/prospectingCompanies";
-import { installBaseStrategyCompanies } from "@/data/installBase";
+import { getFscPortalsCardData, getPortalsCardData, isFscCompany, installBaseStrategyCompanies } from "@/data/installBase";
 import { companyDetails } from "@/data/companyDetails";
 import { contactDetails } from "@/data/contactDetails";
 import ContactDetailPanel from "@/components/ContactDetailPanel";
@@ -45,6 +45,8 @@ import type { RefusalReason } from "@/components/SequenceRefusalBanner";
 import { TouchDots, type TouchStatus } from "@/components/TouchDot";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import HubSummaryCard from "@/components/HubSummaryCard";
+import PortalsCard from "@/components/PortalsCard";
+import PortalsCardFSC from "@/components/PortalsCardFSC";
 import RecentConversionsCard from "@/components/RecentConversionsCard";
 import { getHubSummary, getRecentConversions } from "@/data/companyCards";
 
@@ -307,6 +309,15 @@ const ProspectingStrategy = () => {
   const currentCompanyDetails = companyDetails[currentCompany?.id || "1"];
 
   const hubSummary = useMemo(() => getHubSummary(currentCompany?.id ?? ""), [currentCompany?.id]);
+  const isFsc = isInstallBase && isFscCompany(currentCompany?.id ?? "");
+  const portalsData = useMemo(
+    () => (isInstallBase && !isFsc ? getPortalsCardData(currentCompany?.id ?? "") : []),
+    [isInstallBase, isFsc, currentCompany?.id],
+  );
+  const fscPortalsData = useMemo(
+    () => (isFsc ? getFscPortalsCardData(currentCompany?.id ?? "") : []),
+    [isFsc, currentCompany?.id],
+  );
   const recentConversions = useMemo(() => getRecentConversions(currentCompany?.id ?? ""), [currentCompany?.id]);
 
   const companyNotes = useMemo(() => {
@@ -1147,13 +1158,12 @@ const ProspectingStrategy = () => {
               <TabsList ref={tabsListRef} className="relative w-max min-w-full justify-start border-b border-border-subtle rounded-none bg-transparent px-0 h-auto gap-0">
                 {([
                   { label: "Strategy", value: "strategy" },
-                  { label: "Company Data", value: "company" },
+                  ...(isInstallBase ? [{ label: "Portals", value: "portals" }] : []),
                   { label: "LinkedIn", value: "linkedin" },
-                  { label: "Hub Summary", value: "hub-summary" },
+                  ...(!isInstallBase ? [{ label: "Hub Summary", value: "hub-summary" }] : []),
                   { label: "Conversions", value: "conversions" },
                   { label: "Activity", value: "activity" },
                   { label: `Deals (${currentCompanyDetails?.deals?.length || 0})`, value: "deals" },
-                  { label: "Notes", value: "notes" },
                 ] as const).map((tab) => (
                       <TabsTrigger
                         key={tab.value}
@@ -1624,15 +1634,15 @@ const ProspectingStrategy = () => {
                 </Collapsible>
               </TabsContent>
 
-              {isNarrow && (
-                <TabsContent value="company" className="px-6 pt-6 pb-6 mt-0">
-                  {companyBody}
+              {isNarrow && isInstallBase && (
+                <TabsContent value="portals" className="px-6 pt-6 pb-6 mt-0">
+                  {isFsc ? <PortalsCardFSC portals={fscPortalsData} /> : <PortalsCard portals={portalsData} />}
                 </TabsContent>
               )}
               {isNarrow && (
                 <TabsContent value="linkedin" className="px-6 pt-6 pb-6 mt-0">{linkedInBody}</TabsContent>
               )}
-              {isNarrow && (
+              {isNarrow && !isInstallBase && (
                 <TabsContent value="hub-summary" className="px-6 pt-6 pb-6 mt-0"><HubSummaryCard summary={hubSummary} /></TabsContent>
               )}
               {isNarrow && (
@@ -1644,20 +1654,22 @@ const ProspectingStrategy = () => {
               {isNarrow && (
                 <TabsContent value="deals" className="px-6 pt-6 pb-6 mt-0">{dealsBody}</TabsContent>
               )}
-              {isNarrow && (
-                <TabsContent value="notes" className="px-6 py-6 mt-0">{notesBody}</TabsContent>
-              )}
             </Tabs>
             </div>
             {!isNarrow && (
               <div className="flex flex-col gap-4 flex-[4_1_0%] min-w-0">
-                <InfoCard title="Company data" maxHeight="max-h-[640px]" collapsible>{companyBody}</InfoCard>
+                {isInstallBase && (
+                  <InfoCard title="Portals" maxHeight="max-h-[760px]" collapsible>
+                    {isFsc ? <PortalsCardFSC portals={fscPortalsData} /> : <PortalsCard portals={portalsData} />}
+                  </InfoCard>
+                )}
                 <InfoCard title="LinkedIn Sales Navigator" maxHeight="max-h-[640px]" collapsible>{linkedInBody}</InfoCard>
-                <InfoCard title="Hub summary" maxHeight="max-h-[640px]" collapsible><HubSummaryCard summary={hubSummary} /></InfoCard>
+                {!isInstallBase && (
+                  <InfoCard title="Hub summary" maxHeight="max-h-[640px]" collapsible><HubSummaryCard summary={hubSummary} /></InfoCard>
+                )}
                 <InfoCard title="Recent conversions" maxHeight="max-h-[480px]" collapsible><RecentConversionsCard conversions={recentConversions} onContactClick={setContactDrawerId} /></InfoCard>
                 <InfoCard title="Activity" maxHeight="max-h-[640px]" collapsible>{activityBody}</InfoCard>
                 <InfoCard title="Deals" maxHeight="max-h-[480px]" collapsible>{dealsBody}</InfoCard>
-                <InfoCard title="Notes" maxHeight="max-h-[320px]" collapsible>{notesBody}</InfoCard>
               </div>
             )}
             </div>

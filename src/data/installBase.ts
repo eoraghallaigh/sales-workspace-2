@@ -7,6 +7,7 @@
 // .context/ib-ppf-design.md for the design rationale.
 
 import type { Company, RecommendedContact } from "@/components/CompanyCard";
+import type { HubSummary } from "@/data/companyCards";
 import { sig, type SignalInstance, type SignalVariant } from "@/data/signals";
 
 export type IbTier = "P1" | "P2" | "P3" | "P4";
@@ -1232,3 +1233,514 @@ export const installBaseStrategyCompanies: Company[] = installBaseCompanies.map(
     priority: c.tier,
   }),
 );
+
+export interface HubSpotTeam {
+  salesOwner: string;
+  salesSpecialistOwner: string;
+  successOwner: string;
+  contractManager: string;
+}
+
+const SALES_OWNERS = ["Shreya Khadka", "Tomás Alvarez", "Hannah Brooks", "Callum Reid", "Nia Okafor"];
+const SALES_SPECIALIST_OWNERS = ["AJ Waterer", "Ines Moreau", "Daniel Cho", "Priyanka Rao"];
+
+const seedFromId = (id: string): number =>
+  [...id].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+
+const pick = (pool: string[], seed: number): string => pool[seed % pool.length];
+
+export const getHubSpotTeam = (id: string): HubSpotTeam | undefined => {
+  const company = installBaseCompanies.find((c) => c.id === id);
+  if (!company) return undefined;
+  const metrics = getIbMetrics(id);
+  const seed = seedFromId(id);
+  return {
+    salesOwner: pick(SALES_OWNERS, seed),
+    salesSpecialistOwner: pick(SALES_SPECIALIST_OWNERS, seed + 1),
+    successOwner:
+      metrics.successOwner ?? company.csEngagement?.csmName ?? pick(P2_OWNERS, seed + 2),
+    contractManager: metrics.contractManager ?? pick(P2_CONTRACT_MGRS, seed + 3),
+  };
+};
+
+// --- Portals card: per-portal usage + managing team -------------------------
+// The "Portals" card merges the Hub Summary (usage) with the managing team
+// (HubSpot, customer and partner contacts). Teams are assigned per portal, so
+// everything here is keyed on the portal id and generated deterministically.
+
+export interface TeamContact {
+  name: string;
+  email?: string;
+}
+
+export interface CustomerTeamRole {
+  role: string; // "Billing contact" | "Primary contact" | "Decision maker"
+  contacts: TeamContact[];
+}
+
+export interface PartnerTeamRow {
+  type: string; // "Sold Partner" | "Managing Partner"
+  hubs?: string; // e.g. "Marketing Hub" — the hubs the partner sold
+  partner: string;
+  contact: TeamContact;
+}
+
+export interface PortalHubSpotTeam {
+  salesOwner: string;
+  contractManager: string;
+  successOwner: string;
+}
+
+export interface PortalTeam {
+  hubSpot: PortalHubSpotTeam;
+  customer: CustomerTeamRole[];
+  partners: PartnerTeamRow[];
+}
+
+export interface SubscriptionItem {
+  name: string;
+  mrrGbp: string; // "£1,800.00"
+  mrrUsd: string; // "US$2,412.00"
+  discounts: string[]; // each rendered on its own line; empty => "N/A"
+  purchaseDate: string;
+  startDate: string;
+  endDate: string; // "-" when open-ended
+  cancellationDate: string; // "-" when not cancelled
+  inactive?: boolean; // grey dot + "Inactive" badge
+  statusNote?: string; // sub-label, e.g. "Unknown status"
+  cancelledByOrderId?: string; // renders "Cancelled by order #<id>" link instead of statusNote
+}
+
+export interface PortalSubscription {
+  id: string; // subscription number, e.g. "5033837"
+  status: string; // "Active"
+  renewalDate: string;
+  billingCycle: string; // "Monthly" | "Quarterly" | "Semi-annually" | "Annually"
+  nextBillDate: string;
+  mrrDisplay: string; // "£5,401.23" — sum of active item MRR
+  items: SubscriptionItem[];
+  inactiveItems: SubscriptionItem[];
+}
+
+export interface PortalCardData {
+  id: string;
+  name: string;
+  summary: HubSummary;
+  team: PortalTeam;
+  subscription: PortalSubscription;
+}
+
+const CUSTOMER_FIRST = [
+  "Scott Reynolds", "Angharad Parry-Jones", "Priya Nair", "Daniel Osei", "Laura Bennett",
+  "Erin Walsh", "Ben Carter", "Marta Nowak", "Helen Choi", "Sofia Marchetti",
+];
+
+const PARTNER_FIRMS: Array<{ name: string; contact: string; domain: string }> = [
+  { name: "JDR Group", contact: "Leanne Mordue", domain: "jdrgroup.co.uk" },
+  { name: "Quattro", contact: "Neil Clarke", domain: "quattro.co.uk" },
+  { name: "RevQore Consulting Ltd", contact: "Tanja Mitchell", domain: "revqore.com" },
+  { name: "Six & Flow", contact: "Rhiannon Blackwell", domain: "sixandflow.com" },
+  { name: "Huble", contact: "Marcus Feld", domain: "huble.com" },
+  { name: "Avidly", contact: "Sara Lindqvist", domain: "avidly.com" },
+];
+
+const PORTAL_PLAYBOOKS = [
+  "No predicted opportunity", "Expansion: Sales Hub", "Expansion: Service Hub", "Upgrade: Marketing Pro",
+];
+const PORTAL_INTEGRATIONS = [
+  "Salesforce", "Slack", "Gmail", "Outlook", "Zapier", "Zoom", "Stripe", "Aircall", "Segment",
+];
+const PORTAL_MONTHS = ["Mar '26", "Apr '26", "May '26", "Jun '26"];
+const PORTAL_CREATE_DATES = ["14 Mar 2018", "22 Jun 2019", "9 Sep 2020", "3 Feb 2021", "27 Jul 2022"];
+
+const fmtNum = (n: number): string => n.toLocaleString("en-US");
+
+const domainFromWebsite = (website?: string): string =>
+  (website ?? "").replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/$/, "") || "example.com";
+
+const emailFor = (name: string, domain: string): string =>
+  `${name.toLowerCase().replace(/[^a-z\s-]/g, "").trim().replace(/\s+/g, ".")}@${domain}`;
+
+const HUB_TIER_RANK: Record<HubTier, number> = { Starter: 1, Pro: 2, Enterprise: 3 };
+
+const portalTierLabel = (hubs: PortalHub[]): string => {
+  const top = hubs.reduce<HubTier>(
+    (max, h) => (HUB_TIER_RANK[h.tier] > HUB_TIER_RANK[max] ? h.tier : max),
+    "Starter",
+  );
+  return top === "Pro" ? "Professional" : top;
+};
+
+const portalHubSummary = (company: IbCompany, portal: Portal): HubSummary => {
+  const seed = seedFromId(portal.id);
+  const tier = portalTierLabel(portal.hubs);
+  const contactsUsed = 400 + (seed % 9600);
+  const emailsSent = 120 + (seed % 4800);
+  const emailLimit = 50000;
+  const creditsUsed = portal.creditsUsed ?? 0;
+  const creditsLimit = portal.creditsLimit ?? 5000;
+
+  return {
+    tier,
+    hubId: portal.id,
+    customerName: portal.id,
+    created: PORTAL_CREATE_DATES[seed % PORTAL_CREATE_DATES.length],
+    domain: domainFromWebsite(company.website),
+    activeUsers: { active: portal.seatsActive, total: portal.seatsLicensed },
+    usageIntentScore: `US$${80 + (seed % 320)}`,
+    usageIntentPlaybook: PORTAL_PLAYBOOKS[seed % PORTAL_PLAYBOOKS.length],
+    firstPurchase: PORTAL_CREATE_DATES[(seed + 2) % PORTAL_CREATE_DATES.length],
+    eligibility: `This portal is eligible for marketing contacts`,
+    limits: [
+      {
+        label: "Contacts",
+        usedLabel: `${fmtNum(contactsUsed)} of No limit contacts used`,
+        pct: 6,
+      },
+      {
+        label: "Core Seats",
+        usedLabel: `${portal.seatsActive} of ${portal.seatsLicensed} Core Seats assigned`,
+        pct: Math.min(100, Math.round((portal.seatsActive / Math.max(portal.seatsLicensed, 1)) * 100)),
+        note: `(${tier})`,
+      },
+      {
+        label: "Credits",
+        usedLabel: `${fmtNum(creditsUsed)} of ${fmtNum(creditsLimit)} credits used this month`,
+        pct: Math.min(100, Math.round((creditsUsed / Math.max(creditsLimit, 1)) * 100)),
+      },
+      {
+        label: "Emails",
+        usedLabel: `${fmtNum(emailsSent)} of ${fmtNum(emailLimit)} emails sent this month`,
+        pct: Math.max(2, Math.round((emailsSent / emailLimit) * 100)),
+      },
+    ],
+    usageOverTime: {
+      contacts: PORTAL_MONTHS.map((month, i) => ({
+        month,
+        value: contactsUsed - (3 - i) * (40 + (seed % 120)),
+      })),
+      emails: PORTAL_MONTHS.map((month, i) => ({
+        month,
+        value: (seed + i * 11) % 60,
+      })),
+    },
+    integrations: PORTAL_INTEGRATIONS.filter((_, i) => (seed >> i) % 3 === 0).slice(0, 4),
+    trials: [],
+  };
+};
+
+const portalTeam = (company: IbCompany, portal: Portal): PortalTeam => {
+  const seed = seedFromId(portal.id);
+  const metrics = getIbMetrics(company.id);
+  const domain = domainFromWebsite(company.website);
+
+  const named = company.contacts.map((c) => c.name).filter(Boolean);
+  const pool = named.length > 0 ? named : CUSTOMER_FIRST;
+  const customerName = (salt: number) => pool[(seed + salt) % pool.length];
+
+  const primary = customerName(0);
+  const decisionMaker = customerName(1);
+
+  const customer: CustomerTeamRole[] = [
+    {
+      role: "Billing contact",
+      contacts: [
+        { name: "Finance Team", email: `finance@${domain}` },
+        { name: customerName(2), email: emailFor(customerName(2), domain) },
+      ],
+    },
+    {
+      role: "Primary contact",
+      contacts: [{ name: primary, email: emailFor(primary, domain) }],
+    },
+    {
+      role: "Decision maker",
+      contacts: [{ name: decisionMaker, email: emailFor(decisionMaker, domain) }],
+    },
+  ];
+
+  // Sold partners are tied to specific hubs; a managing partner oversees the account.
+  const soldCount = seed % 3; // 0–2 sold-partner rows
+  const partners: PartnerTeamRow[] = [];
+  for (let i = 0; i < soldCount; i += 1) {
+    const firm = PARTNER_FIRMS[(seed + i) % PARTNER_FIRMS.length];
+    const hub = portal.hubs[i % portal.hubs.length];
+    partners.push({
+      type: "Sold Partner",
+      hubs: `${hub.hub} Hub`,
+      partner: firm.name,
+      contact: { name: firm.contact, email: emailFor(firm.contact, firm.domain) },
+    });
+  }
+  const managing = PARTNER_FIRMS[(seed + soldCount + 2) % PARTNER_FIRMS.length];
+  partners.push({
+    type: "Managing Partner",
+    partner: managing.name,
+    contact: { name: managing.contact, email: emailFor(managing.contact, managing.domain) },
+  });
+
+  return {
+    hubSpot: {
+      salesOwner: pick(SALES_OWNERS, seed),
+      contractManager: metrics.contractManager ?? pick(P2_CONTRACT_MGRS, seed + 1),
+      successOwner:
+        metrics.successOwner ?? company.csEngagement?.csmName ?? pick(P2_OWNERS, seed + 2),
+    },
+    customer,
+    partners,
+  };
+};
+
+const GBP_TO_USD = 1.34;
+const money = (symbol: string, n: number): string =>
+  `${symbol}${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const gbp = (n: number): string => money("£", n);
+const usd = (n: number): string => money("US$", n * GBP_TO_USD);
+
+const BILLING_CYCLES = ["Monthly", "Quarterly", "Semi-annually", "Annually"];
+const SUB_DATES = ["Apr 1, 2025", "Aug 12, 2025", "Jul 16, 2025", "Jan 3, 2025", "Nov 20, 2024"];
+const SUB_BILL_DATES = ["Jan 26, 2027", "Mar 12, 2027", "Nov 19, 2026", "Aug 4, 2027"];
+const SUB_ADDONS: Array<{ name: string; gbp: number; discounts?: string[] }> = [
+  { name: "20,000 Additional Marketing Contacts", gbp: 98.4, discounts: ["Custom discount (40%) £65.60"] },
+  { name: "10 Core Seats (Enterprise)", gbp: 700 },
+  { name: "8 Granted Core Seats", gbp: 0 },
+  { name: "Reporting Limit Increase (1 Unit)", gbp: 175 },
+  { name: "Dedicated IP", gbp: 300 },
+  { name: "API Limit Increase (2 Units)", gbp: 250 },
+];
+const SUB_DISCOUNTS: string[][] = [
+  [],
+  ["Custom discount (40%) £1,200.00"],
+  ["Price Migration Discount £278.55", "Custom discount (30.8%) £828.97"],
+  ["Price Migration Discount £93.52", "Custom discount (30.2%) £331.14"],
+];
+
+const SUB_INACTIVE_TEMPLATES: Array<{
+  name: string;
+  gbp: number;
+  pct?: number;
+  cancelled?: boolean;
+}> = [
+  { name: "Marketing Hub Professional - Marketing Contacts (Includes 2,000 Marketing Contacts)", gbp: 617.44, pct: 25 },
+  { name: "35,000 Additional Marketing Contacts", gbp: 1245, pct: 25 },
+  { name: "Sales Hub Professional (Includes 5 Users)", gbp: 230, pct: 50, cancelled: true },
+  { name: "Sales Hub Professional Additional Users (2 Users)", gbp: 90, pct: 50, cancelled: true },
+  { name: "Service Hub Starter (2 Seats)", gbp: 40, cancelled: true },
+  { name: "Legacy Reporting Add-on", gbp: 120 },
+  { name: "Operations Hub Starter", gbp: 50 },
+];
+const SUB_END_DATES = ["Jun 15, 2026", "Jun 22, 2023", "Dec 1, 2025", "Mar 30, 2024", "Sep 9, 2025"];
+const round2 = (n: number): number => Math.round(n * 100) / 100;
+
+const hubTierFull = (tier: HubTier): string => (tier === "Pro" ? "Professional" : tier);
+
+const hubBaseMrr = (tier: HubTier, seed: number): number => {
+  const base = tier === "Enterprise" ? 1800 : tier === "Pro" ? 765 : 200;
+  return base + (seed % 7) * 25;
+};
+
+const hubDetail = (hub: PortalHub, portal: Portal): string => {
+  if (hub.hub === "Marketing") return "(Includes 5 Core Seats, 10,000 Marketing Contacts)";
+  if (hub.hub === "Sales") return `(${portal.seatsLicensed} Sales Seats)`;
+  if (hub.hub === "Service") return `(${portal.seatsLicensed} Service Seats)`;
+  return "";
+};
+
+const portalSubscription = (portal: Portal): PortalSubscription => {
+  const seed = seedFromId(portal.id);
+
+  const hubItems: SubscriptionItem[] = portal.hubs.map((hub, idx) => {
+    const amount = hubBaseMrr(hub.tier, seed + idx);
+    const detail = hubDetail(hub, portal);
+    return {
+      name: `${hub.hub} Hub ${hubTierFull(hub.tier)}${detail ? ` ${detail}` : ""}`,
+      mrrGbp: gbp(amount),
+      mrrUsd: usd(amount),
+      discounts: SUB_DISCOUNTS[(seed + idx) % SUB_DISCOUNTS.length],
+      purchaseDate: SUB_DATES[(seed + idx) % SUB_DATES.length],
+      startDate: SUB_DATES[(seed + idx) % SUB_DATES.length],
+      endDate: "-",
+      cancellationDate: "-",
+    };
+  });
+
+  const addonCount = 2 + (seed % 3); // 2–4 add-ons
+  const addonItems: SubscriptionItem[] = Array.from({ length: addonCount }, (_, k) => {
+    const addon = SUB_ADDONS[(seed + k) % SUB_ADDONS.length];
+    const date = SUB_DATES[(seed + k + 1) % SUB_DATES.length];
+    return {
+      name: addon.name,
+      mrrGbp: gbp(addon.gbp),
+      mrrUsd: usd(addon.gbp),
+      discounts: addon.discounts ?? [],
+      purchaseDate: date,
+      startDate: date,
+      endDate: "-",
+      cancellationDate: "-",
+    };
+  });
+
+  const items = [...hubItems, ...addonItems];
+  const total = [...portal.hubs].reduce((sum, h, idx) => sum + hubBaseMrr(h.tier, seed + idx), 0)
+    + addonItems.reduce((sum, _, k) => sum + SUB_ADDONS[(seed + k) % SUB_ADDONS.length].gbp, 0);
+
+  const inactiveCount = 4 + (seed % 4); // 4–7 inactive items
+  const inactiveItems: SubscriptionItem[] = Array.from({ length: inactiveCount }, (_, k) => {
+    const t = SUB_INACTIVE_TEMPLATES[(seed + k) % SUB_INACTIVE_TEMPLATES.length];
+    const date = SUB_DATES[(seed + k) % SUB_DATES.length];
+    return {
+      name: t.name,
+      mrrGbp: gbp(t.gbp),
+      mrrUsd: usd(t.gbp),
+      discounts: t.pct ? [`Custom discount (${t.pct}%) ${gbp(round2(t.gbp * (t.pct / 100)))}`] : [],
+      purchaseDate: date,
+      startDate: date,
+      endDate: SUB_END_DATES[(seed + k) % SUB_END_DATES.length],
+      cancellationDate: SUB_END_DATES[(seed + k + 1) % SUB_END_DATES.length],
+      inactive: true,
+      statusNote: t.cancelled ? undefined : "Unknown status",
+      cancelledByOrderId: t.cancelled ? String(16_000_000 + ((seed + k) % 900_000)) : undefined,
+    };
+  });
+
+  return {
+    id: String(5_000_000 + (seed % 900_000)),
+    status: "Active",
+    renewalDate: portal.renewalDate,
+    billingCycle: BILLING_CYCLES[seed % BILLING_CYCLES.length],
+    nextBillDate: SUB_BILL_DATES[seed % SUB_BILL_DATES.length],
+    mrrDisplay: gbp(total),
+    items,
+    inactiveItems,
+  };
+};
+
+export const getPortalsCardData = (companyId: string): PortalCardData[] => {
+  const company = installBaseCompanies.find((c) => c.id === companyId);
+  if (!company) return [];
+  return company.portals.map((portal) => ({
+    id: portal.id,
+    name: portal.name,
+    summary: portalHubSummary(company, portal),
+    team: portalTeam(company, portal),
+    subscription: portalSubscription(portal),
+  }));
+};
+
+// --- FSC (Flexible Seats & Credits) portal card -----------------------------
+// Under FSC customers buy seats + credits rather than Hubs: the portal has a
+// single edition, the tiers-limits block is replaced by a Credits & Capacity
+// view, and subscription line items are seats/capacity packs. This is a
+// separate card variant — the legacy card above is untouched for non-FSC
+// customers. Only companies in FSC_COMPANY_IDS use the FSC card.
+const FSC_COMPANY_IDS = new Set<string>(["harbor-dental"]);
+export const isFscCompany = (companyId: string): boolean => FSC_COMPANY_IDS.has(companyId);
+
+export interface CreditCapacityRow {
+  label: string;
+  group: "top" | "usage"; // top = seats/credits; usage = "HubSpot on Credits Usage"
+  usedLabel?: string; // "2 of 2 GTM Seats assigned"
+  pct?: number; // 0–100 bar fill
+  message?: string; // e.g. "This portal does not have a Email Sends Bundle"
+  note?: string; // e.g. "Additional workflow actions used 36 credits"
+}
+
+export interface CreditUsageDatum {
+  label: string;
+  billed: number;
+  nonBilled: number;
+}
+
+export interface FscPortalCardData {
+  id: string;
+  edition: string; // single portal-level edition
+  summary: HubSummary; // reused for key facts / integrations / charts
+  capacity: CreditCapacityRow[];
+  creditUsage: CreditUsageDatum[];
+  team: PortalTeam;
+  subscription: PortalSubscription;
+}
+
+const fscCapacity = (): CreditCapacityRow[] => [
+  { group: "top", label: "GTM Seats", usedLabel: "2 of 2 GTM Seats assigned", pct: 100 },
+  { group: "top", label: "HubSpot Credits", usedLabel: `0 of ${fmtNum(20000)} HubSpot Credits used`, pct: 0 },
+  { group: "usage", label: "Records", usedLabel: `16 of ${fmtNum(250000)} Records assigned`, pct: 1 },
+  { group: "usage", label: "Calling", usedLabel: "0 of 500 minutes", pct: 0 },
+  { group: "usage", label: "Custom Events", usedLabel: `0 of ${fmtNum(2500000)} event completions`, pct: 0 },
+  { group: "usage", label: "Email Sends", message: "This portal does not have a Email Sends Bundle", pct: 0 },
+  {
+    group: "usage",
+    label: "Workflow Actions (Non-AI Executions)",
+    message: "This portal does not have a Workflow Actions Bundle",
+    note: "Additional workflow actions used 36 credits",
+    pct: 0,
+  },
+  {
+    group: "usage",
+    label: "CONVERSATIONAL_CONTEXT_RECORD_ANALYSIS",
+    usedLabel: "0 of 500 CONVERSATIONAL_CONTEXT_RECORD_ANALYSIS assigned",
+    pct: 0,
+  },
+];
+
+const fscCreditUsage = (seed: number): CreditUsageDatum[] =>
+  Array.from({ length: 12 }, (_, i) => ({
+    label: `${i * 2 + 1} Nov`,
+    billed: (seed + i * 7) % 6,
+    nonBilled: (seed + i * 3) % 3,
+  }));
+
+const fscSubscription = (portal: Portal, edition: string): PortalSubscription => {
+  const seed = seedFromId(portal.id);
+  const seats = 3 + (seed % 5);
+  const date = "Oct 5, 2026";
+  const items: SubscriptionItem[] = [
+    {
+      name: `${seats} GTM Seats (${edition})`,
+      mrrGbp: gbp(153.33),
+      mrrUsd: usd(153.33),
+      discounts: ["Custom discount (43.21%) £116.67"],
+      purchaseDate: date,
+      startDate: date,
+      endDate: "-",
+      cancellationDate: "-",
+    },
+    {
+      name: "Growth Workflow Actions Capacity Pack (500,000 Workflow Actions)",
+      mrrGbp: gbp(76.67),
+      mrrUsd: usd(76.67),
+      discounts: ["Custom discount (43.21%) £58.33"],
+      purchaseDate: date,
+      startDate: date,
+      endDate: "-",
+      cancellationDate: "-",
+    },
+  ];
+  return {
+    id: String(113_000_000 + (seed % 900_000)),
+    status: "Active",
+    renewalDate: portal.renewalDate,
+    billingCycle: "Monthly",
+    nextBillDate: SUB_BILL_DATES[seed % SUB_BILL_DATES.length],
+    mrrDisplay: gbp(230),
+    items,
+    inactiveItems: [],
+  };
+};
+
+export const getFscPortalsCardData = (companyId: string): FscPortalCardData[] => {
+  const company = installBaseCompanies.find((c) => c.id === companyId);
+  if (!company) return [];
+  return company.portals.map((portal) => {
+    const edition = portalTierLabel(portal.hubs); // single portal-level edition
+    return {
+      id: portal.id,
+      edition,
+      summary: { ...portalHubSummary(company, portal), tier: edition },
+      capacity: fscCapacity(),
+      creditUsage: fscCreditUsage(seedFromId(portal.id)),
+      team: portalTeam(company, portal),
+      subscription: fscSubscription(portal, edition),
+    };
+  });
+};

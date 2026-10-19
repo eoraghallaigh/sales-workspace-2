@@ -1,7 +1,8 @@
+import type { ReactNode } from "react";
+import { toast } from "sonner";
 import { AreaChart, Area, LineChart, Line, XAxis } from "recharts";
 
 import type { HubSummary } from "@/data/companyCards";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { TrellisIcon } from "@/components/ui/trellis-icon";
@@ -9,12 +10,30 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 
 interface HubSummaryCardProps {
   summary: HubSummary;
+  // The Portals card shows the Hub ID + "View Portal" link in its own portal
+  // header, so it hides this card's copy to avoid duplicating them.
+  hidePortalLinks?: boolean;
+  // FSC portals replace the "Tiers limits" section with a Credits & Capacity
+  // view; when provided it renders in that slot. Defaults to the tiers limits.
+  limitsSlot?: ReactNode;
+  // FSC portals don't surface the usage-intent playbook key fact.
+  hideUsageIntentPlaybook?: boolean;
 }
 
-const KeyValue = ({ label, value }: { label: string; value: string }) => (
+const KeyValue = ({ label, value, link }: { label: string; value: string; link?: boolean }) => (
   <div className="flex flex-col gap-1">
     <span className="detail-200 text-muted-foreground">{label}</span>
-    <span className="link-100 text-[var(--color-text-interactive-default)]">{value}</span>
+    {link ? (
+      <button
+        type="button"
+        onClick={() => toast.success(`Opens ${label}`)}
+        className="link-100 text-left text-[var(--color-text-interactive-default)] hover:underline"
+      >
+        {value}
+      </button>
+    ) : (
+      <span className="link-100 text-foreground">{value}</span>
+    )}
   </div>
 );
 
@@ -28,23 +47,23 @@ const ExternalLink = ({ children }: { children: string }) => (
   </button>
 );
 
-const HubSummaryCard = ({ summary }: HubSummaryCardProps) => {
+const HubSummaryCard = ({
+  summary,
+  hidePortalLinks = false,
+  limitsSlot,
+  hideUsageIntentPlaybook = false,
+}: HubSummaryCardProps) => {
   const gradId = `hubAreaGrad-${summary.hubId}`;
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header: tier + customer + portal links */}
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="heading-200 text-foreground">{summary.customerName}</span>
-          <Badge variant="green">{summary.tier}</Badge>
-        </div>
+      {!hidePortalLinks && (
+        /* Header: Hub ID + portal link */
         <div className="flex items-center gap-4 flex-wrap">
           <span className="detail-200 text-muted-foreground">Hub ID: {summary.hubId}</span>
-          <ExternalLink>View in Success Suite</ExternalLink>
           <ExternalLink>View Portal</ExternalLink>
         </div>
-      </div>
+      )}
 
       {/* Key facts */}
       <div className="grid grid-cols-2 gap-x-6 gap-y-4">
@@ -52,36 +71,41 @@ const HubSummaryCard = ({ summary }: HubSummaryCardProps) => {
         <KeyValue
           label="Active users"
           value={`${summary.activeUsers.active} of ${summary.activeUsers.total} total users`}
+          link
         />
         <KeyValue label="Usage intent score" value={summary.usageIntentScore} />
-        <KeyValue label="Usage intent playbook" value={summary.usageIntentPlaybook} />
+        {!hideUsageIntentPlaybook && (
+          <KeyValue label="Usage intent playbook" value={summary.usageIntentPlaybook} />
+        )}
         <KeyValue label="First purchase" value={summary.firstPurchase} />
         <KeyValue label="Created" value={summary.created} />
       </div>
 
       <Separator />
 
-      {/* Tiers limits */}
-      <div className="flex flex-col gap-4">
-        <h4 className="heading-100 text-foreground">Tiers limits</h4>
-        <div className="grid grid-cols-1 gap-4">
-          {summary.limits.map((limit) => (
-            <div key={limit.label} className="flex flex-col gap-1">
-              <div className="flex items-center justify-between">
-                <span className="body-100 text-foreground">
-                  {limit.label}
-                  {limit.note ? (
-                    <span className="text-muted-foreground"> {limit.note}</span>
-                  ) : null}
-                </span>
+      {/* Tiers limits (legacy) — replaced by a Credits & Capacity view under FSC */}
+      {limitsSlot ?? (
+        <div className="flex flex-col gap-4">
+          <h4 className="heading-100 text-foreground">Tiers limits</h4>
+          <div className="grid grid-cols-1 gap-4">
+            {summary.limits.map((limit) => (
+              <div key={limit.label} className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <span className="body-100 text-foreground">
+                    {limit.label}
+                    {limit.note ? (
+                      <span className="text-muted-foreground"> {limit.note}</span>
+                    ) : null}
+                  </span>
+                </div>
+                <Progress value={limit.pct} className="h-2" />
+                <span className="detail-200 text-muted-foreground">{limit.usedLabel}</span>
               </div>
-              <Progress value={limit.pct} className="h-2" />
-              <span className="detail-200 text-muted-foreground">{limit.usedLabel}</span>
-            </div>
-          ))}
+            ))}
+          </div>
+          <p className="detail-200 text-muted-foreground">{summary.eligibility}</p>
         </div>
-        <p className="detail-200 text-muted-foreground">{summary.eligibility}</p>
-      </div>
+      )}
 
       <Separator />
 
@@ -93,7 +117,7 @@ const HubSummaryCard = ({ summary }: HubSummaryCardProps) => {
             <span className="detail-200 text-muted-foreground">All contacts</span>
             <ChartContainer
               config={{ value: { label: "Contacts", color: "hsl(var(--chart-1))" } }}
-              className="h-[110px] w-full"
+              className="h-[110px] w-full overflow-hidden"
             >
               <AreaChart data={summary.usageOverTime.contacts}>
                 <defs>
@@ -118,7 +142,7 @@ const HubSummaryCard = ({ summary }: HubSummaryCardProps) => {
             <span className="detail-200 text-muted-foreground">Emails</span>
             <ChartContainer
               config={{ value: { label: "Emails", color: "hsl(var(--chart-3))" } }}
-              className="h-[110px] w-full"
+              className="h-[110px] w-full overflow-hidden"
             >
               <LineChart data={summary.usageOverTime.emails}>
                 <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
