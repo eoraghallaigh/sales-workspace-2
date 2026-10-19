@@ -129,8 +129,12 @@ const PartnerTeamSection = ({ partners }: { partners: PartnerTeamRow[] }) => (
 
 const PortalTeams = ({ team }: { team: PortalTeam }) => (
   <>
-    <HubSpotTeamSection team={team.hubSpot} />
-    <Separator />
+    {team.hubSpot && (
+      <>
+        <HubSpotTeamSection team={team.hubSpot} />
+        <Separator />
+      </>
+    )}
     <CustomerTeamSection roles={team.customer} />
     <Separator />
     <PartnerTeamSection partners={team.partners} />
