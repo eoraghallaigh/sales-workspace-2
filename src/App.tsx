@@ -37,6 +37,7 @@ import PlayLifecycleSpec from "./pages/specs/play-lifecycle";
 import OsaDelaySpec from "./pages/specs/osa-delay";
 import WorkingHighVolumeSpec from "./pages/specs/working-high-volume";
 import CompanySidebarCardsSpec from "./pages/specs/company-sidebar-cards";
+import SidebarCardsSpec from "./pages/specs/sidebar-cards";
 import SequenceClaritySpec from "./pages/specs/sequence-clarity";
 import OutreachTargetDecouplingSpec from "./pages/specs/outreach-target-decoupling";
 import OutreachOnCrmRecordSpec from "./pages/specs/outreach-on-crm-record";
@@ -91,6 +92,7 @@ const App = () => (
             <Route path="/specs/osa-delay" element={<OsaDelaySpec />} />
             <Route path="/specs/working-high-volume" element={<WorkingHighVolumeSpec />} />
             <Route path="/specs/company-sidebar-cards" element={<CompanySidebarCardsSpec />} />
+            <Route path="/specs/sidebar-cards" element={<SidebarCardsSpec />} />
             <Route path="/specs/sequence-clarity" element={<SequenceClaritySpec />} />
             <Route path="/specs/outreach-target-decoupling" element={<OutreachTargetDecouplingSpec />} />
             <Route path="/specs/outreach-on-crm-record" element={<OutreachOnCrmRecordSpec />} />

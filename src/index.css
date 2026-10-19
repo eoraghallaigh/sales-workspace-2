@@ -336,11 +336,11 @@
   --color-text-secondary-disabled: #8A8A8A;
   --color-text-tertiary-default: #141414;
   --color-text-tertiary-disabled: #8A8A8A;
-  --color-text-interactive-default: #141414;
+  --color-text-interactive-default: #006162;
   --color-text-interactive-onfilldefault: #FFFFFF;
-  --color-text-interactive-defaulthover: #4D4D4D;
+  --color-text-interactive-defaulthover: #00494B;
   --color-text-interactive-onfillhover: #E6E6E6;
-  --color-text-interactive-defaultpressed: #000000;
+  --color-text-interactive-defaultpressed: #033637;
   --color-text-interactive-onfillpressed: #B3B3B3;
   --color-text-interactive-defaultdisabled: #8A8A8A;
   --color-text-interactive-onfill: #FFFFFF;
@@ -501,9 +501,9 @@
   --color-specialty-tertiary-transparent-hover: #EBEBEB;
   --color-specialty-tertiary-transparent-pressed: #E6E6E6;
   --color-specialty-text-core-alt-default: #006162;
-  --color-specialty-text-interactive-alt-default: #141414;
-  --color-specialty-text-interactive-alt-hover: #4D4D4D;
-  --color-specialty-text-interactive-alt-pressed: #666666;
+  --color-specialty-text-interactive-alt-default: #006162;
+  --color-specialty-text-interactive-alt-hover: #00494B;
+  --color-specialty-text-interactive-alt-pressed: #033637;
   --color-reporting-fill-highlight-purple-subtle: #EFEEFD;
 
   /* Typography System */
